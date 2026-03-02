@@ -1,0 +1,96 @@
+﻿{% extends "base.html" %}
+
+{% block title %}帖子详情 | LearningWebsite{% endblock %}
+
+{% block content %}
+<section class="card">
+    <div style="display:flex; justify-content:space-between; gap:0.8rem; flex-wrap:wrap;">
+        <h1 style="margin:0;">{{ post.title }}</h1>
+        <a class="btn btn-outline" href="{% url 'forum:post_list' %}">返回列表</a>
+    </div>
+    <p style="margin:0.5rem 0;">
+        <span class="badge">{{ post.get_category_display }}</span>
+        {% if post.is_pinned %}<span class="badge">置顶</span>{% endif %}
+        {% if post.is_solved %}<span class="badge">已解决</span>{% endif %}
+    </p>
+    <p class="small muted">
+        作者：{{ post.author.username|default:"匿名" }} · 发布时间：{{ post.created_at|date:"Y-m-d H:i" }} · 浏览：{{ post.view_count }}
+    </p>
+
+    {% if request.user.is_authenticated %}
+        <div style="display:flex; gap:0.5rem; flex-wrap:wrap; margin-bottom:0.7rem;">
+            {% if request.user.is_staff or request.user.id == post.author_id %}
+                <form method="post" action="{% url 'forum:toggle_solved' post_id=post.id %}" style="margin:0;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-outline">
+                        {% if post.is_solved %}标记为未解决{% else %}标记为已解决{% endif %}
+                    </button>
+                </form>
+            {% endif %}
+
+            {% if request.user.is_staff %}
+                <form method="post" action="{% url 'forum:toggle_pin' post_id=post.id %}" style="margin:0;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-outline">
+                        {% if post.is_pinned %}取消置顶{% else %}置顶帖子{% endif %}
+                    </button>
+                </form>
+                <form method="post" action="{% url 'forum:change_status' post_id=post.id %}" style="margin:0; display:flex; gap:0.4rem;">
+                    {% csrf_token %}
+                    <select name="status" style="min-width:130px;">
+                        <option value="published" {% if post.status == "published" %}selected{% endif %}>已发布</option>
+                        <option value="hidden" {% if post.status == "hidden" %}selected{% endif %}>已隐藏</option>
+                        <option value="deleted" {% if post.status == "deleted" %}selected{% endif %}>已删除</option>
+                    </select>
+                    <button type="submit" class="btn btn-outline">更新状态</button>
+                </form>
+            {% endif %}
+        </div>
+    {% endif %}
+
+    <article style="white-space:pre-wrap; line-height:1.6;">{{ post.content }}</article>
+</section>
+
+<section class="card" style="margin-top:1rem;">
+    <h2 style="margin-top:0;">评论（{{ comments|length }}）</h2>
+    {% if comments %}
+        <div class="stack">
+            {% for comment in comments %}
+                <div style="border:1px solid var(--line); border-radius:10px; padding:0.8rem;">
+                    <p class="small muted" style="margin:0;">
+                        {{ comment.author.username|default:"匿名" }} · {{ comment.created_at|date:"Y-m-d H:i" }}
+                        {% if comment.parent_id %}
+                            · 回复 #{{ comment.parent_id }}
+                        {% endif %}
+                    </p>
+                    <p style="margin:0.55rem 0; white-space:pre-wrap;">{{ comment.content }}</p>
+                    {% if request.user.is_authenticated %}
+                        <a class="small" href="{% url 'forum:post_detail' post_id=post.id %}?reply_to={{ comment.id }}#comment-form">回复</a>
+                    {% endif %}
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p class="muted">暂无评论。</p>
+    {% endif %}
+</section>
+
+<section class="card" style="margin-top:1rem;" id="comment-form">
+    <h2 style="margin-top:0;">发表评论</h2>
+    {% if request.user.is_authenticated %}
+        <form method="post" action="{% url 'forum:comment_create' post_id=post.id %}">
+            {% csrf_token %}
+            {{ form.parent_id }}
+            <div class="form-row">
+                <label for="{{ form.content.id_for_label }}">评论内容</label>
+                {{ form.content }}
+                {{ form.content.errors }}
+            </div>
+            <button type="submit" class="btn">提交评论</button>
+        </form>
+    {% else %}
+        <p class="muted">请先登录后再发表评论。</p>
+        <a class="btn" href="{% url 'accounts:login' %}?next={% url 'forum:post_detail' post_id=post.id %}">前往登录</a>
+    {% endif %}
+</section>
+{% endblock %}

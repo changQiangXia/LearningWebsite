@@ -1,0 +1,168 @@
+{% extends "base.html" %}
+
+{% block title %}内容工作台 | LearningWebsite{% endblock %}
+
+{% block content %}
+<section class="card">
+    <div style="display:flex; justify-content:space-between; gap:0.8rem; flex-wrap:wrap; align-items:center;">
+        <div>
+            <h1 style="margin:0;">内容工作台</h1>
+            <p class="muted small" style="margin:0.4rem 0 0;">在业务工作台中完成课程内容建设与维护，无需进入后台管理页。</p>
+        </div>
+        <a class="btn" href="{% url 'courses:manage_course_create' %}">新建课程</a>
+    </div>
+</section>
+
+<section class="card" style="margin-top:1rem;">
+    <h2 style="margin-top:0;">概览</h2>
+    <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:0.8rem;">
+        <div style="border:1px solid var(--line); border-radius:10px; padding:0.8rem;">
+            <div class="small muted">课程总数</div>
+            <div style="font-size:1.2rem; font-weight:700;">{{ total_courses }}</div>
+        </div>
+        <div style="border:1px solid var(--line); border-radius:10px; padding:0.8rem;">
+            <div class="small muted">已发布课程</div>
+            <div style="font-size:1.2rem; font-weight:700;">{{ published_courses }}</div>
+        </div>
+        <div style="border:1px solid var(--line); border-radius:10px; padding:0.8rem;">
+            <div class="small muted">草稿课程</div>
+            <div style="font-size:1.2rem; font-weight:700;">{{ draft_courses }}</div>
+        </div>
+        <div style="border:1px solid var(--line); border-radius:10px; padding:0.8rem;">
+            <div class="small muted">已归档课程</div>
+            <div style="font-size:1.2rem; font-weight:700;">{{ archived_courses }}</div>
+        </div>
+        <div style="border:1px solid var(--line); border-radius:10px; padding:0.8rem;">
+            <div class="small muted">课时总数</div>
+            <div style="font-size:1.2rem; font-weight:700;">{{ total_lessons }}</div>
+        </div>
+        <div style="border:1px solid var(--line); border-radius:10px; padding:0.8rem;">
+            <div class="small muted">未启用章节</div>
+            <div style="font-size:1.2rem; font-weight:700;">{{ inactive_chapters }}</div>
+        </div>
+        <div style="border:1px solid var(--line); border-radius:10px; padding:0.8rem;">
+            <div class="small muted">未启用课时</div>
+            <div style="font-size:1.2rem; font-weight:700;">{{ inactive_lessons }}</div>
+        </div>
+        <div style="border:1px solid var(--line); border-radius:10px; padding:0.8rem;">
+            <div class="small muted">题目总数</div>
+            <div style="font-size:1.2rem; font-weight:700;">{{ total_questions }}</div>
+        </div>
+    </div>
+</section>
+
+<section class="card" style="margin-top:1rem;">
+    <h2 style="margin-top:0;">课程管理列表</h2>
+    {% if courses %}
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>课程</th>
+                    <th>状态</th>
+                    <th>更新时间</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for course in courses %}
+                    <tr>
+                        <td>
+                            <a href="{% url 'courses:course_detail' slug=course.slug %}">{{ course.title }}</a>
+                        </td>
+                        <td>{{ course.get_status_display }}</td>
+                        <td>{{ course.updated_at|date:"Y-m-d H:i" }}</td>
+                        <td>
+                            <div style="display:flex; gap:0.4rem; flex-wrap:wrap;">
+                                <a class="btn btn-outline" href="{% url 'courses:manage_course_edit' course_id=course.id %}">编辑</a>
+                                <a class="btn btn-outline" href="{% url 'courses:manage_chapter_create' course_id=course.id %}">新增章节</a>
+                                <form method="post" action="{% url 'courses:manage_course_toggle_status' course_id=course.id %}" style="margin:0;">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-outline">
+                                        {% if course.status == "published" %}
+                                            转为草稿
+                                        {% elif course.status == "draft" %}
+                                            发布
+                                        {% else %}
+                                            已归档
+                                        {% endif %}
+                                    </button>
+                                </form>
+                                <form method="post" action="{% url 'courses:manage_course_toggle_archive' course_id=course.id %}" style="margin:0;">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-outline">
+                                        {% if course.status == "archived" %}
+                                            恢复
+                                        {% else %}
+                                            归档
+                                        {% endif %}
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p class="muted">暂无可管理课程。</p>
+    {% endif %}
+</section>
+
+<section class="card" style="margin-top:1rem;">
+    <h2 style="margin-top:0;">最近更新课时</h2>
+    {% if recent_lessons %}
+        <ul>
+            {% for lesson in recent_lessons %}
+                <li>
+                    <a href="{% url 'courses:lesson_detail' lesson_id=lesson.id %}">{{ lesson.title }}</a>
+                    <span class="small muted">
+                        ({{ lesson.chapter.course.title }} / {{ lesson.chapter.title }})
+                    </span>
+                    <a class="small" href="{% url 'courses:manage_lesson_edit' lesson_id=lesson.id %}" style="margin-left:0.4rem;">
+                        编辑
+                    </a>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p class="muted">暂无课时记录。</p>
+    {% endif %}
+</section>
+
+<section class="card" style="margin-top:1rem;">
+    <h2 style="margin-top:0;">最近更新题目</h2>
+    {% if recent_questions %}
+        <ul>
+            {% for q in recent_questions %}
+                <li>
+                    {{ q.stem|truncatechars:90 }}
+                    <span class="small muted">({{ q.lesson.chapter.course.title }} / {{ q.lesson.title }})</span>
+                    <a class="small" href="{% url 'quiz:manage_question_edit' question_id=q.id %}" style="margin-left:0.4rem;">
+                        编辑
+                    </a>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p class="muted">暂无题目记录。</p>
+    {% endif %}
+</section>
+
+<section class="card" style="margin-top:1rem;">
+    <h2 style="margin-top:0;">最近操作日志</h2>
+    {% if recent_logs %}
+        <ul>
+            {% for item in recent_logs %}
+                <li>
+                    {{ item.created_at|date:"Y-m-d H:i" }} - {{ item.message }}
+                    <span class="small muted">
+                        {% if item.actor %}({{ item.actor.username }}){% endif %}
+                    </span>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p class="muted">暂无操作日志。</p>
+    {% endif %}
+</section>
+{% endblock %}

@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block title %}账户中心 | LearningWebsite{% endblock %}
+
+{% block content %}
+<section class="card">
+    <div style="display:flex; justify-content:space-between; gap:0.8rem; flex-wrap:wrap;">
+        <h1 style="margin:0;">账户中心</h1>
+        <a class="btn btn-outline" href="{% url 'accounts:profile_edit' %}">编辑资料</a>
+    </div>
+    <table class="table" style="margin-top:0.8rem;">
+        <tr>
+            <th>用户名</th>
+            <td>{{ request.user.username }}</td>
+        </tr>
+        <tr>
+            <th>邮箱</th>
+            <td>{{ request.user.email|default:"-" }}</td>
+        </tr>
+        <tr>
+            <th>角色</th>
+            <td>{{ request.user.profile.get_role_display }}</td>
+        </tr>
+        <tr>
+            <th>学校</th>
+            <td>{{ request.user.profile.school|default:"-" }}</td>
+        </tr>
+        <tr>
+            <th>专业</th>
+            <td>{{ request.user.profile.major|default:"-" }}</td>
+        </tr>
+        <tr>
+            <th>年级</th>
+            <td>{{ request.user.profile.grade|default:"-" }}</td>
+        </tr>
+        <tr>
+            <th>简介</th>
+            <td>{{ request.user.profile.bio|default:"-" }}</td>
+        </tr>
+        <tr>
+            <th>管理权限</th>
+            <td>{% if request.user.is_staff %}是{% else %}否{% endif %}</td>
+        </tr>
+    </table>
+    {% if request.user.profile.avatar %}
+        <p class="small muted" style="margin-top:0.7rem;">头像：</p>
+        <img src="{{ request.user.profile.avatar.url }}" alt="头像" style="max-width:120px; border-radius:8px; border:1px solid var(--line);">
+    {% endif %}
+</section>
+{% endblock %}

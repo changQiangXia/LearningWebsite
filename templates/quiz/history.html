@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block title %}我的测验历史 | LearningWebsite{% endblock %}
+
+{% block content %}
+<section class="card">
+    <h1 style="margin-top:0;">我的测验提交历史</h1>
+    <p class="small muted">每一行代表一次测验提交记录。</p>
+    <a class="btn btn-outline" href="{% url 'quiz:index' %}">返回测验中心</a>
+</section>
+
+<section class="card" style="margin-top:1rem;">
+    {% if page_obj.object_list %}
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>课时</th>
+                    <th>课程</th>
+                    <th>得分</th>
+                    <th>答对</th>
+                    <th>正确率</th>
+                    <th>提交时间</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in page_obj.object_list %}
+                    <tr>
+                        <td>#{{ item.id }}</td>
+                        <td>{{ item.lesson.title }}</td>
+                        <td>{{ item.lesson.chapter.course.title }}</td>
+                        <td>{{ item.earned_score }} / {{ item.total_score }}</td>
+                        <td>{{ item.correct_count }} / {{ item.total_questions }}</td>
+                        <td>{{ item.accuracy }}%</td>
+                        <td>{{ item.submitted_at|date:"Y-m-d H:i" }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        {% if page_obj.paginator.num_pages > 1 %}
+            <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
+                {% if page_obj.has_previous %}
+                    <a class="btn btn-outline" href="?page={{ page_obj.previous_page_number }}">上一页</a>
+                {% endif %}
+                <span class="small muted" style="padding:0.45rem 0;">第 {{ page_obj.number }} / {{ page_obj.paginator.num_pages }} 页</span>
+                {% if page_obj.has_next %}
+                    <a class="btn btn-outline" href="?page={{ page_obj.next_page_number }}">下一页</a>
+                {% endif %}
+            </div>
+        {% endif %}
+    {% else %}
+        <p class="muted">暂无提交历史。</p>
+    {% endif %}
+</section>
+{% endblock %}

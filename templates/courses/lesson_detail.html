@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+
+{% block title %}{{ lesson.title }} | LearningWebsite{% endblock %}
+
+{% block content %}
+<section class="card">
+    <p class="small muted" style="margin-top:0;">
+        <a href="{% url 'courses:course_detail' slug=course.slug %}">{{ course.title }}</a>
+        / {{ lesson.chapter.title }}
+    </p>
+    <h1 style="margin-top:0;">{{ lesson.title }}</h1>
+    <p class="small muted">
+        预计学习时长：{{ lesson.estimated_minutes }} 分钟
+        {% if lesson.is_free_preview %}| 已启用免费试看{% endif %}
+        {% if not lesson.is_active %}| 课时未启用{% endif %}
+    </p>
+
+    {% if request.user.is_authenticated and progress %}
+        <p class="small muted">
+            浏览次数：{{ progress.view_count }} |
+            学习状态：
+            {% if progress.completed %}
+                <span class="badge">已完成</span>
+            {% else %}
+                <span class="badge">学习中</span>
+            {% endif %}
+        </p>
+    {% endif %}
+
+    {% if lesson.video_url %}
+        <p><a class="btn btn-outline" href="{{ lesson.video_url }}" target="_blank" rel="noopener">打开视频资源</a></p>
+    {% endif %}
+    {% if lesson.attachment_url %}
+        <p><a class="btn btn-outline" href="{{ lesson.attachment_url }}" target="_blank" rel="noopener">打开附件资源</a></p>
+    {% endif %}
+
+    <article style="white-space:pre-wrap; line-height:1.6;">
+        {{ lesson.content|default:"暂无课时内容。" }}
+    </article>
+
+    {% if can_manage_lesson %}
+        <div style="margin-top:0.8rem; display:flex; gap:0.5rem; flex-wrap:wrap;">
+            <a class="btn btn-outline" href="{% url 'courses:manage_lesson_edit' lesson_id=lesson.id %}">编辑课时</a>
+            <a class="btn btn-outline" href="{% url 'quiz:manage_question_list' lesson_id=lesson.id %}">管理题目</a>
+            <form method="post" action="{% url 'courses:manage_lesson_toggle_active' lesson_id=lesson.id %}" style="margin:0;">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-outline">
+                    {% if lesson.is_active %}停用课时{% else %}启用课时{% endif %}
+                </button>
+            </form>
+            <a class="btn btn-outline" href="{% url 'courses:manage_dashboard' %}">打开内容工作台</a>
+        </div>
+    {% endif %}
+</section>
+
+<section class="card" style="margin-top:1rem;">
+    <h2 style="margin-top:0;">学习操作</h2>
+    <div style="display:flex; gap:0.6rem; flex-wrap:wrap;">
+        {% if request.user.is_authenticated %}
+            <form method="post" action="{% url 'courses:mark_lesson_complete' lesson_id=lesson.id %}" style="margin:0;">
+                {% csrf_token %}
+                <button type="submit" class="btn">
+                    {% if progress and progress.completed %}
+                        已完成
+                    {% else %}
+                        标记为已完成
+                    {% endif %}
+                </button>
+            </form>
+        {% else %}
+            <a class="btn btn-outline" href="{% url 'accounts:login' %}?next={% url 'courses:lesson_detail' lesson_id=lesson.id %}">
+                登录后保存学习进度
+            </a>
+        {% endif %}
+    </div>
+</section>
+
+<section class="card" style="margin-top:1rem;">
+    <h2 style="margin-top:0;">课时测验</h2>
+    <p class="muted small">当前可用题目数：{{ question_count }}。</p>
+    {% if question_count > 0 %}
+        <a class="btn" href="{% url 'quiz:take_lesson_quiz' lesson_id=lesson.id %}">开始测验</a>
+    {% else %}
+        <span class="muted">本课时暂未配置题目。</span>
+    {% endif %}
+</section>
+
+<section class="card" style="margin-top:1rem;">
+    <h2 style="margin-top:0;">课时导航</h2>
+    <div style="display:flex; gap:0.6rem; flex-wrap:wrap;">
+        {% if previous_lesson %}
+            <a class="btn btn-outline" href="{% url 'courses:lesson_detail' lesson_id=previous_lesson.id %}">
+                上一课：{{ previous_lesson.title }}
+            </a>
+        {% endif %}
+        {% if next_lesson %}
+            <a class="btn btn-outline" href="{% url 'courses:lesson_detail' lesson_id=next_lesson.id %}">
+                下一课：{{ next_lesson.title }}
+            </a>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

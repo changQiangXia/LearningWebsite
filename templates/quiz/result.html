@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+
+{% block title %}测验结果 | LearningWebsite{% endblock %}
+
+{% block content %}
+<section class="card">
+    <h1 style="margin-top:0;">测验结果：{{ lesson.title }}</h1>
+    <p class="small">
+        提交编号：<strong>#{{ submission.id }}</strong><br>
+        模式：
+        <strong>
+            {% if quiz_mode == "wrong_retry" %}
+                错题重练
+            {% else %}
+                课时测验
+            {% endif %}
+        </strong><br>
+        得分：<strong>{{ user_score }}</strong> / {{ total_score }}<br>
+        答对：<strong>{{ correct_count }}</strong> / {{ question_count }}<br>
+        正确率：<strong>{{ accuracy }}%</strong>
+    </p>
+    <div style="display:flex; gap:0.6rem; flex-wrap:wrap;">
+        {% if quiz_mode == "wrong_retry" %}
+            <a class="btn" href="{% url 'quiz:retry_wrong_questions' lesson_id=lesson.id %}">继续重练未解决错题</a>
+        {% else %}
+            <a class="btn" href="{% url 'quiz:take_lesson_quiz' lesson_id=lesson.id %}">再次测验</a>
+        {% endif %}
+        <a class="btn btn-outline" href="{% url 'quiz:submission_history' %}">查看历史</a>
+        <a class="btn btn-outline" href="{% url 'quiz:wrong_question_list' %}">查看错题本</a>
+    </div>
+</section>
+
+<section class="card" style="margin-top:1rem;">
+    <h2 style="margin-top:0;">逐题反馈</h2>
+    <div class="stack">
+        {% for row in result_rows %}
+            <article style="border:1px solid var(--line); border-radius:10px; padding:0.9rem;">
+                <h3 style="margin:0;">第 {{ forloop.counter }} 题</h3>
+                <p style="margin:0.5rem 0; white-space:pre-wrap;">{{ row.question.stem }}</p>
+                <p class="small">
+                    作答：
+                    <strong>
+                        {% if row.user_answer %}
+                            {{ row.user_answer|join:", " }}
+                        {% else %}
+                            （空）
+                        {% endif %}
+                    </strong>
+                </p>
+                <p class="small">正确答案：<strong>{{ row.expected|join:", " }}</strong></p>
+                <p class="small">
+                    判定：
+                    {% if row.is_correct %}
+                        <span class="badge">正确</span>
+                    {% else %}
+                        <span class="badge">错误</span>
+                    {% endif %}
+                </p>
+                {% if row.question.explanation %}
+                    <p class="small muted">解析：{{ row.question.explanation }}</p>
+                {% endif %}
+            </article>
+        {% endfor %}
+    </div>
+</section>
+{% endblock %}

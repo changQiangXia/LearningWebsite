@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block title %}首页 | LearningWebsite{% endblock %}
+
+{% block content %}
+<section class="card">
+    <h1 style="margin-top:0;">LearningWebsite 开发基线已就绪</h1>
+    <p class="muted">当前项目运行在隔离 conda 环境 <code>learningwebsite</code> 中。</p>
+    <p>推荐启动命令：<code>conda run -n learningwebsite python manage.py runserver</code></p>
+</section>
+
+<section class="card" style="margin-top:1rem;">
+    <h2 style="margin-top:0;">模块入口</h2>
+    <div class="stack">
+        <a href="/accounts/">账户中心</a>
+        <a href="/forum/">论坛</a>
+        <a href="/search/">搜索</a>
+        <a href="/courses/">课程</a>
+        <a href="/quiz/">测验</a>
+        <a href="/analytics/">数据看板</a>
+        <a href="/admin/">后台管理</a>
+        <a href="/health/">健康检查</a>
+    </div>
+</section>
+{% endblock %}

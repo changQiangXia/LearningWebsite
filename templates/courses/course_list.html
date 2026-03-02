@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block title %}课程列表 | LearningWebsite{% endblock %}
+
+{% block content %}
+<section class="card">
+    <h1 style="margin-top:0;">课程列表</h1>
+    <p class="muted small">学生默认仅查看已发布课程；教务/管理员可查看全部状态课程。</p>
+</section>
+
+<section class="card" style="margin-top:1rem;">
+    {% if courses %}
+        <div class="stack">
+            {% for course in courses %}
+                <article style="border:1px solid var(--line); border-radius:10px; padding:0.9rem;">
+                    <div style="display:flex; justify-content:space-between; gap:0.8rem; flex-wrap:wrap;">
+                        <a href="{% url 'courses:course_detail' slug=course.slug %}" style="font-weight:600;">
+                            {{ course.title }}
+                        </a>
+                        <span class="badge">{{ course.get_status_display }}</span>
+                    </div>
+                    <p class="muted" style="margin:0.5rem 0 0;">
+                        {{ course.description|truncatechars:140|default:"暂无课程简介。" }}
+                    </p>
+                    <p class="small muted" style="margin:0.55rem 0 0;">
+                        章节数：{{ course.chapters.count }} | 创建者：{{ course.created_by.username|default:"-" }}
+                    </p>
+                    {% if request.user.is_authenticated %}
+                        <p class="small muted" style="margin:0.35rem 0 0;">
+                            学习进度：{{ course.progress_completed|default:0 }} / {{ course.progress_total|default:0 }}
+                            ({{ course.progress_rate|default:0 }}%)
+                        </p>
+                    {% endif %}
+                </article>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p class="muted">暂无可用课程。</p>
+    {% endif %}
+</section>
+{% endblock %}

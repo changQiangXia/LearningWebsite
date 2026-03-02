@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+
+{% block title %}搜索 | LearningWebsite{% endblock %}
+
+{% block content %}
+<section class="card">
+    <h1 style="margin-top:0;">站内搜索</h1>
+    <form method="get">
+        <div style="display:grid; grid-template-columns:1fr auto; gap:0.6rem;">
+            <input type="text" name="q" value="{{ keyword }}" placeholder="输入课程 / 课时 / 帖子 / 题目的关键词">
+            <button class="btn" type="submit">搜索</button>
+        </div>
+    </form>
+    {% if keyword %}
+        <p class="muted small" style="margin-bottom:0;">
+            关键词：<strong>{{ keyword }}</strong>，共 {{ total }} 条结果。
+        </p>
+    {% else %}
+        <p class="muted small" style="margin-bottom:0;">输入关键词后开始检索。</p>
+    {% endif %}
+</section>
+
+{% if keyword %}
+    <section class="card" style="margin-top:1rem;">
+        <h2 style="margin-top:0;">课程结果（{{ courses|length }}）</h2>
+        {% if courses %}
+            <ul>
+                {% for course in courses %}
+                    <li>
+                        <a href="{% url 'courses:course_detail' slug=course.slug %}"><strong>{{ course.title }}</strong></a>
+                        <span class="small muted">（状态：{{ course.get_status_display }}）</span>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p class="muted">未命中课程。</p>
+        {% endif %}
+    </section>
+
+    <section class="card" style="margin-top:1rem;">
+        <h2 style="margin-top:0;">课时结果（{{ lessons|length }}）</h2>
+        {% if lessons %}
+            <ul>
+                {% for lesson in lessons %}
+                    <li>
+                        <a href="{% url 'courses:lesson_detail' lesson_id=lesson.id %}"><strong>{{ lesson.title }}</strong></a>
+                        <span class="small muted">
+                            （课程：{{ lesson.chapter.course.title }} / 章节：{{ lesson.chapter.title }}）
+                        </span>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p class="muted">未命中课时。</p>
+        {% endif %}
+    </section>
+
+    <section class="card" style="margin-top:1rem;">
+        <h2 style="margin-top:0;">论坛结果（{{ posts|length }}）</h2>
+        {% if posts %}
+            <ul>
+                {% for post in posts %}
+                    <li>
+                        <a href="{% url 'forum:post_detail' post_id=post.id %}">{{ post.title }}</a>
+                        <span class="small muted">（作者：{{ post.author.username|default:"匿名" }}）</span>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p class="muted">未命中帖子。</p>
+        {% endif %}
+    </section>
+
+    <section class="card" style="margin-top:1rem;">
+        <h2 style="margin-top:0;">题目结果（{{ questions|length }}）</h2>
+        {% if questions %}
+            <ul>
+                {% for question in questions %}
+                    <li>
+                        <a href="{% url 'courses:lesson_detail' lesson_id=question.lesson_id %}">
+                            {{ question.stem|truncatechars:90 }}
+                        </a>
+                        <span class="small muted">（课时：{{ question.lesson.title }}）</span>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p class="muted">未命中题目。</p>
+        {% endif %}
+    </section>
+{% endif %}
+{% endblock %}

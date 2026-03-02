@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+
+{% block title %}我的错题本 | LearningWebsite{% endblock %}
+
+{% block content %}
+<section class="card">
+    <h1 style="margin-top:0;">我的错题本</h1>
+    <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
+        <a class="btn {% if status == 'open' %}{% else %}btn-outline{% endif %}" href="?status=open">未解决</a>
+        <a class="btn {% if status == 'resolved' %}{% else %}btn-outline{% endif %}" href="?status=resolved">已解决</a>
+        <a class="btn {% if status == 'all' %}{% else %}btn-outline{% endif %}" href="?status=all">全部</a>
+        <a class="btn btn-outline" href="{% url 'quiz:index' %}">返回测验中心</a>
+    </div>
+</section>
+
+<section class="card" style="margin-top:1rem;">
+    {% if page_obj.object_list %}
+        <div class="stack">
+            {% for item in page_obj.object_list %}
+                <article style="border:1px solid var(--line); border-radius:10px; padding:0.9rem;">
+                    <p class="small muted" style="margin-top:0;">
+                        课程：{{ item.question.lesson.chapter.course.title }}
+                        / 课时：{{ item.question.lesson.title }}
+                    </p>
+                    <p style="white-space:pre-wrap; margin:0.45rem 0;"><strong>题目：</strong>{{ item.question.stem }}</p>
+                    {% if item.question.explanation %}
+                        <p class="small muted"><strong>解析：</strong>{{ item.question.explanation }}</p>
+                    {% endif %}
+                    <p class="small">
+                        错误次数：<strong>{{ item.wrong_count }}</strong> |
+                        状态：
+                        {% if item.resolved %}
+                            <span class="badge">已解决</span>
+                        {% else %}
+                            <span class="badge">未解决</span>
+                        {% endif %}
+                        | 最近错误时间：{{ item.last_wrong_at|date:"Y-m-d H:i" }}
+                    </p>
+                    <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
+                        <a class="btn" href="{% url 'quiz:retry_wrong_questions' lesson_id=item.question.lesson_id %}">
+                            重练未解决错题
+                        </a>
+                        <a class="btn btn-outline" href="{% url 'quiz:take_lesson_quiz' lesson_id=item.question.lesson_id %}">
+                            重做整套课时测验
+                        </a>
+                    </div>
+                </article>
+            {% endfor %}
+        </div>
+
+        {% if page_obj.paginator.num_pages > 1 %}
+            <div style="display:flex; gap:0.5rem; flex-wrap:wrap; margin-top:1rem;">
+                {% if page_obj.has_previous %}
+                    <a class="btn btn-outline" href="?status={{ status }}&page={{ page_obj.previous_page_number }}">上一页</a>
+                {% endif %}
+                <span class="small muted" style="padding:0.45rem 0;">第 {{ page_obj.number }} / {{ page_obj.paginator.num_pages }} 页</span>
+                {% if page_obj.has_next %}
+                    <a class="btn btn-outline" href="?status={{ status }}&page={{ page_obj.next_page_number }}">下一页</a>
+                {% endif %}
+            </div>
+        {% endif %}
+    {% else %}
+        <p class="muted">当前筛选条件下暂无错题记录。</p>
+    {% endif %}
+</section>
+{% endblock %}

@@ -1,0 +1,23 @@
+﻿{% extends "base.html" %}
+
+{% block title %}发布帖子 | LearningWebsite{% endblock %}
+
+{% block content %}
+<section class="card" style="max-width:760px;">
+    <h1 style="margin-top:0;">发布新帖</h1>
+    <form method="post">
+        {% csrf_token %}
+        {% for field in form %}
+            <div class="form-row">
+                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                {{ field }}
+                {{ field.errors }}
+            </div>
+        {% endfor %}
+        <div style="display:flex; gap:0.6rem;">
+            <button class="btn" type="submit">提交</button>
+            <a class="btn btn-outline" href="{% url 'forum:post_list' %}">取消</a>
+        </div>
+    </form>
+</section>
+{% endblock %}

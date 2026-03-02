@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.log
+
+# Django
+db.sqlite3
+media/
+staticfiles/
+
+# Virtual environments
+.venv/
+venv/
+
+# Editors and OS
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Project docs to keep local only
+FULL_PYTHON_GRADUATION_PROJECT_PLAN.md
+docs/

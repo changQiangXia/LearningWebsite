@@ -1,0 +1,72 @@
+﻿{% extends "base.html" %}
+
+{% block title %}论坛 | LearningWebsite{% endblock %}
+
+{% block content %}
+<section class="card">
+    <div style="display:flex; justify-content:space-between; align-items:center; gap:0.8rem; flex-wrap:wrap;">
+        <h1 style="margin:0;">论坛</h1>
+        {% if request.user.is_authenticated %}
+            <a class="btn" href="{% url 'forum:post_create' %}">发布新帖</a>
+        {% else %}
+            <a class="btn btn-outline" href="{% url 'accounts:login' %}?next={% url 'forum:post_create' %}">
+                登录后发帖
+            </a>
+        {% endif %}
+    </div>
+
+    <form method="get" style="margin-top:1rem;">
+        <div style="display:grid; grid-template-columns:2fr 1fr auto; gap:0.6rem;">
+            <input type="text" name="q" value="{{ keyword }}" placeholder="搜索标题或正文">
+            <select name="category">
+                <option value="">全部分类</option>
+                <option value="discussion" {% if category == "discussion" %}selected{% endif %}>讨论</option>
+                <option value="help" {% if category == "help" %}selected{% endif %}>求助</option>
+                <option value="share" {% if category == "share" %}selected{% endif %}>分享</option>
+            </select>
+            <button class="btn" type="submit">筛选</button>
+        </div>
+    </form>
+</section>
+
+<section class="card" style="margin-top:1rem;">
+    {% if page_obj.object_list %}
+        <div class="stack">
+            {% for post in page_obj.object_list %}
+                <article style="border:1px solid var(--line); border-radius:10px; padding:0.9rem;">
+                    <div style="display:flex; justify-content:space-between; gap:0.8rem; flex-wrap:wrap;">
+                        <a href="{% url 'forum:post_detail' post_id=post.id %}" style="font-weight:600;">
+                            {{ post.title }}
+                        </a>
+                        <div class="small muted">
+                            浏览 {{ post.view_count }} · 最后活跃 {{ post.last_activity_at|date:"Y-m-d H:i" }}
+                        </div>
+                    </div>
+                    <div style="margin-top:0.4rem;">
+                        <span class="badge">{{ post.get_category_display }}</span>
+                        {% if post.is_pinned %}<span class="badge">置顶</span>{% endif %}
+                        {% if post.is_solved %}<span class="badge">已解决</span>{% endif %}
+                    </div>
+                    <p class="muted small" style="margin:0.5rem 0 0;">
+                        作者：{{ post.author.username|default:"匿名" }} · 创建时间：{{ post.created_at|date:"Y-m-d H:i" }}
+                    </p>
+                </article>
+            {% endfor %}
+        </div>
+
+        {% if page_obj.paginator.num_pages > 1 %}
+            <div style="margin-top:1rem; display:flex; gap:0.5rem; flex-wrap:wrap;">
+                {% if page_obj.has_previous %}
+                    <a class="btn btn-outline" href="?q={{ keyword }}&category={{ category }}&page={{ page_obj.previous_page_number }}">上一页</a>
+                {% endif %}
+                <span class="small muted" style="padding:0.45rem 0;">第 {{ page_obj.number }} / {{ page_obj.paginator.num_pages }} 页</span>
+                {% if page_obj.has_next %}
+                    <a class="btn btn-outline" href="?q={{ keyword }}&category={{ category }}&page={{ page_obj.next_page_number }}">下一页</a>
+                {% endif %}
+            </div>
+        {% endif %}
+    {% else %}
+        <p class="muted">暂无帖子，欢迎发布第一条内容。</p>
+    {% endif %}
+</section>
+{% endblock %}

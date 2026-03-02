@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block title %}注册 | LearningWebsite{% endblock %}
+
+{% block content %}
+<section class="card" style="max-width:620px; margin:0 auto;">
+    <h1 style="margin-top:0;">创建账户</h1>
+    <p class="muted small">新用户默认角色为学生。</p>
+    <form method="post">
+        {% csrf_token %}
+        {% if form.non_field_errors %}
+            {{ form.non_field_errors }}
+        {% endif %}
+        <div class="form-row">
+            <label for="{{ form.username.id_for_label }}">用户名</label>
+            {{ form.username }}
+            {{ form.username.errors }}
+        </div>
+        <div class="form-row">
+            <label for="{{ form.email.id_for_label }}">邮箱</label>
+            {{ form.email }}
+            {{ form.email.errors }}
+        </div>
+        <div class="form-row">
+            <label for="{{ form.password1.id_for_label }}">密码</label>
+            {{ form.password1 }}
+            {{ form.password1.errors }}
+        </div>
+        <div class="form-row">
+            <label for="{{ form.password2.id_for_label }}">确认密码</label>
+            {{ form.password2 }}
+            {{ form.password2.errors }}
+        </div>
+        <div style="display:flex; gap:0.6rem; flex-wrap:wrap;">
+            <button type="submit" class="btn">创建账户</button>
+            <a class="btn btn-outline" href="{% url 'accounts:login' %}">返回登录</a>
+        </div>
+    </form>
+</section>
+{% endblock %}

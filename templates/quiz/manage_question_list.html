@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% block title %}题目管理 | LearningWebsite{% endblock %}
+
+{% block content %}
+<section class="card">
+    <h1 style="margin-top:0;">题目管理</h1>
+    <p class="small muted">
+        所属课程：
+        <a href="{% url 'courses:course_detail' slug=lesson.chapter.course.slug %}">{{ lesson.chapter.course.title }}</a>
+        / {{ lesson.chapter.title }} / {{ lesson.title }}
+    </p>
+    <div style="display:flex; gap:0.6rem; flex-wrap:wrap;">
+        <a class="btn" href="{% url 'quiz:manage_question_create' lesson_id=lesson.id %}">新建题目</a>
+        <a class="btn btn-outline" href="{% url 'courses:lesson_detail' lesson_id=lesson.id %}">返回课时页</a>
+        <a class="btn btn-outline" href="{% url 'courses:manage_dashboard' %}">内容工作台</a>
+    </div>
+</section>
+
+<section class="card" style="margin-top:1rem;">
+    {% if questions %}
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>题型</th>
+                    <th>难度</th>
+                    <th>分值</th>
+                    <th>状态</th>
+                    <th>题干</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in questions %}
+                    <tr>
+                        <td>#{{ item.id }}</td>
+                        <td>{{ item.get_question_type_display }}</td>
+                        <td>{{ item.get_difficulty_display }}</td>
+                        <td>{{ item.score }}</td>
+                        <td>{% if item.is_active %}启用{% else %}停用{% endif %}</td>
+                        <td>{{ item.stem|truncatechars:90 }}</td>
+                        <td>
+                            <div style="display:flex; gap:0.4rem; flex-wrap:wrap;">
+                                <a class="btn btn-outline" href="{% url 'quiz:manage_question_edit' question_id=item.id %}">编辑</a>
+                                <form method="post" action="{% url 'quiz:manage_question_toggle_active' question_id=item.id %}" style="margin:0;">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-outline">
+                                        {% if item.is_active %}停用{% else %}启用{% endif %}
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p class="muted">暂无题目，请先创建第一题。</p>
+    {% endif %}
+</section>
+{% endblock %}

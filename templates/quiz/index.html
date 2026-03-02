@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block title %}测验中心 | LearningWebsite{% endblock %}
+
+{% block content %}
+<section class="card">
+    <h1 style="margin-top:0;">测验中心</h1>
+    <p class="muted small">选择课时即可开始测验；登录后可查看提交历史与错题本。</p>
+    <div style="display:flex; gap:0.6rem; flex-wrap:wrap;">
+        {% if request.user.is_authenticated %}
+            <a class="btn btn-outline" href="{% url 'quiz:submission_history' %}">我的提交历史</a>
+            <a class="btn btn-outline" href="{% url 'quiz:wrong_question_list' %}">我的错题本</a>
+        {% else %}
+            <a class="btn btn-outline" href="{% url 'accounts:login' %}?next={% url 'quiz:index' %}">登录后查看历史</a>
+        {% endif %}
+    </div>
+</section>
+
+<section class="card" style="margin-top:1rem;">
+    {% if lessons %}
+        <div class="stack">
+            {% for lesson in lessons %}
+                <article style="border:1px solid var(--line); border-radius:10px; padding:0.9rem;">
+                    <h3 style="margin:0;">{{ lesson.title }}</h3>
+                    <p class="small muted">
+                        课程：{{ lesson.chapter.course.title }} / 章节：{{ lesson.chapter.title }}
+                    </p>
+                    <div style="display:flex; gap:0.6rem; flex-wrap:wrap;">
+                        <a class="btn" href="{% url 'quiz:take_lesson_quiz' lesson_id=lesson.id %}">开始测验</a>
+                        <a class="btn btn-outline" href="{% url 'courses:lesson_detail' lesson_id=lesson.id %}">返回课时页</a>
+                    </div>
+                </article>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p class="muted">暂无可测验课时。教师可在内容工作台中为课时添加启用状态题目。</p>
+    {% endif %}
+</section>
+{% endblock %}

@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+
+{% block title %}{{ course.title }} | LearningWebsite{% endblock %}
+
+{% block content %}
+<section class="card">
+    <div style="display:flex; justify-content:space-between; gap:0.6rem; flex-wrap:wrap; align-items:center;">
+        <h1 style="margin:0;">{{ course.title }}</h1>
+        {% if can_manage_course %}
+            <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
+                <a class="btn btn-outline" href="{% url 'courses:manage_course_edit' course_id=course.id %}">编辑课程</a>
+                <a class="btn btn-outline" href="{% url 'courses:manage_chapter_create' course_id=course.id %}">新增章节</a>
+            </div>
+        {% endif %}
+    </div>
+    <p><span class="badge">{{ course.get_status_display }}</span></p>
+    <p class="muted">{{ course.description|default:"暂无课程简介。" }}</p>
+    {% if request.user.is_authenticated %}
+        <p class="small muted">
+            已完成课时：{{ completed_count }} / {{ total_lessons }} ({{ completion_rate }}%)
+        </p>
+    {% endif %}
+    <a class="btn btn-outline" href="{% url 'courses:course_list' %}">返回课程列表</a>
+</section>
+
+<section class="card" style="margin-top:1rem;">
+    <h2 style="margin-top:0;">章节与课时</h2>
+    {% if chapters %}
+        <div class="stack">
+            {% for chapter in chapters %}
+                <article style="border:1px solid var(--line); border-radius:10px; padding:0.9rem;">
+                    <h3 style="margin:0;">
+                        第 {{ chapter.order_no }} 章：{{ chapter.title }}
+                        {% if not chapter.is_active %}
+                            <span class="badge">未启用</span>
+                        {% endif %}
+                    </h3>
+                    {% if chapter.description %}
+                        <p class="muted small">{{ chapter.description }}</p>
+                    {% endif %}
+                    {% if can_manage_course %}
+                        <p style="margin:0.35rem 0; display:flex; gap:0.5rem; flex-wrap:wrap;">
+                                <a class="btn btn-outline" href="{% url 'courses:manage_chapter_edit' chapter_id=chapter.id %}">
+                                编辑章节
+                            </a>
+                            <a class="btn btn-outline" href="{% url 'courses:manage_lesson_create' chapter_id=chapter.id %}">
+                                新增课时
+                            </a>
+                            <form method="post" action="{% url 'courses:manage_chapter_toggle_active' chapter_id=chapter.id %}" style="margin:0;">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-outline">
+                                    {% if chapter.is_active %}停用章节{% else %}启用章节{% endif %}
+                                </button>
+                            </form>
+                        </p>
+                    {% endif %}
+                    {% if chapter.lessons.all %}
+                        <ul style="margin-bottom:0;">
+                            {% for lesson in chapter.lessons.all %}
+                                <li>
+                                    <a href="{% url 'courses:lesson_detail' lesson_id=lesson.id %}">
+                                        第 {{ lesson.order_no }} 课：{{ lesson.title }}
+                                    </a>
+                                    <span class="small muted">（预计 {{ lesson.estimated_minutes }} 分钟）</span>
+                                    {% if not lesson.is_active %}
+                                        <span class="badge">未启用</span>
+                                    {% endif %}
+                                    {% if lesson.id in completed_lesson_ids %}
+                                        <span class="badge">已完成</span>
+                                    {% endif %}
+                                    {% if can_manage_course %}
+                                        <a class="small" href="{% url 'courses:manage_lesson_edit' lesson_id=lesson.id %}" style="margin-left:0.4rem;">
+                                            编辑
+                                        </a>
+                                        <a class="small" href="{% url 'quiz:manage_question_list' lesson_id=lesson.id %}" style="margin-left:0.4rem;">
+                                            题目
+                                        </a>
+                                        <form method="post" action="{% url 'courses:manage_lesson_toggle_active' lesson_id=lesson.id %}" style="display:inline; margin:0;">
+                                            {% csrf_token %}
+                                            <button type="submit" class="small" style="background:none; border:none; color:var(--brand); cursor:pointer; padding:0; margin-left:0.4rem;">
+                                                {% if lesson.is_active %}停用{% else %}启用{% endif %}
+                                            </button>
+                                        </form>
+                                    {% endif %}
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <p class="muted small">本章节暂无课时。</p>
+                    {% endif %}
+                </article>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p class="muted">暂无章节。</p>
+    {% endif %}
+</section>
+{% endblock %}
