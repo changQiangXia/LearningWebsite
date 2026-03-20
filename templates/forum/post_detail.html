@@ -3,87 +3,104 @@
 {% block title %}帖子详情 | LearningWebsite{% endblock %}
 
 {% block content %}
-<section class="card">
-    <div style="display:flex; justify-content:space-between; gap:0.8rem; flex-wrap:wrap; align-items:flex-start;">
-        <div>
-            <div style="display:flex; gap:0.35rem; flex-wrap:wrap; margin-bottom:0.55rem;">
-                <span class="badge">{{ post.get_category_display }}</span>
-                {% if post.lesson %}<span class="badge">第 {{ post.lesson.order_no }} 课时</span>{% endif %}
-                {% if post.is_pinned %}<span class="badge">置顶</span>{% endif %}
-                {% if post.is_solved %}<span class="badge">已解决</span>{% endif %}
-                <span class="badge">{{ post.get_status_display }}</span>
+<section class="card hero-panel reveal">
+    <div class="hero-copy">
+        <div class="hero-meta">
+            <span class="badge">{{ post.get_category_display }}</span>
+            {% if post.lesson %}<span class="badge">第 {{ post.lesson.order_no }} 课时</span>{% endif %}
+            {% if post.is_pinned %}<span class="badge">置顶</span>{% endif %}
+            {% if post.is_solved %}<span class="badge">已解决</span>{% endif %}
+            <span class="badge">{{ post.get_status_display }}</span>
+        </div>
+        <h1>{{ post.title }}</h1>
+        <p class="display-copy">
+            作者：{{ post.author.username|default:"匿名" }} · 发布时间：{{ post.created_at|date:"Y-m-d H:i" }} · 浏览 {{ post.view_count }} · 点赞 {{ post.like_total }} · 评论 {{ post.comment_total }}
+            {% if post.lesson %}<br>关联课时：{{ post.lesson.title }}{% endif %}
+        </p>
+        <div class="hero-actions">
+            <a class="btn btn-outline" href="{% url 'forum:post_list' %}">返回列表</a>
+            {% if request.user.is_authenticated %}
+                <form method="post" action="{% url 'forum:toggle_like' post_id=post.id %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-outline">{% if is_liked %}取消点赞{% else %}点赞帖子{% endif %}</button>
+                </form>
+                <form method="post" action="{% url 'accounts:toggle_favorite' target_type='post' target_id=post.id %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="next" value="{{ request.path }}">
+                    <button type="submit" class="btn btn-outline">{% if is_favorited %}取消收藏{% else %}收藏帖子{% endif %}</button>
+                </form>
+            {% endif %}
+        </div>
+        {% if request.user.is_authenticated %}
+            <div class="hero-actions">
+                {% if can_toggle_solved %}
+                    <form method="post" action="{% url 'forum:toggle_solved' post_id=post.id %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-outline">{% if post.is_solved %}标记为未解决{% else %}标记为已解决{% endif %}</button>
+                    </form>
+                {% endif %}
+                {% if can_moderate %}
+                    <form method="post" action="{% url 'forum:toggle_pin' post_id=post.id %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-outline">{% if post.is_pinned %}取消置顶{% else %}置顶帖子{% endif %}</button>
+                    </form>
+                    <form method="post" action="{% url 'forum:change_status' post_id=post.id %}" class="inline-form">
+                        {% csrf_token %}
+                        <select name="status" style="min-width:160px;">
+                            <option value="published" {% if post.status == "published" %}selected{% endif %}>已发布</option>
+                            <option value="hidden" {% if post.status == "hidden" %}selected{% endif %}>已隐藏</option>
+                            <option value="deleted" {% if post.status == "deleted" %}selected{% endif %}>已删除</option>
+                        </select>
+                        <button type="submit" class="btn btn-outline">更新状态</button>
+                    </form>
+                {% endif %}
             </div>
-            <h1 style="margin:0;">{{ post.title }}</h1>
-            <p class="small muted" style="margin:0.45rem 0 0; line-height:1.7;">
-                作者：{{ post.author.username|default:"匿名" }} · 发布时间：{{ post.created_at|date:"Y-m-d H:i" }} · 浏览 {{ post.view_count }} · 点赞 {{ post.like_total }} · 评论 {{ post.comment_total }}
-                {% if post.lesson %}<br>关联课时：{{ post.lesson.title }}{% endif %}
-            </p>
-        </div>
-        <a class="btn btn-outline" href="{% url 'forum:post_list' %}">返回列表</a>
+        {% endif %}
     </div>
-
-    {% if request.user.is_authenticated %}
-        <div style="display:flex; gap:0.5rem; flex-wrap:wrap; margin:1rem 0;">
-            <form method="post" action="{% url 'forum:toggle_like' post_id=post.id %}" style="margin:0;">
-                {% csrf_token %}
-                <button type="submit" class="btn btn-outline">{% if is_liked %}取消点赞{% else %}点赞帖子{% endif %}</button>
-            </form>
-            <form method="post" action="{% url 'accounts:toggle_favorite' target_type='post' target_id=post.id %}" style="margin:0;">
-                {% csrf_token %}
-                <input type="hidden" name="next" value="{{ request.path }}">
-                <button type="submit" class="btn btn-outline">{% if is_favorited %}取消收藏{% else %}收藏帖子{% endif %}</button>
-            </form>
-            {% if can_toggle_solved %}
-                <form method="post" action="{% url 'forum:toggle_solved' post_id=post.id %}" style="margin:0;">
-                    {% csrf_token %}
-                    <button type="submit" class="btn btn-outline">{% if post.is_solved %}标记为未解决{% else %}标记为已解决{% endif %}</button>
-                </form>
-            {% endif %}
-            {% if can_moderate %}
-                <form method="post" action="{% url 'forum:toggle_pin' post_id=post.id %}" style="margin:0;">
-                    {% csrf_token %}
-                    <button type="submit" class="btn btn-outline">{% if post.is_pinned %}取消置顶{% else %}置顶帖子{% endif %}</button>
-                </form>
-                <form method="post" action="{% url 'forum:change_status' post_id=post.id %}" style="margin:0; display:flex; gap:0.45rem; flex-wrap:wrap;">
-                    {% csrf_token %}
-                    <select name="status" style="min-width:150px;">
-                        <option value="published" {% if post.status == "published" %}selected{% endif %}>已发布</option>
-                        <option value="hidden" {% if post.status == "hidden" %}selected{% endif %}>已隐藏</option>
-                        <option value="deleted" {% if post.status == "deleted" %}selected{% endif %}>已删除</option>
-                    </select>
-                    <button type="submit" class="btn btn-outline">更新状态</button>
-                </form>
-            {% endif %}
+    <div class="hero-subgrid">
+        <div class="content-panel">
+            <strong>帖子正文</strong>
+            <div class="rich-text" style="margin-top:0.7rem;">{{ post.content }}</div>
         </div>
-    {% endif %}
-
-    <article style="white-space:pre-wrap; line-height:1.8;">{{ post.content }}</article>
+    </div>
 </section>
 
-<section class="card" style="margin-top:1rem;">
-    <h2 style="margin-top:0;">评论区（{{ comments|length }}）</h2>
+<section class="card reveal">
+    <div class="section-head">
+        <div>
+            <span class="eyebrow">Comments</span>
+            <h2>评论区（{{ comments|length }}）</h2>
+        </div>
+    </div>
     {% if comments %}
         <div class="stack">
             {% for comment in comments %}
-                <article style="border:1px solid var(--line); border-radius:10px; padding:0.9rem;">
-                    <p class="small muted" style="margin:0;">
+                <article class="content-panel">
+                    <p class="small muted">
                         {{ comment.author.username|default:"匿名" }} · {{ comment.created_at|date:"Y-m-d H:i" }}
                         {% if comment.parent_id %} · 回复 #{{ comment.parent_id }}{% endif %}
                     </p>
-                    <p style="margin:0.55rem 0 0; white-space:pre-wrap; line-height:1.7;">{{ comment.content }}</p>
+                    <p class="rich-text" style="margin-top:0.7rem;">{{ comment.content }}</p>
                     {% if request.user.is_authenticated %}
-                        <p style="margin:0.55rem 0 0;"><a class="small" href="{% url 'forum:post_detail' post_id=post.id %}?reply_to={{ comment.id }}#comment-form">回复这条评论</a></p>
+                        <div class="hero-actions" style="margin-top:0.8rem;">
+                            <a class="btn btn-outline" href="{% url 'forum:post_detail' post_id=post.id %}?reply_to={{ comment.id }}#comment-form">回复这条评论</a>
+                        </div>
                     {% endif %}
                 </article>
             {% endfor %}
         </div>
     {% else %}
-        <p class="muted">暂无评论。</p>
+        <p class="empty-state">暂无评论。</p>
     {% endif %}
 </section>
 
-<section class="card" style="margin-top:1rem;" id="comment-form">
-    <h2 style="margin-top:0;">发表评论</h2>
+<section class="card reveal" id="comment-form">
+    <div class="section-head">
+        <div>
+            <span class="eyebrow">Reply</span>
+            <h2>发表评论</h2>
+        </div>
+    </div>
     {% if request.user.is_authenticated %}
         <form method="post" action="{% url 'forum:comment_create' post_id=post.id %}">
             {% csrf_token %}
@@ -96,7 +113,7 @@
             <button type="submit" class="btn">提交评论</button>
         </form>
     {% else %}
-        <p class="muted">请先登录后再发表评论。</p>
+        <p class="empty-state">请先登录后再发表评论。</p>
         <a class="btn" href="{% url 'accounts:login' %}?next={% url 'forum:post_detail' post_id=post.id %}">前往登录</a>
     {% endif %}
 </section>

@@ -1,53 +1,53 @@
-{% extends "base.html" %}
+﻿{% extends "base.html" %}
 
 {% block title %}教学指引 | LearningWebsite{% endblock %}
 
 {% block content %}
-<section class="card">
-    <div style="display:flex; justify-content:space-between; gap:0.8rem; flex-wrap:wrap; align-items:center;">
-        <div>
-            <h1 style="margin:0;">教学指引</h1>
-            <p class="muted small" style="margin:0.35rem 0 0;">围绕教学目标、重点难点和实践建议进行内容组织。</p>
+<section class="card hero-panel reveal">
+    <div class="hero-copy">
+        <span class="eyebrow">Teaching Guides</span>
+        <h1>教学指引</h1>
+        <p class="display-copy">围绕教学目标、重点难点、教学建议、作业设计与评价建议组织内容，为教师备课与课堂实施提供结构化支撑。</p>
+        <form method="get" class="inline-form" style="margin-top:1.2rem;">
+            <input type="text" name="q" value="{{ keyword }}" placeholder="搜索指引标题或单元名称">
+            <button class="btn" type="submit">搜索</button>
+        </form>
+    </div>
+    <div class="hero-subgrid">
+        <div class="content-panel">
+            <strong>当前可见指引</strong>
+            <p class="section-copy">共 {{ guides|length }} 项。每条指引都与课程绑定，可在课程详情页和教师教学场景中联动展示。</p>
         </div>
         {% if can_manage_guides %}
-            <div style="display:flex; gap:0.6rem; flex-wrap:wrap;">
+            <div class="inline-actions">
                 <a class="btn" href="{% url 'guides:manage_guide_create' %}">新增指引</a>
                 <a class="btn btn-outline" href="{% url 'guides:manage_guide_list' %}">指引管理</a>
             </div>
         {% endif %}
     </div>
-
-    <form method="get" style="margin-top:1rem;">
-        <div style="display:grid; grid-template-columns:1fr auto; gap:0.6rem;">
-            <input type="text" name="q" value="{{ keyword }}" placeholder="搜索指引标题或单元名称">
-            <button class="btn" type="submit">搜索</button>
-        </div>
-    </form>
 </section>
 
-<section class="card" style="margin-top:1rem;">
+<section class="card reveal">
     {% if guides %}
         <div class="stack">
             {% for guide in guides %}
-                <article style="border:1px solid var(--line); border-radius:10px; padding:0.9rem;">
-                    <div style="display:flex; justify-content:space-between; gap:0.8rem; flex-wrap:wrap;">
+                <article class="content-panel">
+                    <div class="section-head" style="margin-bottom:0.8rem; align-items:start;">
                         <div>
-                            <a href="{% url 'guides:guide_detail' guide_id=guide.id %}" style="font-weight:700;">{{ guide.title }}</a>
-                            <p class="small muted" style="margin:0.35rem 0 0;">
-                                课程：{{ guide.course.title }}{% if guide.unit_name %} | 单元：{{ guide.unit_name }}{% endif %}
-                            </p>
+                            <a href="{% url 'guides:guide_detail' guide_id=guide.id %}"><strong>{{ guide.title }}</strong></a>
+                            <p class="section-copy">课程：{{ guide.course.title }}{% if guide.unit_name %} · 单元：{{ guide.unit_name }}{% endif %}</p>
                         </div>
-                        <div>
+                        <div class="note-line">
                             <span class="badge">第 {{ guide.order_no }} 项</span>
                             {% if not guide.is_published %}<span class="badge">未公开</span>{% endif %}
                         </div>
                     </div>
-                    <p class="muted" style="margin-bottom:0;">{{ guide.objectives|truncatechars:120 }}</p>
+                    <p class="section-copy">{{ guide.objectives|truncatechars:120 }}</p>
                 </article>
             {% endfor %}
         </div>
     {% else %}
-        <p class="muted">当前暂无教学指引。</p>
+        <p class="empty-state">当前暂无教学指引。</p>
     {% endif %}
 </section>
 {% endblock %}

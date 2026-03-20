@@ -1,35 +1,41 @@
-{% extends "base.html" %}
+﻿{% extends "base.html" %}
 
 {% block title %}语音识别体验 | LearningWebsite{% endblock %}
 
 {% block content %}
-<section class="card">
-    <h1 style="margin-top:0;">语音识别体验</h1>
-    <p class="muted">本页面调用浏览器语音识别能力，将语音实时转写为文字，用于展示 AI 在学习记录中的应用。</p>
-    <div style="display:flex; gap:0.6rem; flex-wrap:wrap; margin-bottom:1rem;">
-        <button class="btn" type="button" id="start-recognition">开始识别</button>
-        <button class="btn btn-outline" type="button" id="stop-recognition">停止识别</button>
+<section class="card hero-panel reveal">
+    <div class="hero-copy">
+        <span class="eyebrow">Speech Recognition</span>
+        <h1>语音识别体验</h1>
+        <p class="display-copy">本页面调用浏览器语音识别能力，将语音实时转写为文字，用于展示 AI 在学习记录中的应用。</p>
+        <div class="hero-actions">
+            <button class="btn" type="button" id="start-recognition">开始识别</button>
+            <button class="btn btn-outline" type="button" id="stop-recognition">停止识别</button>
+        </div>
     </div>
-    <form method="post">
-        {% csrf_token %}
-        {% for field in form %}
-            <div class="form-row">
-                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
-                {{ field }}
-                {{ field.errors }}
-            </div>
-        {% endfor %}
-        <button class="btn" type="submit">保存识别结果</button>
-    </form>
+    <div class="hero-subgrid">
+        <div class="content-panel">
+            <form method="post">
+                {% csrf_token %}
+                {% for field in form %}
+                    <div class="form-row">
+                        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                        {{ field }}
+                        {{ field.errors }}
+                    </div>
+                {% endfor %}
+                <button class="btn" type="submit">保存识别结果</button>
+            </form>
+        </div>
+        <div class="content-panel">
+            <strong>使用说明</strong>
+            <p class="section-copy">如果浏览器支持 Web Speech API，点击“开始识别”后可直接语音输入。若浏览器不支持，也可以手动粘贴文本后保存。</p>
+        </div>
+    </div>
 </section>
+{% endblock %}
 
-<section class="card" style="margin-top:1rem;">
-    <h2 style="margin-top:0;">使用说明</h2>
-    <p class="muted" style="margin-bottom:0;">
-        如果浏览器支持 Web Speech API，点击“开始识别”后可直接语音输入。若浏览器不支持，也可以手动粘贴文本后保存。
-    </p>
-</section>
-
+{% block extra_scripts %}
 <script>
     (function () {
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;

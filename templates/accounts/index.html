@@ -1,147 +1,171 @@
-{% extends "base.html" %}
+﻿{% extends "base.html" %}
 
 {% block title %}账户中心 | LearningWebsite{% endblock %}
 
 {% block content %}
-<section class="card">
-    <div style="display:flex; justify-content:space-between; gap:1rem; flex-wrap:wrap; align-items:flex-start;">
-        <div style="display:flex; gap:1rem; flex-wrap:wrap; align-items:center;">
+<section class="card hero-panel reveal">
+    <div class="hero-copy">
+        <span class="eyebrow">Personal Hub</span>
+        <h1>账户中心</h1>
+        <div class="profile-inline" style="margin-top:1.2rem;">
             {% if request.user.profile.avatar %}
-                <img src="{{ request.user.profile.avatar.url }}" alt="头像" style="width:88px; height:88px; border-radius:14px; object-fit:cover; border:1px solid var(--line);">
-            {% else %}
-                <div style="width:88px; height:88px; border-radius:14px; background:var(--brand-soft); color:var(--brand); display:flex; align-items:center; justify-content:center; font-size:1.5rem; font-weight:700;">
-                    {{ request.user.username|slice:":1"|upper }}
+                <div class="avatar-shell">
+                    <img src="{{ request.user.profile.avatar.url }}" alt="头像">
                 </div>
+            {% else %}
+                <div class="avatar-shell">{{ request.user.username|slice:":1"|upper }}</div>
             {% endif %}
             <div>
-                <h1 style="margin:0;">{{ request.user.username }}</h1>
-                <p class="small muted" style="margin:0.35rem 0 0;">
-                    {{ request.user.profile.get_role_display }} · 注册时间 {{ registered_at|date:"Y-m-d H:i" }}
-                </p>
-                <p class="small muted" style="margin:0.25rem 0 0;">
-                    {{ request.user.email|default:"未填写邮箱" }}
-                    {% if request.user.profile.school %} · {{ request.user.profile.school }}{% endif %}
-                    {% if request.user.profile.major %} · {{ request.user.profile.major }}{% endif %}
-                </p>
+                <h2>{{ request.user.username }}</h2>
+                <p class="section-copy">{{ request.user.profile.get_role_display }} · 注册时间 {{ registered_at|date:"Y-m-d H:i" }}</p>
+                <p class="section-copy">{{ request.user.email|default:"未填写邮箱" }}{% if request.user.profile.school %} · {{ request.user.profile.school }}{% endif %}{% if request.user.profile.major %} · {{ request.user.profile.major }}{% endif %}</p>
             </div>
         </div>
-        <a class="btn btn-outline" href="{% url 'accounts:profile_edit' %}">编辑资料</a>
+        <div class="hero-actions">
+            <a class="btn btn-outline" href="{% url 'accounts:profile_edit' %}">编辑资料</a>
+        </div>
     </div>
-</section>
-
-<section class="card" style="margin-top:1rem;">
-    <h2 style="margin-top:0;">学习概览</h2>
-    <div class="stats-grid">
-        <div style="border:1px solid var(--line); border-radius:10px; padding:0.8rem;">
-            <div class="small muted">已完成课时</div>
-            <div style="font-size:1.25rem; font-weight:700;">{{ completed_count }}</div>
-            <div class="small muted">总可学课时 {{ total_available_lessons }}</div>
-        </div>
-        <div style="border:1px solid var(--line); border-radius:10px; padding:0.8rem;">
-            <div class="small muted">学习中课时</div>
-            <div style="font-size:1.25rem; font-weight:700;">{{ in_progress_count }}</div>
-            <div class="small muted">持续推进中的内容</div>
-        </div>
-        <div style="border:1px solid var(--line); border-radius:10px; padding:0.8rem;">
-            <div class="small muted">在线答题次数</div>
-            <div style="font-size:1.25rem; font-weight:700;">{{ answer_count }}</div>
-            <div class="small muted">已记录测验提交</div>
-        </div>
-        <div style="border:1px solid var(--line); border-radius:10px; padding:0.8rem;">
-            <div class="small muted">未解决错题</div>
-            <div style="font-size:1.25rem; font-weight:700;">{{ wrong_question_count }}</div>
-            <div class="small muted">可继续复习重做</div>
-        </div>
-        <div style="border:1px solid var(--line); border-radius:10px; padding:0.8rem;">
-            <div class="small muted">收藏内容</div>
-            <div style="font-size:1.25rem; font-weight:700;">{{ favorite_count }}</div>
-            <div class="small muted">课程、资源、帖子与指引</div>
-        </div>
-        <div style="border:1px solid var(--line); border-radius:10px; padding:0.8rem;">
-            <div class="small muted">学习统计</div>
-            <div style="font-size:1.25rem; font-weight:700;">{{ activity_days }}</div>
-            <div class="small muted">活跃天数 · 发帖 {{ community_post_count }} 篇</div>
+    <div class="hero-subgrid">
+        <div class="metric-panel">
+            <div class="panel-label">学习概览</div>
+            <div class="metric-grid">
+                <div class="metric-item">
+                    <span>已完成课时</span>
+                    <strong>{{ completed_count }}</strong>
+                </div>
+                <div class="metric-item">
+                    <span>学习中课时</span>
+                    <strong>{{ in_progress_count }}</strong>
+                </div>
+                <div class="metric-item">
+                    <span>在线答题次数</span>
+                    <strong>{{ answer_count }}</strong>
+                </div>
+                <div class="metric-item">
+                    <span>未解决错题</span>
+                    <strong>{{ wrong_question_count }}</strong>
+                </div>
+            </div>
         </div>
     </div>
 </section>
 
-<section class="card" style="margin-top:1rem;">
-    <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:1rem;">
+<section class="card reveal">
+    <div class="section-head">
         <div>
-            <h2 style="margin-top:0;">最近答题记录</h2>
+            <span class="eyebrow">Statistics</span>
+            <h2>学习概览</h2>
+        </div>
+    </div>
+    <div class="stats-grid">
+        <article class="metric-card">
+            <strong>{{ completed_count }}</strong>
+            <p class="section-copy">已完成课时 / 总可学课时 {{ total_available_lessons }}</p>
+        </article>
+        <article class="metric-card">
+            <strong>{{ in_progress_count }}</strong>
+            <p class="section-copy">学习中课时，代表持续推进中的内容。</p>
+        </article>
+        <article class="metric-card">
+            <strong>{{ answer_count }}</strong>
+            <p class="section-copy">已记录测验提交。</p>
+        </article>
+        <article class="metric-card">
+            <strong>{{ wrong_question_count }}</strong>
+            <p class="section-copy">可继续复习重做的未解决错题。</p>
+        </article>
+        <article class="metric-card">
+            <strong>{{ favorite_count }}</strong>
+            <p class="section-copy">课程、资源、帖子与指引收藏总数。</p>
+        </article>
+        <article class="metric-card">
+            <strong>{{ activity_days }}</strong>
+            <p class="section-copy">活跃天数 · 发帖 {{ community_post_count }} 篇。</p>
+        </article>
+    </div>
+</section>
+
+<section class="card reveal">
+    <div class="split-grid">
+        <article class="content-panel">
+            <div class="section-head" style="margin-bottom:0.8rem;">
+                <h2>最近答题记录</h2>
+            </div>
             {% if recent_submissions %}
                 <div class="stack">
                     {% for submission in recent_submissions %}
-                        <article style="border:1px solid var(--line); border-radius:10px; padding:0.8rem;">
-                            <a href="{% url 'courses:lesson_detail' lesson_id=submission.lesson_id %}" style="font-weight:700;">{{ submission.lesson.title }}</a>
-                            <p class="small muted" style="margin:0.35rem 0 0;">
-                                得分 {{ submission.earned_score }}/{{ submission.total_score }} · 正确率 {{ submission.accuracy }}%
-                            </p>
+                        <article class="content-panel">
+                            <a href="{% url 'courses:lesson_detail' lesson_id=submission.lesson_id %}"><strong>{{ submission.lesson.title }}</strong></a>
+                            <p class="section-copy">得分 {{ submission.earned_score }}/{{ submission.total_score }} · 正确率 {{ submission.accuracy }}%</p>
                         </article>
                     {% endfor %}
                 </div>
             {% else %}
-                <p class="muted">暂时还没有答题记录。</p>
+                <p class="empty-state">暂时还没有答题记录。</p>
             {% endif %}
-        </div>
-        <div>
-            <h2 style="margin-top:0;">我的笔记</h2>
-            <p class="small muted" style="margin:0 0 0.6rem;">公开笔记与学习心得会同步展示在社区中。</p>
+        </article>
+
+        <article class="content-panel">
+            <div class="section-head" style="margin-bottom:0.8rem;">
+                <h2>我的笔记</h2>
+            </div>
+            <p class="section-copy" style="margin-bottom:0.8rem;">公开笔记与学习心得会同步展示在社区中。</p>
             {% if my_notes %}
                 <div class="stack">
                     {% for note in my_notes %}
-                        <article style="border:1px solid var(--line); border-radius:10px; padding:0.8rem;">
-                            <a href="{% url 'forum:post_detail' post_id=note.id %}" style="font-weight:700;">{{ note.title }}</a>
-                            <p class="small muted" style="margin:0.35rem 0 0;">
-                                {% if note.lesson %}{{ note.lesson.title }} · {% endif %}{{ note.created_at|date:"Y-m-d H:i" }}
-                            </p>
+                        <article class="content-panel">
+                            <a href="{% url 'forum:post_detail' post_id=note.id %}"><strong>{{ note.title }}</strong></a>
+                            <p class="section-copy">{% if note.lesson %}{{ note.lesson.title }} · {% endif %}{{ note.created_at|date:"Y-m-d H:i" }}</p>
                         </article>
                     {% endfor %}
                 </div>
             {% else %}
-                <p class="muted">还没有发布学习笔记。</p>
+                <p class="empty-state">还没有发布学习笔记。</p>
             {% endif %}
-        </div>
+        </article>
     </div>
 </section>
 
-<section class="card" style="margin-top:1rem;">
-    <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:1rem;">
-        <div>
-            <h2 style="margin-top:0;">我的收藏</h2>
+<section class="card reveal">
+    <div class="split-grid">
+        <article class="content-panel">
+            <div class="section-head" style="margin-bottom:0.8rem;">
+                <h2>我的收藏</h2>
+            </div>
             {% if favorite_items %}
                 <div class="stack">
                     {% for item in favorite_items %}
-                        <article style="border:1px solid var(--line); border-radius:10px; padding:0.8rem;">
-                            <a href="{{ item.url }}" style="font-weight:700;">{{ item.title }}</a>
-                            <p class="small muted" style="margin:0.35rem 0 0;">{{ item.target_type }} · 收藏于 {{ item.created_at|date:"Y-m-d H:i" }}</p>
+                        <article class="content-panel">
+                            <a href="{{ item.url }}"><strong>{{ item.title }}</strong></a>
+                            <p class="section-copy">{{ item.target_type }} · 收藏于 {{ item.created_at|date:"Y-m-d H:i" }}</p>
                         </article>
                     {% endfor %}
                 </div>
             {% else %}
-                <p class="muted">当前还没有收藏内容。</p>
+                <p class="empty-state">当前还没有收藏内容。</p>
             {% endif %}
-        </div>
-        <div>
-            <h2 style="margin-top:0;">错题本</h2>
+        </article>
+
+        <article class="content-panel">
+            <div class="section-head" style="margin-bottom:0.8rem;">
+                <h2>错题本</h2>
+            </div>
             {% if wrong_questions %}
                 <div class="stack">
                     {% for item in wrong_questions %}
-                        <article style="border:1px solid var(--line); border-radius:10px; padding:0.8rem;">
-                            <a href="{% url 'courses:lesson_detail' lesson_id=item.question.lesson_id %}" style="font-weight:700;">
-                                {{ item.question.stem|truncatechars:56 }}
-                            </a>
-                            <p class="small muted" style="margin:0.35rem 0 0;">
-                                {{ item.question.lesson.title }} · 错误次数 {{ item.wrong_count }}
-                            </p>
+                        <article class="content-panel">
+                            <a href="{% url 'courses:lesson_detail' lesson_id=item.question.lesson_id %}"><strong>{{ item.question.stem|truncatechars:56 }}</strong></a>
+                            <p class="section-copy">{{ item.question.lesson.title }} · 错误次数 {{ item.wrong_count }}</p>
                         </article>
                     {% endfor %}
                 </div>
-                <p style="margin:0.8rem 0 0;"><a class="btn btn-outline" href="{% url 'quiz:wrong_question_list' %}">打开完整错题本</a></p>
+                <div class="hero-actions">
+                    <a class="btn btn-outline" href="{% url 'quiz:wrong_question_list' %}">打开完整错题本</a>
+                </div>
             {% else %}
-                <p class="muted">当前没有未解决错题。</p>
+                <p class="empty-state">当前没有未解决错题。</p>
             {% endif %}
-        </div>
+        </article>
     </div>
 </section>
 {% endblock %}

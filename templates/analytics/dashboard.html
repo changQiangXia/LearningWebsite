@@ -1,75 +1,58 @@
-{% extends "base.html" %}
+﻿{% extends "base.html" %}
 
 {% block title %}数据看板 | LearningWebsite{% endblock %}
 
 {% block content %}
-<section class="card">
-    <div style="display:flex; justify-content:space-between; gap:0.8rem; align-items:center; flex-wrap:wrap;">
-        <div>
-            <h1 style="margin:0;">数据看板</h1>
-            {% if mode == "staff" %}
-                <p class="muted small" style="margin:0.35rem 0 0;">面向教务与管理员账号的平台级指标。</p>
-            {% else %}
-                <p class="muted small" style="margin:0.35rem 0 0;">当前账号的学习与测验数据概览。</p>
-            {% endif %}
+<section class="card hero-panel reveal">
+    <div class="hero-copy">
+        <span class="eyebrow">Analytics</span>
+        <h1>数据看板</h1>
+        {% if mode == "staff" %}
+            <p class="display-copy">面向教务与管理员账号的平台级指标，展示用户、课程、社区与测验数据，为教学管理和项目答辩提供量化支撑。</p>
+        {% else %}
+            <p class="display-copy">当前账号的学习与测验数据概览，用于直观展示学习进度、测验表现与课程参与情况。</p>
+        {% endif %}
+        <div class="hero-actions">
+            <a class="btn btn-outline" href="{% url 'analytics:export_csv' %}">导出 CSV</a>
         </div>
-        <a class="btn btn-outline" href="{% url 'analytics:export_csv' %}">导出 CSV</a>
+    </div>
+    <div class="hero-subgrid">
+        <div class="content-panel">
+            <strong>{% if mode == "staff" %}平台概览{% else %}个人概览{% endif %}</strong>
+            <p class="section-copy">通过统计信息、排行榜、课程完成率和测验历史，将系统运行状态可视化呈现。</p>
+        </div>
     </div>
 </section>
 
 {% if mode == "staff" %}
-    <section class="card" style="margin-top:1rem;">
-        <h2 style="margin-top:0;">平台概览</h2>
-        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:0.8rem;">
-            <div style="border:1px solid var(--line); border-radius:10px; padding:0.8rem;">
-                <div class="small muted">用户总数</div>
-                <div style="font-size:1.2rem; font-weight:700;">{{ total_users }}</div>
+    <section class="card reveal">
+        <div class="section-head">
+            <div>
+                <span class="eyebrow">Platform Overview</span>
+                <h2>平台概览</h2>
             </div>
-            <div style="border:1px solid var(--line); border-radius:10px; padding:0.8rem;">
-                <div class="small muted">活跃用户</div>
-                <div style="font-size:1.2rem; font-weight:700;">{{ active_users }}</div>
-            </div>
-            <div style="border:1px solid var(--line); border-radius:10px; padding:0.8rem;">
-                <div class="small muted">学生人数</div>
-                <div style="font-size:1.2rem; font-weight:700;">{{ total_students }}</div>
-            </div>
-            <div style="border:1px solid var(--line); border-radius:10px; padding:0.8rem;">
-                <div class="small muted">课程总数</div>
-                <div style="font-size:1.2rem; font-weight:700;">{{ total_courses }}</div>
-            </div>
-            <div style="border:1px solid var(--line); border-radius:10px; padding:0.8rem;">
-                <div class="small muted">已发布 / 草稿 / 已归档</div>
-                <div style="font-size:1.2rem; font-weight:700;">
-                    {{ published_courses }} / {{ draft_courses }} / {{ archived_courses }}
-                </div>
-            </div>
-            <div style="border:1px solid var(--line); border-radius:10px; padding:0.8rem;">
-                <div class="small muted">课时总数</div>
-                <div style="font-size:1.2rem; font-weight:700;">{{ total_lessons }}</div>
-            </div>
-            <div style="border:1px solid var(--line); border-radius:10px; padding:0.8rem;">
-                <div class="small muted">帖子总数 / 已发布 / 已隐藏 / 已删除</div>
-                <div style="font-size:1.2rem; font-weight:700;">
-                    {{ forum_total }} / {{ forum_published }} / {{ forum_hidden }} / {{ forum_deleted }}
-                </div>
-            </div>
-            <div style="border:1px solid var(--line); border-radius:10px; padding:0.8rem;">
-                <div class="small muted">测验提交次数</div>
-                <div style="font-size:1.2rem; font-weight:700;">{{ submission_count }}</div>
-            </div>
-            <div style="border:1px solid var(--line); border-radius:10px; padding:0.8rem;">
-                <div class="small muted">平均正确率</div>
-                <div style="font-size:1.2rem; font-weight:700;">{{ avg_accuracy }}%</div>
-            </div>
-            <div style="border:1px solid var(--line); border-radius:10px; padding:0.8rem;">
-                <div class="small muted">未解决错题 / 已解决错题</div>
-                <div style="font-size:1.2rem; font-weight:700;">{{ open_wrong_count }} / {{ resolved_wrong_count }}</div>
-            </div>
+        </div>
+        <div class="stats-grid">
+            <article class="metric-card"><strong>{{ total_users }}</strong><p class="section-copy">用户总数</p></article>
+            <article class="metric-card"><strong>{{ active_users }}</strong><p class="section-copy">活跃用户</p></article>
+            <article class="metric-card"><strong>{{ total_students }}</strong><p class="section-copy">学生人数</p></article>
+            <article class="metric-card"><strong>{{ total_courses }}</strong><p class="section-copy">课程总数</p></article>
+            <article class="metric-card"><strong>{{ published_courses }} / {{ draft_courses }} / {{ archived_courses }}</strong><p class="section-copy">已发布 / 草稿 / 已归档</p></article>
+            <article class="metric-card"><strong>{{ total_lessons }}</strong><p class="section-copy">课时总数</p></article>
+            <article class="metric-card"><strong>{{ forum_total }} / {{ forum_published }} / {{ forum_hidden }} / {{ forum_deleted }}</strong><p class="section-copy">帖子总数 / 已发布 / 已隐藏 / 已删除</p></article>
+            <article class="metric-card"><strong>{{ submission_count }}</strong><p class="section-copy">测验提交次数</p></article>
+            <article class="metric-card"><strong>{{ avg_accuracy }}%</strong><p class="section-copy">平均正确率</p></article>
+            <article class="metric-card"><strong>{{ open_wrong_count }} / {{ resolved_wrong_count }}</strong><p class="section-copy">未解决错题 / 已解决错题</p></article>
         </div>
     </section>
 
-    <section class="card" style="margin-top:1rem;">
-        <h2 style="margin-top:0;">学习表现前列用户</h2>
+    <section class="card reveal">
+        <div class="section-head">
+            <div>
+                <span class="eyebrow">Top Learners</span>
+                <h2>学习表现前列用户</h2>
+            </div>
+        </div>
         {% if learner_rows %}
             <table class="table">
                 <thead>
@@ -92,12 +75,17 @@
                 </tbody>
             </table>
         {% else %}
-            <p class="muted">暂无学习者数据。</p>
+            <p class="empty-state">暂无学习者数据。</p>
         {% endif %}
     </section>
 
-    <section class="card" style="margin-top:1rem;">
-        <h2 style="margin-top:0;">课程参与度</h2>
+    <section class="card reveal">
+        <div class="section-head">
+            <div>
+                <span class="eyebrow">Course Participation</span>
+                <h2>课程参与度</h2>
+            </div>
+        </div>
         {% if course_rows %}
             <table class="table">
                 <thead>
@@ -122,46 +110,35 @@
                 </tbody>
             </table>
         {% else %}
-            <p class="muted">暂无课程分析数据。</p>
+            <p class="empty-state">暂无课程分析数据。</p>
         {% endif %}
     </section>
 {% else %}
-    <section class="card" style="margin-top:1rem;">
-        <h2 style="margin-top:0;">个人概览</h2>
-        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:0.8rem;">
-            <div style="border:1px solid var(--line); border-radius:10px; padding:0.8rem;">
-                <div class="small muted">课时总数</div>
-                <div style="font-size:1.2rem; font-weight:700;">{{ total_lessons }}</div>
+    <section class="card reveal">
+        <div class="section-head">
+            <div>
+                <span class="eyebrow">Personal Overview</span>
+                <h2>个人概览</h2>
             </div>
-            <div style="border:1px solid var(--line); border-radius:10px; padding:0.8rem;">
-                <div class="small muted">已完成课时</div>
-                <div style="font-size:1.2rem; font-weight:700;">{{ completed_lessons }}</div>
-            </div>
-            <div style="border:1px solid var(--line); border-radius:10px; padding:0.8rem;">
-                <div class="small muted">完成率</div>
-                <div style="font-size:1.2rem; font-weight:700;">{{ completion_rate }}%</div>
-            </div>
-            <div style="border:1px solid var(--line); border-radius:10px; padding:0.8rem;">
-                <div class="small muted">测验提交次数</div>
-                <div style="font-size:1.2rem; font-weight:700;">{{ submission_count }}</div>
-            </div>
-            <div style="border:1px solid var(--line); border-radius:10px; padding:0.8rem;">
-                <div class="small muted">平均正确率</div>
-                <div style="font-size:1.2rem; font-weight:700;">{{ avg_accuracy }}%</div>
-            </div>
-            <div style="border:1px solid var(--line); border-radius:10px; padding:0.8rem;">
-                <div class="small muted">未解决错题</div>
-                <div style="font-size:1.2rem; font-weight:700;">{{ open_wrong_count }}</div>
-            </div>
-            <div style="border:1px solid var(--line); border-radius:10px; padding:0.8rem;">
-                <div class="small muted">已解决错题</div>
-                <div style="font-size:1.2rem; font-weight:700;">{{ resolved_wrong_count }}</div>
-            </div>
+        </div>
+        <div class="stats-grid">
+            <article class="metric-card"><strong>{{ total_lessons }}</strong><p class="section-copy">课时总数</p></article>
+            <article class="metric-card"><strong>{{ completed_lessons }}</strong><p class="section-copy">已完成课时</p></article>
+            <article class="metric-card"><strong>{{ completion_rate }}%</strong><p class="section-copy">完成率</p></article>
+            <article class="metric-card"><strong>{{ submission_count }}</strong><p class="section-copy">测验提交次数</p></article>
+            <article class="metric-card"><strong>{{ avg_accuracy }}%</strong><p class="section-copy">平均正确率</p></article>
+            <article class="metric-card"><strong>{{ open_wrong_count }}</strong><p class="section-copy">未解决错题</p></article>
+            <article class="metric-card"><strong>{{ resolved_wrong_count }}</strong><p class="section-copy">已解决错题</p></article>
         </div>
     </section>
 
-    <section class="card" style="margin-top:1rem;">
-        <h2 style="margin-top:0;">课程完成明细</h2>
+    <section class="card reveal">
+        <div class="section-head">
+            <div>
+                <span class="eyebrow">Progress</span>
+                <h2>课程完成明细</h2>
+            </div>
+        </div>
         {% if course_progress_rows %}
             <table class="table">
                 <thead>
@@ -184,12 +161,17 @@
                 </tbody>
             </table>
         {% else %}
-            <p class="muted">暂无课程数据。</p>
+            <p class="empty-state">暂无课程数据。</p>
         {% endif %}
     </section>
 
-    <section class="card" style="margin-top:1rem;">
-        <h2 style="margin-top:0;">最近测验提交</h2>
+    <section class="card reveal">
+        <div class="section-head">
+            <div>
+                <span class="eyebrow">Recent Quiz</span>
+                <h2>最近测验提交</h2>
+            </div>
+        </div>
         {% if recent_submissions %}
             <table class="table">
                 <thead>
@@ -216,7 +198,7 @@
                 </tbody>
             </table>
         {% else %}
-            <p class="muted">暂无测验提交数据。</p>
+            <p class="empty-state">暂无测验提交数据。</p>
         {% endif %}
     </section>
 {% endif %}

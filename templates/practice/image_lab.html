@@ -1,32 +1,46 @@
-{% extends "base.html" %}
+﻿{% extends "base.html" %}
 
 {% block title %}图像识别体验 | LearningWebsite{% endblock %}
 
 {% block content %}
-<section class="card">
-    <h1 style="margin-top:0;">图像识别体验</h1>
-    <p class="muted">上传图片后，系统会根据格式、尺寸、亮度和版式给出基础识别结论，用于展示图像理解的入门式应用流程。</p>
-    <form method="post" enctype="multipart/form-data">
-        {% csrf_token %}
-        {% for field in form %}
-            <div class="form-row">
-                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
-                {{ field }}
-                {{ field.errors }}
-            </div>
-        {% endfor %}
-        <button class="btn" type="submit">开始识别</button>
-    </form>
+<section class="card hero-panel reveal">
+    <div class="hero-copy">
+        <span class="eyebrow">Image Recognition</span>
+        <h1>图像识别体验</h1>
+        <p class="display-copy">上传图片后，系统会根据格式、尺寸、亮度和版式给出基础识别结论，用于展示图像理解的入门式应用流程。</p>
+    </div>
+    <div class="hero-subgrid">
+        <div class="content-panel">
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                {% for field in form %}
+                    <div class="form-row">
+                        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                        {{ field }}
+                        {{ field.errors }}
+                    </div>
+                {% endfor %}
+                <button class="btn" type="submit">开始识别</button>
+            </form>
+        </div>
+    </div>
 </section>
 
 {% if analysis %}
-    <section class="card" style="margin-top:1rem;">
-        <h2 style="margin-top:0;">识别结果</h2>
-        <ul style="margin-bottom:0;">
-            {% for label in analysis.labels %}
-                <li>{{ label }}</li>
-            {% endfor %}
-        </ul>
+    <section class="card reveal">
+        <div class="section-head">
+            <div>
+                <span class="eyebrow">Recognition Result</span>
+                <h2>识别结果</h2>
+            </div>
+        </div>
+        <div class="content-panel">
+            <ul style="margin:0; padding-left:1.2rem; line-height:1.9;">
+                {% for label in analysis.labels %}
+                    <li>{{ label }}</li>
+                {% endfor %}
+            </ul>
+        </div>
     </section>
 {% endif %}
 {% endblock %}

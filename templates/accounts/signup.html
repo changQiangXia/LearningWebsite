@@ -1,30 +1,44 @@
-{% extends "base.html" %}
+﻿{% extends "base.html" %}
 
 {% block title %}注册 | LearningWebsite{% endblock %}
 
 {% block content %}
-<section class="card" style="max-width:680px; margin:0 auto;">
-    <h1 style="margin-top:0;">创建账户</h1>
-    <p class="muted small">注册时可选择学生或教师角色。管理员账户由后台统一创建。</p>
-    <form method="post">
-        {% csrf_token %}
-        {% if form.non_field_errors %}
-            {{ form.non_field_errors }}
-        {% endif %}
-        {% for field in form %}
-            <div class="form-row">
-                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
-                {{ field }}
-                {% if field.help_text %}
-                    <div class="small muted">{{ field.help_text }}</div>
-                {% endif %}
-                {{ field.errors }}
+<div class="auth-shell">
+    <section class="auth-card hero-panel reveal">
+        <div class="hero-copy">
+            <span class="eyebrow">Create Account</span>
+            <h1>创建账户</h1>
+            <p class="display-copy">注册时可选择学生或教师角色。管理员账户由后台统一创建。表单设计保持简洁，便于首次使用者完成注册。</p>
+            <div class="hero-meta">
+                <span class="badge">学生角色</span>
+                <span class="badge">教师角色</span>
+                <span class="badge">管理员后台创建</span>
             </div>
-        {% endfor %}
-        <div style="display:flex; gap:0.6rem; flex-wrap:wrap;">
-            <button type="submit" class="btn">创建账户</button>
-            <a class="btn btn-outline" href="{% url 'accounts:login' %}">返回登录</a>
         </div>
-    </form>
-</section>
+        <div class="hero-subgrid">
+            <div class="content-panel">
+                <form method="post">
+                    {% csrf_token %}
+                    {% if form.non_field_errors %}
+                        {{ form.non_field_errors }}
+                    {% endif %}
+                    {% for field in form %}
+                        <div class="form-row">
+                            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                            {{ field }}
+                            {% if field.help_text %}
+                                <div class="small muted">{{ field.help_text }}</div>
+                            {% endif %}
+                            {{ field.errors }}
+                        </div>
+                    {% endfor %}
+                    <div class="hero-actions">
+                        <button type="submit" class="btn">创建账户</button>
+                        <a class="btn btn-outline" href="{% url 'accounts:login' %}">返回登录</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </section>
+</div>
 {% endblock %}

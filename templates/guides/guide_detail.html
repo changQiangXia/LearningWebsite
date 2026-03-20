@@ -3,19 +3,16 @@
 {% block title %}{{ guide.title }} | LearningWebsite{% endblock %}
 
 {% block content %}
-<section class="card" style="background:linear-gradient(135deg, #ffffff 0%, #eef5fc 100%);">
-    <div style="display:flex; justify-content:space-between; gap:0.8rem; flex-wrap:wrap; align-items:flex-start;">
-        <div>
-            <h1 style="margin:0;">{{ guide.title }}</h1>
-            <p class="small muted" style="margin:0.45rem 0 0; line-height:1.7;">
-                课程：{{ guide.course.title }}{% if guide.unit_name %} · 单元：{{ guide.unit_name }}{% endif %}
-            </p>
-        </div>
-        <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
+<section class="card hero-panel reveal">
+    <div class="hero-copy">
+        <span class="eyebrow">Teaching Guide</span>
+        <h1>{{ guide.title }}</h1>
+        <p class="display-copy">课程：{{ guide.course.title }}{% if guide.unit_name %} · 单元：{{ guide.unit_name }}{% endif %}</p>
+        <div class="hero-actions">
             <a class="btn btn-outline" href="{% url 'guides:guide_list' %}">返回指引列表</a>
             <a class="btn btn-outline" href="{% url 'courses:course_detail' slug=guide.course.slug %}">查看所属课程</a>
             {% if request.user.is_authenticated %}
-                <form method="post" action="{% url 'accounts:toggle_favorite' target_type='guide' target_id=guide.id %}" style="margin:0;">
+                <form method="post" action="{% url 'accounts:toggle_favorite' target_type='guide' target_id=guide.id %}">
                     {% csrf_token %}
                     <input type="hidden" name="next" value="{{ request.path }}">
                     <button class="btn btn-outline" type="submit">收藏指引</button>
@@ -24,32 +21,38 @@
             {% if can_manage_guide %}<a class="btn btn-outline" href="{% url 'guides:manage_guide_edit' guide_id=guide.id %}">编辑指引</a>{% endif %}
         </div>
     </div>
+    <div class="hero-subgrid">
+        <div class="content-panel">
+            <strong>内容说明</strong>
+            <p class="section-copy">教学指引用于支撑教师备课与课堂实施，包含教学目标、重点难点、建议活动、作业设计与评价建议等核心字段。</p>
+        </div>
+    </div>
 </section>
 
-<div class="stats-grid" style="margin-top:1rem; grid-template-columns:repeat(auto-fit, minmax(260px, 1fr));">
-    <section class="card">
-        <h2 style="margin-top:0;">教学目标</h2>
-        <div style="white-space:pre-wrap; line-height:1.75;">{{ guide.objectives }}</div>
+<div class="split-grid">
+    <section class="card reveal">
+        <h2>教学目标</h2>
+        <div class="rich-text" style="margin-top:0.8rem;">{{ guide.objectives }}</div>
     </section>
-    <section class="card">
-        <h2 style="margin-top:0;">重点内容</h2>
-        <div style="white-space:pre-wrap; line-height:1.75;">{{ guide.key_points }}</div>
+    <section class="card reveal">
+        <h2>重点内容</h2>
+        <div class="rich-text" style="margin-top:0.8rem;">{{ guide.key_points }}</div>
     </section>
-    <section class="card">
-        <h2 style="margin-top:0;">难点提示</h2>
-        <div style="white-space:pre-wrap; line-height:1.75;">{{ guide.difficult_points|default:"暂无难点提示。" }}</div>
+    <section class="card reveal">
+        <h2>难点提示</h2>
+        <div class="rich-text" style="margin-top:0.8rem;">{{ guide.difficult_points|default:"暂无难点提示。" }}</div>
     </section>
-    <section class="card">
-        <h2 style="margin-top:0;">教学建议</h2>
-        <div style="white-space:pre-wrap; line-height:1.75;">{{ guide.learning_methods|default:"暂无教学建议。" }}</div>
+    <section class="card reveal">
+        <h2>教学建议</h2>
+        <div class="rich-text" style="margin-top:0.8rem;">{{ guide.learning_methods|default:"暂无教学建议。" }}</div>
     </section>
-    <section class="card">
-        <h2 style="margin-top:0;">作业与实践建议</h2>
-        <div style="white-space:pre-wrap; line-height:1.75;">{{ guide.assignment_suggestion|default:"暂无作业与实践建议。" }}</div>
+    <section class="card reveal">
+        <h2>作业与实践建议</h2>
+        <div class="rich-text" style="margin-top:0.8rem;">{{ guide.assignment_suggestion|default:"暂无作业与实践建议。" }}</div>
     </section>
-    <section class="card">
-        <h2 style="margin-top:0;">评价建议</h2>
-        <div style="white-space:pre-wrap; line-height:1.75;">{{ guide.evaluation_suggestion|default:"暂无评价建议。" }}</div>
+    <section class="card reveal">
+        <h2>评价建议</h2>
+        <div class="rich-text" style="margin-top:0.8rem;">{{ guide.evaluation_suggestion|default:"暂无评价建议。" }}</div>
     </section>
 </div>
 {% endblock %}

@@ -3,80 +3,84 @@
 {% block title %}{{ course.title }} | LearningWebsite{% endblock %}
 
 {% block content %}
-<section class="card" style="background:linear-gradient(135deg, #ffffff 0%, #eef5fc 100%);">
-    <div style="display:grid; grid-template-columns:minmax(0, 1.4fr) minmax(280px, 0.8fr); gap:1rem; align-items:start;">
-        <div>
-            <p class="small muted" style="margin:0 0 0.45rem;">专题课程</p>
-            <h1 style="margin:0 0 0.6rem;">{{ course.title }}</h1>
-            <p class="muted" style="line-height:1.75; margin:0;">{{ course.description|default:"暂无课程简介。" }}</p>
-            <div style="display:flex; gap:0.55rem; flex-wrap:wrap; margin-top:0.9rem;">
-                <span class="badge">{{ course.get_status_display }}</span>
-                <span class="badge">共 {{ total_lessons }} 个课时</span>
-                <span class="badge">{{ chapters|length }} 个章节</span>
-                {% if request.user.is_authenticated %}
-                    <span class="badge">已完成 {{ completed_count }} / {{ total_lessons }}</span>
-                {% endif %}
-            </div>
+<section class="card hero-panel reveal">
+    <div class="hero-copy">
+        <span class="eyebrow">专题课程</span>
+        <h1>{{ course.title }}</h1>
+        <p class="display-copy">{{ course.description|default:"暂无课程简介。" }}</p>
+        <div class="hero-meta">
+            <span class="badge">{{ course.get_status_display }}</span>
+            <span class="badge">共 {{ total_lessons }} 个课时</span>
+            <span class="badge">{{ chapters|length }} 个章节</span>
             {% if request.user.is_authenticated %}
-                <p class="small muted" style="margin:0.7rem 0 0;">已完成课时：{{ completed_count }} / {{ total_lessons }}，课程完成度 {{ completion_rate }}%。</p>
+                <span class="badge">已完成 {{ completed_count }} / {{ total_lessons }}</span>
             {% endif %}
-            <div style="display:flex; gap:0.6rem; flex-wrap:wrap; margin-top:1rem;">
-                <a class="btn" href="{% url 'courses:course_list' %}">返回课程列表</a>
-                <a class="btn btn-outline" href="{% url 'practice:index' %}">进入互动实践</a>
-                {% if request.user.is_authenticated %}
-                    <form method="post" action="{% url 'accounts:toggle_favorite' target_type='course' target_id=course.id %}" style="margin:0;">
-                        {% csrf_token %}
-                        <input type="hidden" name="next" value="{{ request.path }}">
-                        <button class="btn btn-outline" type="submit">收藏课程</button>
-                    </form>
-                {% endif %}
-            </div>
         </div>
-        <div class="card" style="margin:0;">
-            <h2 style="margin-top:0; font-size:1.05rem;">课程导学</h2>
-            <p class="small muted" style="line-height:1.7; margin:0 0 0.7rem;">
-                建议按“概念认识、技术基石、社会影响、单元总结”顺序完成 4 个课时学习，再进入互动体验、在线答题和社区讨论模块。
-            </p>
-            <div class="stack">
-                <div style="border:1px solid var(--line); border-radius:10px; padding:0.8rem;">
-                    <div class="small muted">学习目标</div>
-                    <div style="font-weight:700; margin-top:0.25rem;">理解 AI 基本概念、技术要素与伦理边界</div>
+        {% if request.user.is_authenticated %}
+            <p class="section-copy">已完成课时：{{ completed_count }} / {{ total_lessons }}，课程完成度 {{ completion_rate }}%。</p>
+        {% endif %}
+        <div class="hero-actions">
+            <a class="btn" href="{% url 'courses:course_list' %}">返回课程列表</a>
+            <a class="btn btn-outline" href="{% url 'practice:index' %}">进入互动实践</a>
+            {% if request.user.is_authenticated %}
+                <form method="post" action="{% url 'accounts:toggle_favorite' target_type='course' target_id=course.id %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="next" value="{{ request.path }}">
+                    <button class="btn btn-outline" type="submit">收藏课程</button>
+                </form>
+            {% endif %}
+        </div>
+        {% if can_manage_course %}
+            <div class="hero-actions">
+                <a class="btn btn-outline" href="{% url 'courses:manage_course_edit' course_id=course.id %}">编辑课程</a>
+                <a class="btn btn-outline" href="{% url 'courses:manage_chapter_create' course_id=course.id %}">新增章节</a>
+                <a class="btn btn-outline" href="{% url 'guides:manage_guide_create' %}?course={{ course.id }}">新增教学指引</a>
+                <a class="btn btn-outline" href="{% url 'resources:manage_resource_create' %}?course={{ course.id }}">新增课程资源</a>
+            </div>
+        {% endif %}
+    </div>
+
+    <div class="hero-subgrid">
+        <div class="metric-panel">
+            <div class="panel-label">课程导学</div>
+            <p class="panel-copy">建议按“概念认识、技术基石、社会影响、单元总结”顺序完成 4 个课时学习，再进入互动体验、在线答题和社区讨论模块。</p>
+            <div class="metric-grid">
+                <div class="metric-item">
+                    <span>学习目标</span>
+                    <strong>理解 AI 基本概念、技术要素与伦理边界</strong>
                 </div>
-                <div style="border:1px solid var(--line); border-radius:10px; padding:0.8rem;">
-                    <div class="small muted">推荐学习路径</div>
-                    <div style="font-weight:700; margin-top:0.25rem;">课时学习 → 互动体验 → 在线答题 → 资源拓展 → 社区交流</div>
+                <div class="metric-item">
+                    <span>推荐路径</span>
+                    <strong>课时学习 → 互动体验 → 在线答题 → 资源拓展 → 社区交流</strong>
                 </div>
             </div>
         </div>
     </div>
-    {% if can_manage_course %}
-        <div style="display:flex; gap:0.55rem; flex-wrap:wrap; margin-top:1rem;">
-            <a class="btn btn-outline" href="{% url 'courses:manage_course_edit' course_id=course.id %}">编辑课程</a>
-            <a class="btn btn-outline" href="{% url 'courses:manage_chapter_create' course_id=course.id %}">新增章节</a>
-            <a class="btn btn-outline" href="{% url 'guides:manage_guide_create' %}?course={{ course.id }}">新增教学指引</a>
-            <a class="btn btn-outline" href="{% url 'resources:manage_resource_create' %}?course={{ course.id }}">新增课程资源</a>
-        </div>
-    {% endif %}
 </section>
 
-<div class="sidebar-layout" style="margin-top:1rem; align-items:start;">
+<div class="sidebar-layout">
     <aside class="sidebar stack">
-        <section class="card">
-            <h2 style="margin-top:0; font-size:1.05rem;">课时导航</h2>
+        <section class="card reveal">
+            <div class="section-head" style="margin-bottom:0.8rem;">
+                <div>
+                    <span class="eyebrow">Course Map</span>
+                    <h2>课时导航</h2>
+                </div>
+            </div>
             <div class="stack">
                 {% for chapter in chapters %}
-                    <article style="border:1px solid var(--line); border-radius:10px; padding:0.8rem;">
-                        <p style="margin:0; font-weight:700;">第 {{ chapter.order_no }} 章 {{ chapter.title }}</p>
+                    <article class="content-panel">
+                        <strong>第 {{ chapter.order_no }} 章 {{ chapter.title }}</strong>
                         {% if chapter.description %}
-                            <p class="small muted" style="margin:0.35rem 0 0.6rem;">{{ chapter.description }}</p>
+                            <p class="section-copy">{{ chapter.description }}</p>
                         {% endif %}
                         {% if chapter.lessons.all %}
-                            <div class="stack" style="gap:0.45rem;">
+                            <div class="stack" style="margin-top:0.8rem; gap:0.7rem;">
                                 {% for lesson in chapter.lessons.all %}
-                                    <a href="{% url 'courses:lesson_detail' lesson_id=lesson.id %}" style="display:block; text-decoration:none; border:1px solid var(--line); border-radius:8px; padding:0.6rem;">
-                                        <div style="font-weight:600;">第 {{ lesson.order_no }} 课 {{ lesson.title }}</div>
-                                        <div class="small muted" style="margin-top:0.25rem;">预计 {{ lesson.estimated_minutes }} 分钟</div>
-                                        <div style="display:flex; gap:0.35rem; flex-wrap:wrap; margin-top:0.35rem;">
+                                    <a href="{% url 'courses:lesson_detail' lesson_id=lesson.id %}" class="list-card">
+                                        <strong>第 {{ lesson.order_no }} 课 {{ lesson.title }}</strong>
+                                        <p class="section-copy">预计 {{ lesson.estimated_minutes }} 分钟</p>
+                                        <div class="hero-meta">
                                             {% if lesson.id in completed_lesson_ids %}<span class="badge">已完成</span>{% endif %}
                                             {% if lesson.is_free_preview %}<span class="badge">可试看</span>{% endif %}
                                             {% if not lesson.is_active %}<span class="badge">未启用</span>{% endif %}
@@ -85,64 +89,74 @@
                                 {% endfor %}
                             </div>
                         {% else %}
-                            <p class="small muted" style="margin:0.45rem 0 0;">本章节暂无课时。</p>
+                            <p class="empty-state">本章节暂无课时。</p>
                         {% endif %}
                     </article>
                 {% endfor %}
             </div>
         </section>
-        <section class="card">
-            <h2 style="margin-top:0; font-size:1.05rem;">关键术语表</h2>
+
+        <section class="card reveal">
+            <div class="section-head" style="margin-bottom:0.8rem;">
+                <div>
+                    <span class="eyebrow">Glossary</span>
+                    <h2>关键术语表</h2>
+                </div>
+            </div>
             {% if glossary_terms %}
-                <div class="stack" style="gap:0.55rem;">
+                <div class="stack">
                     {% for term in glossary_terms %}
-                        <div style="border-bottom:1px solid var(--line); padding-bottom:0.55rem;">
-                            <div style="font-weight:700;">{{ term.term }}</div>
-                            <div class="small muted" style="margin-top:0.25rem; line-height:1.65;">{{ term.definition|truncatechars:90 }}</div>
-                        </div>
+                        <article class="content-panel">
+                            <strong>{{ term.term }}</strong>
+                            <p class="section-copy">{{ term.definition|truncatechars:90 }}</p>
+                        </article>
                     {% endfor %}
                 </div>
             {% else %}
-                <p class="muted">当前暂无术语表。</p>
+                <p class="empty-state">当前暂无术语表。</p>
             {% endif %}
         </section>
     </aside>
 
     <div class="stack">
-        <section class="card">
-            <div style="display:flex; justify-content:space-between; gap:0.8rem; flex-wrap:wrap; align-items:center;">
+        <section class="card reveal">
+            <div class="section-head">
                 <div>
-                    <h2 style="margin:0;">课程内容结构</h2>
-                    <p class="small muted" style="margin:0.35rem 0 0;">按照四课时专题结构组织图文内容、视频资源与互动节点。</p>
+                    <span class="eyebrow">Course Structure</span>
+                    <h2>课程内容结构</h2>
+                    <p class="section-copy">按照四课时专题结构组织图文内容、视频资源与互动节点。</p>
                 </div>
                 {% if request.user.is_authenticated %}
-                    <div class="small muted">当前进度 {{ completion_rate }}%</div>
+                    <span class="badge">当前进度 {{ completion_rate }}%</span>
                 {% endif %}
             </div>
-            <div class="stack" style="margin-top:1rem;">
+
+            <div class="stack">
                 {% for chapter in chapters %}
-                    <article style="border:1px solid var(--line); border-radius:12px; padding:1rem;">
-                        <div style="display:flex; justify-content:space-between; gap:0.8rem; flex-wrap:wrap; align-items:flex-start;">
+                    <article class="content-panel">
+                        <div class="section-head" style="margin-bottom:0.8rem; align-items:start;">
                             <div>
-                                <h3 style="margin:0;">第 {{ chapter.order_no }} 章 {{ chapter.title }}</h3>
+                                <h3>第 {{ chapter.order_no }} 章 {{ chapter.title }}</h3>
                                 {% if chapter.description %}
-                                    <p class="muted" style="margin:0.45rem 0 0;">{{ chapter.description }}</p>
+                                    <p class="section-copy">{{ chapter.description }}</p>
                                 {% endif %}
                             </div>
                             {% if not chapter.is_active %}<span class="badge">未启用</span>{% endif %}
                         </div>
-                        <div class="stats-grid" style="margin-top:0.85rem; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));">
+                        <div class="collection-grid">
                             {% for lesson in chapter.lessons.all %}
-                                <article style="border:1px solid var(--line); border-radius:10px; padding:0.8rem; background:#fbfdff;">
-                                    <p class="small muted" style="margin:0;">第 {{ lesson.order_no }} 课时</p>
-                                    <h4 style="margin:0.25rem 0 0.4rem;">{{ lesson.title }}</h4>
-                                    <p class="small muted" style="margin:0;">{{ lesson.content|truncatechars:80 }}</p>
-                                    <div style="display:flex; gap:0.35rem; flex-wrap:wrap; margin:0.65rem 0;">
+                                <article class="content-panel">
+                                    <span class="badge">第 {{ lesson.order_no }} 课时</span>
+                                    <strong style="margin-top:0.8rem;">{{ lesson.title }}</strong>
+                                    <p class="section-copy">{{ lesson.content|truncatechars:80 }}</p>
+                                    <div class="hero-meta">
                                         <span class="badge">{{ lesson.estimated_minutes }} 分钟</span>
                                         {% if lesson.video_url %}<span class="badge">含视频</span>{% endif %}
                                         {% if lesson.id in completed_lesson_ids %}<span class="badge">已完成</span>{% endif %}
                                     </div>
-                                    <a class="btn btn-outline" href="{% url 'courses:lesson_detail' lesson_id=lesson.id %}">进入本课</a>
+                                    <div class="hero-actions">
+                                        <a class="btn btn-outline" href="{% url 'courses:lesson_detail' lesson_id=lesson.id %}">进入本课</a>
+                                    </div>
                                 </article>
                             {% endfor %}
                         </div>
@@ -151,16 +165,21 @@
             </div>
         </section>
 
-        <section class="card">
-            <h2 style="margin-top:0;">专题视频与动画</h2>
+        <section class="card reveal">
+            <div class="section-head">
+                <div>
+                    <span class="eyebrow">Video Library</span>
+                    <h2>专题视频与动画</h2>
+                </div>
+            </div>
             {% if featured_videos %}
-                <div class="stats-grid" style="grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));">
+                <div class="collection-grid">
                     {% for video_lesson in featured_videos %}
-                        <article style="border:1px solid var(--line); border-radius:10px; padding:0.9rem;">
-                            <div class="small muted">关联课时</div>
-                            <div style="font-weight:700; margin-top:0.25rem;">{{ video_lesson.title }}</div>
-                            <p class="small muted" style="margin:0.4rem 0 0.8rem;">{{ video_lesson.video_url }}</p>
-                            <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
+                        <article class="content-panel">
+                            <span class="badge">关联课时</span>
+                            <strong style="margin-top:0.8rem;">{{ video_lesson.title }}</strong>
+                            <p class="section-copy">{{ video_lesson.video_url }}</p>
+                            <div class="hero-actions">
                                 <a class="btn btn-outline" href="{% url 'courses:lesson_detail' lesson_id=video_lesson.id %}">查看内容</a>
                                 <a class="btn btn-outline" href="{{ video_lesson.video_url }}" target="_blank" rel="noopener">打开视频</a>
                             </div>
@@ -168,50 +187,60 @@
                     {% endfor %}
                 </div>
             {% else %}
-                <p class="muted">当前课程尚未配置视频资源。</p>
+                <p class="empty-state">当前课程尚未配置视频资源。</p>
             {% endif %}
         </section>
 
-        <section class="card">
-            <h2 style="margin-top:0;">配套教学指引</h2>
+        <section class="card reveal">
+            <div class="section-head">
+                <div>
+                    <span class="eyebrow">Teaching Guides</span>
+                    <h2>配套教学指引</h2>
+                </div>
+            </div>
             {% if related_guides %}
                 <div class="stack">
                     {% for guide in related_guides %}
-                        <article style="border:1px solid var(--line); border-radius:10px; padding:0.9rem;">
-                            <div style="display:flex; justify-content:space-between; gap:0.6rem; flex-wrap:wrap; align-items:center;">
-                                <a href="{% url 'guides:guide_detail' guide_id=guide.id %}" style="font-weight:700;">{{ guide.title }}</a>
+                        <article class="content-panel">
+                            <div class="section-head" style="margin-bottom:0.6rem; align-items:center;">
+                                <a href="{% url 'guides:guide_detail' guide_id=guide.id %}"><strong>{{ guide.title }}</strong></a>
                                 <span class="badge">第 {{ guide.order_no }} 项</span>
                             </div>
                             {% if guide.unit_name %}
-                                <p class="small muted" style="margin:0.35rem 0 0;">单元：{{ guide.unit_name }}</p>
+                                <p class="section-copy">单元：{{ guide.unit_name }}</p>
                             {% endif %}
                         </article>
                     {% endfor %}
                 </div>
             {% else %}
-                <p class="muted">当前课程暂无教学指引。</p>
+                <p class="empty-state">当前课程暂无教学指引。</p>
             {% endif %}
         </section>
 
-        <section class="card">
-            <h2 style="margin-top:0;">配套资源</h2>
+        <section class="card reveal">
+            <div class="section-head">
+                <div>
+                    <span class="eyebrow">Resources</span>
+                    <h2>配套资源</h2>
+                </div>
+            </div>
             {% if related_resources %}
                 <div class="stack">
                     {% for resource in related_resources %}
-                        <article style="border:1px solid var(--line); border-radius:10px; padding:0.9rem;">
-                            <div style="display:flex; justify-content:space-between; gap:0.6rem; flex-wrap:wrap; align-items:center;">
-                                <a href="{% url 'resources:resource_detail' slug=resource.slug %}" style="font-weight:700;">{{ resource.title }}</a>
-                                <div style="display:flex; gap:0.35rem; flex-wrap:wrap;">
+                        <article class="content-panel">
+                            <div class="section-head" style="margin-bottom:0.6rem; align-items:center;">
+                                <a href="{% url 'resources:resource_detail' slug=resource.slug %}"><strong>{{ resource.title }}</strong></a>
+                                <div class="note-line">
                                     <span class="badge">{{ resource.get_resource_type_display }}</span>
                                     {% if resource.lesson %}<span class="badge">第 {{ resource.lesson.order_no }} 课时</span>{% endif %}
                                 </div>
                             </div>
-                            <p class="muted" style="margin:0.45rem 0 0;">{{ resource.description|truncatechars:120|default:"暂无资源简介。" }}</p>
+                            <p class="section-copy">{{ resource.description|truncatechars:120|default:"暂无资源简介。" }}</p>
                         </article>
                     {% endfor %}
                 </div>
             {% else %}
-                <p class="muted">当前课程暂无配套资源。</p>
+                <p class="empty-state">当前课程暂无配套资源。</p>
             {% endif %}
         </section>
     </div>
