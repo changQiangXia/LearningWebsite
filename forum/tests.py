@@ -2,8 +2,8 @@ from datetime import timedelta
 
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
-from django.urls import reverse
 from django.test import TestCase
+from django.urls import reverse
 from django.utils import timezone
 
 from forum.models import ForumComment, ForumPost, ForumPostCategory, ForumPostStatus
@@ -59,6 +59,37 @@ class ForumViewTests(TestCase):
         )
         self.assertEqual(response.status_code, 200)
         self.assertTrue(ForumPost.objects.filter(title="My Question").exists())
+
+    def test_logged_in_user_can_create_note(self):
+        self.client.login(username="forum_u1", password="Password123!")
+        response = self.client.post(
+            reverse("forum:note_create"),
+            {"title": "My Note", "content": "Key learning points."},
+            follow=True,
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(
+            ForumPost.objects.filter(title="My Note", category=ForumPostCategory.SHARE, author=self.user).exists()
+        )
+
+    def test_note_list_shows_only_share_posts(self):
+        ForumPost.objects.create(
+            author=self.user,
+            title="Shared Note",
+            content="Shared content",
+            category=ForumPostCategory.SHARE,
+        )
+        ForumPost.objects.create(
+            author=self.user,
+            title="Discussion Post",
+            content="Discussion content",
+            category=ForumPostCategory.DISCUSSION,
+        )
+
+        response = self.client.get(reverse("forum:note_list"))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Shared Note")
+        self.assertNotContains(response, "Discussion Post")
 
     def test_logged_in_user_can_comment_post(self):
         self.client.login(username="forum_u1", password="Password123!")

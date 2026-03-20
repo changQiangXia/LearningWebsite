@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block title %}AI 对话体验 | LearningWebsite{% endblock %}
+
+{% block content %}
+<section class="card">
+    <h1 style="margin-top:0;">AI 对话体验</h1>
+    <p class="muted">当前版本使用规则增强式问答，适合演示课程设计、资源整理和答辩组织相关场景。</p>
+    <form method="post">
+        {% csrf_token %}
+        {% for field in form %}
+            <div class="form-row">
+                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                {{ field }}
+                {{ field.errors }}
+            </div>
+        {% endfor %}
+        <button class="btn" type="submit">发送问题</button>
+    </form>
+</section>
+
+<section class="card" style="margin-top:1rem;">
+    <h2 style="margin-top:0;">最近对话</h2>
+    {% if history %}
+        <div class="stack">
+            {% for item in history %}
+                <article style="border:1px solid var(--line); border-radius:10px; padding:0.9rem;">
+                    <p style="margin-top:0;"><strong>提问：</strong>{{ item.question }}</p>
+                    <p style="margin-bottom:0;"><strong>回复：</strong>{{ item.answer }}</p>
+                </article>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p class="muted">先输入一个问题开始体验。</p>
+    {% endif %}
+</section>
+{% endblock %}

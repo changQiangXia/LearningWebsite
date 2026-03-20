@@ -1,0 +1,80 @@
+﻿{% extends "base.html" %}
+
+{% block title %}笔记分享 | LearningWebsite{% endblock %}
+
+{% block content %}
+<section class="card" style="background:linear-gradient(135deg, #ffffff 0%, #eef5fc 100%);">
+    <div style="display:flex; justify-content:space-between; align-items:center; gap:0.8rem; flex-wrap:wrap;">
+        <div>
+            <h1 style="margin:0;">学习笔记区</h1>
+            <p class="muted" style="margin:0.4rem 0 0; line-height:1.7;">围绕课时内容记录观察、心得和答题经验，形成学生之间的知识共享。</p>
+        </div>
+        {% if request.user.is_authenticated %}
+            <a class="btn" href="{% url 'forum:note_create' %}">发布笔记</a>
+        {% else %}
+            <a class="btn btn-outline" href="{% url 'accounts:login' %}?next={% url 'forum:note_create' %}">登录后发布</a>
+        {% endif %}
+    </div>
+
+    <form method="get" style="margin-top:1rem;">
+        <div style="display:grid; grid-template-columns:minmax(200px, 1.7fr) minmax(140px, 1fr) minmax(140px, 1fr) auto; gap:0.6rem;">
+            <input type="text" name="q" value="{{ keyword }}" placeholder="搜索笔记标题或内容">
+            <select name="lesson">
+                <option value="">全部课时</option>
+                {% for item in lesson_options %}
+                    <option value="{{ item.id }}" {% if lesson_id == item.id|stringformat:"s" %}selected{% endif %}>第 {{ item.order_no }} 课 {{ item.title }}</option>
+                {% endfor %}
+            </select>
+            <select name="order">
+                <option value="latest" {% if order_by == "latest" %}selected{% endif %}>最新发布</option>
+                <option value="hot" {% if order_by == "hot" %}selected{% endif %}>最热优先</option>
+            </select>
+            <button class="btn" type="submit">筛选</button>
+        </div>
+    </form>
+</section>
+
+<section class="card" style="margin-top:1rem;">
+    {% if page_obj.object_list %}
+        <div class="stack">
+            {% for post in page_obj.object_list %}
+                <article style="border:1px solid var(--line); border-radius:12px; padding:1rem;">
+                    <div style="display:flex; justify-content:space-between; gap:0.8rem; flex-wrap:wrap; align-items:flex-start;">
+                        <div>
+                            <div style="display:flex; gap:0.35rem; flex-wrap:wrap; margin-bottom:0.45rem;">
+                                <span class="badge">笔记</span>
+                                {% if post.lesson %}<span class="badge">第 {{ post.lesson.order_no }} 课时</span>{% endif %}
+                                {% if post.is_pinned %}<span class="badge">置顶</span>{% endif %}
+                            </div>
+                            <a href="{% url 'forum:post_detail' post_id=post.id %}" style="font-weight:700; font-size:1.05rem;">{{ post.title }}</a>
+                            <p class="muted" style="margin:0.5rem 0 0; line-height:1.7;">{{ post.content|truncatechars:150 }}</p>
+                        </div>
+                        <div class="small muted" style="min-width:140px; text-align:right;">
+                            {{ post.author.username|default:"匿名" }}<br>
+                            {{ post.created_at|date:"Y-m-d H:i" }}
+                        </div>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; gap:0.8rem; flex-wrap:wrap; margin-top:0.8rem;">
+                        <div class="small muted">点赞 {{ post.like_total }} · 评论 {{ post.comment_total }} · 浏览 {{ post.view_count }}</div>
+                        {% if post.lesson %}<div class="small muted">关联课时：{{ post.lesson.title }}</div>{% endif %}
+                    </div>
+                </article>
+            {% endfor %}
+        </div>
+
+        {% if page_obj.paginator.num_pages > 1 %}
+            <div style="margin-top:1rem; display:flex; gap:0.5rem; flex-wrap:wrap; align-items:center;">
+                {% if page_obj.has_previous %}
+                    <a class="btn btn-outline" href="?q={{ keyword }}&lesson={{ lesson_id }}&order={{ order_by }}&page={{ page_obj.previous_page_number }}">上一页</a>
+                {% endif %}
+                <span class="small muted">第 {{ page_obj.number }} / {{ page_obj.paginator.num_pages }} 页</span>
+                {% if page_obj.has_next %}
+                    <a class="btn btn-outline" href="?q={{ keyword }}&lesson={{ lesson_id }}&order={{ order_by }}&page={{ page_obj.next_page_number }}">下一页</a>
+                {% endif %}
+            </div>
+        {% endif %}
+    {% else %}
+        <p class="muted">暂无笔记分享内容。</p>
+    {% endif %}
+</section>
+{% endblock %}

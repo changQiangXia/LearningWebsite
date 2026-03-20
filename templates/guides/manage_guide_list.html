@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block title %}教学指引管理 | LearningWebsite{% endblock %}
+
+{% block content %}
+<section class="card">
+    <div style="display:flex; justify-content:space-between; gap:0.8rem; flex-wrap:wrap; align-items:center;">
+        <div>
+            <h1 style="margin:0;">教学指引管理</h1>
+            <p class="muted small" style="margin:0.35rem 0 0;">维护单元目标、重点难点与实践建议。</p>
+        </div>
+        <a class="btn" href="{% url 'guides:manage_guide_create' %}">新增指引</a>
+    </div>
+</section>
+
+<section class="card" style="margin-top:1rem;">
+    {% if guides %}
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>标题</th>
+                    <th>课程</th>
+                    <th>顺序</th>
+                    <th>状态</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for guide in guides %}
+                    <tr>
+                        <td><a href="{% url 'guides:guide_detail' guide_id=guide.id %}">{{ guide.title }}</a></td>
+                        <td>{{ guide.course.title }}</td>
+                        <td>{{ guide.order_no }}</td>
+                        <td>{% if guide.is_published %}公开{% else %}隐藏{% endif %}</td>
+                        <td>
+                            <div style="display:flex; gap:0.4rem; flex-wrap:wrap;">
+                                <a class="btn btn-outline" href="{% url 'guides:manage_guide_edit' guide_id=guide.id %}">编辑</a>
+                                <form method="post" action="{% url 'guides:manage_guide_toggle_publish' guide_id=guide.id %}" style="margin:0;">
+                                    {% csrf_token %}
+                                    <button class="btn btn-outline" type="submit">
+                                        {% if guide.is_published %}隐藏{% else %}公开{% endif %}
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p class="muted">暂无可管理的教学指引。</p>
+    {% endif %}
+</section>
+{% endblock %}

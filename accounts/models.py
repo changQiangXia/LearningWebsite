@@ -42,6 +42,34 @@ class UserProfile(models.Model):
         return f"{self.user.username} ({self.role})"
 
 
+class FavoriteTargetType(models.TextChoices):
+    COURSE = "course", "课程"
+    RESOURCE = "resource", "资源"
+    GUIDE = "guide", "教学指引"
+    POST = "post", "帖子"
+
+
+class FavoriteItem(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="favorite_items")
+    target_type = models.CharField(max_length=20, choices=FavoriteTargetType.choices, db_index=True)
+    target_id = models.PositiveBigIntegerField(db_index=True)
+    title_snapshot = models.CharField(max_length=200)
+    url_snapshot = models.CharField(max_length=255, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at", "-id"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["user", "target_type", "target_id"],
+                name="uniq_favorite_user_target",
+            )
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.user_id}:{self.target_type}:{self.target_id}"
+
+
 @receiver(post_save, sender=User)
 def create_or_update_user_profile(sender, instance, created, **kwargs):
     """Ensure each user always has a profile row."""

@@ -6,9 +6,10 @@ from .models import ForumComment, ForumPost
 class ForumPostForm(forms.ModelForm):
     class Meta:
         model = ForumPost
-        fields = ["title", "category", "content"]
+        fields = ["title", "lesson", "category", "content"]
         labels = {
             "title": "标题",
+            "lesson": "关联课时",
             "category": "分类",
             "content": "正文",
         }
@@ -29,4 +30,19 @@ class ForumCommentForm(forms.ModelForm):
         }
         widgets = {
             "content": forms.Textarea(attrs={"placeholder": "输入评论内容"}),
+        }
+
+
+class NoteShareForm(forms.ModelForm):
+    class Meta:
+        model = ForumPost
+        fields = ["title", "lesson", "content"]
+        labels = {
+            "title": "笔记标题",
+            "lesson": "关联课时",
+            "content": "笔记内容",
+        }
+        widgets = {
+            "title": forms.TextInput(attrs={"placeholder": "请输入学习笔记标题"}),
+            "content": forms.Textarea(attrs={"placeholder": "整理学习收获、关键知识点或答题经验"}),
         }

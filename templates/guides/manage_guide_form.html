@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block title %}
+    {% if mode == "edit" %}
+        编辑教学指引 | LearningWebsite
+    {% else %}
+        新增教学指引 | LearningWebsite
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+<section class="card" style="max-width:900px;">
+    <h1 style="margin-top:0;">
+        {% if mode == "edit" %}
+            编辑教学指引
+        {% else %}
+            新增教学指引
+        {% endif %}
+    </h1>
+
+    <form method="post">
+        {% csrf_token %}
+        {% for field in form %}
+            <div class="form-row">
+                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                {{ field }}
+                {% if field.help_text %}
+                    <div class="small muted">{{ field.help_text }}</div>
+                {% endif %}
+                {{ field.errors }}
+            </div>
+        {% endfor %}
+        <div style="display:flex; gap:0.6rem; flex-wrap:wrap;">
+            <button class="btn" type="submit">
+                {% if mode == "edit" %}保存修改{% else %}创建指引{% endif %}
+            </button>
+            <a class="btn btn-outline" href="{% url 'guides:manage_guide_list' %}">返回指引管理</a>
+        </div>
+    </form>
+</section>
+{% endblock %}

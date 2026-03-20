@@ -1,0 +1,74 @@
+﻿{% extends "base.html" %}
+
+{% block title %}发布笔记 | LearningWebsite{% endblock %}
+
+{% block content %}
+<div class="sidebar-layout">
+    <aside class="sidebar stack">
+        <section class="card">
+            <h2 style="margin-top:0; font-size:1.05rem;">笔记建议</h2>
+            <p class="small muted" style="line-height:1.7; margin:0;">可从“学到了什么、生活中哪里见过、还有什么疑问”三个角度整理学习笔记。</p>
+        </section>
+        <section class="card">
+            <h2 style="margin-top:0; font-size:1.05rem;">示例方向</h2>
+            <div class="stack" style="gap:0.55rem;">
+                <div style="border:1px solid var(--line); border-radius:10px; padding:0.75rem;">
+                    <div style="font-weight:700;">我身边的 AI</div>
+                    <div class="small muted" style="margin-top:0.3rem; line-height:1.6;">记录一个真实应用场景，并解释它可能使用了哪些数据。</div>
+                </div>
+                <div style="border:1px solid var(--line); border-radius:10px; padding:0.75rem;">
+                    <div style="font-weight:700;">AI 对话观察</div>
+                    <div class="small muted" style="margin-top:0.3rem; line-height:1.6;">比较机器回答和人的回答，在准确性、情感性上有什么区别。</div>
+                </div>
+                <div style="border:1px solid var(--line); border-radius:10px; padding:0.75rem;">
+                    <div style="font-weight:700;">伦理与未来</div>
+                    <div class="small muted" style="margin-top:0.3rem; line-height:1.6;">围绕隐私、公平或就业变化写下个人判断。</div>
+                </div>
+            </div>
+        </section>
+    </aside>
+
+    <section class="card">
+        <h1 style="margin-top:0;">发布学习笔记</h1>
+        <p class="muted" style="line-height:1.7;">将笔记关联到具体课时后，可在课时讨论和个人中心中被快速检索。</p>
+        <div id="topic-hint" class="card" style="margin:0 0 1rem; background:#fbfdff;">
+            <strong>话题提示</strong>
+            <p class="small muted" style="margin:0.45rem 0 0;">请选择课时后查看对应的话题引导。</p>
+        </div>
+        <form method="post">
+            {% csrf_token %}
+            {% for field in form %}
+                <div class="form-row">
+                    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                    {{ field }}
+                    {{ field.errors }}
+                </div>
+            {% endfor %}
+            <div style="display:flex; gap:0.6rem; flex-wrap:wrap;">
+                <button class="btn" type="submit">提交笔记</button>
+                <a class="btn btn-outline" href="{% url 'forum:note_list' %}">取消</a>
+            </div>
+        </form>
+    </section>
+</div>
+
+{{ topic_prompts|json_script:"forum-note-prompts" }}
+<script>
+    (function () {
+        const lessonField = document.getElementById('id_lesson');
+        const hint = document.getElementById('topic-hint');
+        const dataNode = document.getElementById('forum-note-prompts');
+        if (!lessonField || !hint || !dataNode) {
+            return;
+        }
+        const prompts = JSON.parse(dataNode.textContent);
+        const renderHint = () => {
+            const value = lessonField.value;
+            const text = prompts[value] || '请选择课时后查看对应的话题引导。';
+            hint.innerHTML = '<strong>话题提示</strong><p class="small muted" style="margin:0.45rem 0 0;">' + text + '</p>';
+        };
+        lessonField.addEventListener('change', renderHint);
+        renderHint();
+    })();
+</script>
+{% endblock %}

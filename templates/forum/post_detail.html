@@ -4,40 +4,49 @@
 
 {% block content %}
 <section class="card">
-    <div style="display:flex; justify-content:space-between; gap:0.8rem; flex-wrap:wrap;">
-        <h1 style="margin:0;">{{ post.title }}</h1>
+    <div style="display:flex; justify-content:space-between; gap:0.8rem; flex-wrap:wrap; align-items:flex-start;">
+        <div>
+            <div style="display:flex; gap:0.35rem; flex-wrap:wrap; margin-bottom:0.55rem;">
+                <span class="badge">{{ post.get_category_display }}</span>
+                {% if post.lesson %}<span class="badge">第 {{ post.lesson.order_no }} 课时</span>{% endif %}
+                {% if post.is_pinned %}<span class="badge">置顶</span>{% endif %}
+                {% if post.is_solved %}<span class="badge">已解决</span>{% endif %}
+                <span class="badge">{{ post.get_status_display }}</span>
+            </div>
+            <h1 style="margin:0;">{{ post.title }}</h1>
+            <p class="small muted" style="margin:0.45rem 0 0; line-height:1.7;">
+                作者：{{ post.author.username|default:"匿名" }} · 发布时间：{{ post.created_at|date:"Y-m-d H:i" }} · 浏览 {{ post.view_count }} · 点赞 {{ post.like_total }} · 评论 {{ post.comment_total }}
+                {% if post.lesson %}<br>关联课时：{{ post.lesson.title }}{% endif %}
+            </p>
+        </div>
         <a class="btn btn-outline" href="{% url 'forum:post_list' %}">返回列表</a>
     </div>
-    <p style="margin:0.5rem 0;">
-        <span class="badge">{{ post.get_category_display }}</span>
-        {% if post.is_pinned %}<span class="badge">置顶</span>{% endif %}
-        {% if post.is_solved %}<span class="badge">已解决</span>{% endif %}
-    </p>
-    <p class="small muted">
-        作者：{{ post.author.username|default:"匿名" }} · 发布时间：{{ post.created_at|date:"Y-m-d H:i" }} · 浏览：{{ post.view_count }}
-    </p>
 
     {% if request.user.is_authenticated %}
-        <div style="display:flex; gap:0.5rem; flex-wrap:wrap; margin-bottom:0.7rem;">
-            {% if request.user.is_staff or request.user.id == post.author_id %}
+        <div style="display:flex; gap:0.5rem; flex-wrap:wrap; margin:1rem 0;">
+            <form method="post" action="{% url 'forum:toggle_like' post_id=post.id %}" style="margin:0;">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-outline">{% if is_liked %}取消点赞{% else %}点赞帖子{% endif %}</button>
+            </form>
+            <form method="post" action="{% url 'accounts:toggle_favorite' target_type='post' target_id=post.id %}" style="margin:0;">
+                {% csrf_token %}
+                <input type="hidden" name="next" value="{{ request.path }}">
+                <button type="submit" class="btn btn-outline">{% if is_favorited %}取消收藏{% else %}收藏帖子{% endif %}</button>
+            </form>
+            {% if can_toggle_solved %}
                 <form method="post" action="{% url 'forum:toggle_solved' post_id=post.id %}" style="margin:0;">
                     {% csrf_token %}
-                    <button type="submit" class="btn btn-outline">
-                        {% if post.is_solved %}标记为未解决{% else %}标记为已解决{% endif %}
-                    </button>
+                    <button type="submit" class="btn btn-outline">{% if post.is_solved %}标记为未解决{% else %}标记为已解决{% endif %}</button>
                 </form>
             {% endif %}
-
-            {% if request.user.is_staff %}
+            {% if can_moderate %}
                 <form method="post" action="{% url 'forum:toggle_pin' post_id=post.id %}" style="margin:0;">
                     {% csrf_token %}
-                    <button type="submit" class="btn btn-outline">
-                        {% if post.is_pinned %}取消置顶{% else %}置顶帖子{% endif %}
-                    </button>
+                    <button type="submit" class="btn btn-outline">{% if post.is_pinned %}取消置顶{% else %}置顶帖子{% endif %}</button>
                 </form>
-                <form method="post" action="{% url 'forum:change_status' post_id=post.id %}" style="margin:0; display:flex; gap:0.4rem;">
+                <form method="post" action="{% url 'forum:change_status' post_id=post.id %}" style="margin:0; display:flex; gap:0.45rem; flex-wrap:wrap;">
                     {% csrf_token %}
-                    <select name="status" style="min-width:130px;">
+                    <select name="status" style="min-width:150px;">
                         <option value="published" {% if post.status == "published" %}selected{% endif %}>已发布</option>
                         <option value="hidden" {% if post.status == "hidden" %}selected{% endif %}>已隐藏</option>
                         <option value="deleted" {% if post.status == "deleted" %}selected{% endif %}>已删除</option>
@@ -48,26 +57,24 @@
         </div>
     {% endif %}
 
-    <article style="white-space:pre-wrap; line-height:1.6;">{{ post.content }}</article>
+    <article style="white-space:pre-wrap; line-height:1.8;">{{ post.content }}</article>
 </section>
 
 <section class="card" style="margin-top:1rem;">
-    <h2 style="margin-top:0;">评论（{{ comments|length }}）</h2>
+    <h2 style="margin-top:0;">评论区（{{ comments|length }}）</h2>
     {% if comments %}
         <div class="stack">
             {% for comment in comments %}
-                <div style="border:1px solid var(--line); border-radius:10px; padding:0.8rem;">
+                <article style="border:1px solid var(--line); border-radius:10px; padding:0.9rem;">
                     <p class="small muted" style="margin:0;">
                         {{ comment.author.username|default:"匿名" }} · {{ comment.created_at|date:"Y-m-d H:i" }}
-                        {% if comment.parent_id %}
-                            · 回复 #{{ comment.parent_id }}
-                        {% endif %}
+                        {% if comment.parent_id %} · 回复 #{{ comment.parent_id }}{% endif %}
                     </p>
-                    <p style="margin:0.55rem 0; white-space:pre-wrap;">{{ comment.content }}</p>
+                    <p style="margin:0.55rem 0 0; white-space:pre-wrap; line-height:1.7;">{{ comment.content }}</p>
                     {% if request.user.is_authenticated %}
-                        <a class="small" href="{% url 'forum:post_detail' post_id=post.id %}?reply_to={{ comment.id }}#comment-form">回复</a>
+                        <p style="margin:0.55rem 0 0;"><a class="small" href="{% url 'forum:post_detail' post_id=post.id %}?reply_to={{ comment.id }}#comment-form">回复这条评论</a></p>
                     {% endif %}
-                </div>
+                </article>
             {% endfor %}
         </div>
     {% else %}

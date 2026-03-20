@@ -75,13 +75,20 @@ def index_forum_post(post):
     from forum.models import ForumPostStatus
     from search.models import SearchSourceType
 
+    keywords = [post.category]
+    if post.lesson_id:
+        keywords.append(post.lesson.title)
+        keywords.append(post.lesson.chapter.course.title)
     upsert_document(
         source_type=SearchSourceType.FORUM_POST,
         source_id=post.id,
         title=post.title,
         body=post.content,
-        keywords=post.category,
-        metadata={"post_id": post.id},
+        keywords=" ".join(item for item in keywords if item),
+        metadata={
+            "post_id": post.id,
+            "lesson_id": post.lesson_id,
+        },
         is_active=post.status == ForumPostStatus.PUBLISHED,
     )
 
@@ -108,4 +115,37 @@ def index_question(question):
             "course_id": question.lesson.chapter.course_id,
         },
         is_active=is_active,
+    )
+
+
+def index_resource(resource):
+    from search.models import SearchSourceType
+
+    body_parts = [resource.description or ""]
+    if resource.course_id:
+        body_parts.append(resource.course.title)
+    if resource.lesson_id:
+        body_parts.append(resource.lesson.title)
+    upsert_document(
+        source_type=SearchSourceType.RESOURCE,
+        source_id=resource.id,
+        title=resource.title,
+        body=" ".join(part for part in body_parts if part),
+        keywords=" ".join(
+            part
+            for part in [
+                resource.tags or "",
+                resource.get_resource_type_display(),
+                resource.lesson.title if resource.lesson_id else "",
+            ]
+            if part
+        ),
+        metadata={
+            "resource_id": resource.id,
+            "course_id": resource.course_id,
+            "lesson_id": resource.lesson_id,
+            "resource_type": resource.resource_type,
+            "audience": resource.audience,
+        },
+        is_active=resource.is_published,
     )

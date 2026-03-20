@@ -1,92 +1,144 @@
-{% extends "base.html" %}
+﻿{% extends "base.html" %}
+{% load search_extras %}
 
 {% block title %}搜索 | LearningWebsite{% endblock %}
 
 {% block content %}
-<section class="card">
+<section class="card" style="background:linear-gradient(135deg, #ffffff 0%, #eef5fc 100%);">
     <h1 style="margin-top:0;">站内搜索</h1>
-    <form method="get">
-        <div style="display:grid; grid-template-columns:1fr auto; gap:0.6rem;">
-            <input type="text" name="q" value="{{ keyword }}" placeholder="输入课程 / 课时 / 帖子 / 题目的关键词">
+    <form method="get" id="search-form">
+        <div style="display:grid; grid-template-columns:minmax(200px, 1.8fr) repeat(2, minmax(140px, 1fr)) auto; gap:0.6rem;">
+            <input type="text" name="q" value="{{ keyword }}" placeholder="输入课程、课时、资源或帖子关键词" autocomplete="off">
+            <select name="type">
+                <option value="">全部类型</option>
+                <option value="course" {% if type_filter == "course" %}selected{% endif %}>课程</option>
+                <option value="lesson" {% if type_filter == "lesson" %}selected{% endif %}>课时</option>
+                <option value="resource" {% if type_filter == "resource" %}selected{% endif %}>资源</option>
+                <option value="post" {% if type_filter == "post" %}selected{% endif %}>帖子</option>
+                <option value="question" {% if type_filter == "question" %}selected{% endif %}>题目</option>
+            </select>
+            <select name="lesson">
+                <option value="">全部课时</option>
+                {% for item in lesson_options %}
+                    <option value="{{ item.id }}" {% if lesson_filter == item.id|stringformat:"s" %}selected{% endif %}>第 {{ item.order_no }} 课 {{ item.title }}</option>
+                {% endfor %}
+            </select>
             <button class="btn" type="submit">搜索</button>
         </div>
     </form>
     {% if keyword %}
-        <p class="muted small" style="margin-bottom:0;">
-            关键词：<strong>{{ keyword }}</strong>，共 {{ total }} 条结果。
-        </p>
+        <p class="muted small" style="margin:0.8rem 0 0;">关键词 <strong>{{ keyword }}</strong> 共命中 {{ total }} 条结果。</p>
+        {% if normalized_keyword %}<p class="small muted" style="margin:0.35rem 0 0;">已同时尝试近似词：{{ normalized_keyword }}</p>{% endif %}
     {% else %}
-        <p class="muted small" style="margin-bottom:0;">输入关键词后开始检索。</p>
+        <p class="muted small" style="margin:0.8rem 0 0;">支持关键词检索、类型筛选、课时筛选和基础模糊匹配。</p>
     {% endif %}
 </section>
 
 {% if keyword %}
-    <section class="card" style="margin-top:1rem;">
-        <h2 style="margin-top:0;">课程结果（{{ courses|length }}）</h2>
+    <div class="stack" style="margin-top:1rem;">
         {% if courses %}
-            <ul>
-                {% for course in courses %}
-                    <li>
-                        <a href="{% url 'courses:course_detail' slug=course.slug %}"><strong>{{ course.title }}</strong></a>
-                        <span class="small muted">（状态：{{ course.get_status_display }}）</span>
-                    </li>
-                {% endfor %}
-            </ul>
-        {% else %}
-            <p class="muted">未命中课程。</p>
+            <section class="card">
+                <h2 style="margin-top:0;">课程结果</h2>
+                <div class="stack">
+                    {% for course in courses %}
+                        <article style="border:1px solid var(--line); border-radius:10px; padding:0.9rem;">
+                            <a href="{% url 'courses:course_detail' slug=course.slug %}" title="{{ course.title }}" style="font-weight:700;">{{ course.title|highlight_terms:highlight_terms }}</a>
+                            <p class="small muted" style="margin:0.45rem 0 0; line-height:1.7;">{{ course.search_snippet|highlight_terms:highlight_terms }}</p>
+                        </article>
+                    {% endfor %}
+                </div>
+            </section>
         {% endif %}
-    </section>
 
-    <section class="card" style="margin-top:1rem;">
-        <h2 style="margin-top:0;">课时结果（{{ lessons|length }}）</h2>
         {% if lessons %}
-            <ul>
-                {% for lesson in lessons %}
-                    <li>
-                        <a href="{% url 'courses:lesson_detail' lesson_id=lesson.id %}"><strong>{{ lesson.title }}</strong></a>
-                        <span class="small muted">
-                            （课程：{{ lesson.chapter.course.title }} / 章节：{{ lesson.chapter.title }}）
-                        </span>
-                    </li>
-                {% endfor %}
-            </ul>
-        {% else %}
-            <p class="muted">未命中课时。</p>
+            <section class="card">
+                <h2 style="margin-top:0;">课时结果</h2>
+                <div class="stack">
+                    {% for lesson in lessons %}
+                        <article style="border:1px solid var(--line); border-radius:10px; padding:0.9rem;">
+                            <a href="{% url 'courses:lesson_detail' lesson_id=lesson.id %}" title="{{ lesson.title }}" style="font-weight:700;">{{ lesson.title|highlight_terms:highlight_terms }}</a>
+                            <p class="small muted" style="margin:0.35rem 0 0;">{{ lesson.chapter.course.title }} / {{ lesson.chapter.title }}</p>
+                            <p class="small muted" style="margin:0.45rem 0 0; line-height:1.7;">{{ lesson.search_snippet|highlight_terms:highlight_terms }}</p>
+                        </article>
+                    {% endfor %}
+                </div>
+            </section>
         {% endif %}
-    </section>
 
-    <section class="card" style="margin-top:1rem;">
-        <h2 style="margin-top:0;">论坛结果（{{ posts|length }}）</h2>
+        {% if resources %}
+            <section class="card">
+                <h2 style="margin-top:0;">资源结果</h2>
+                <div class="stack">
+                    {% for resource in resources %}
+                        <article style="border:1px solid var(--line); border-radius:10px; padding:0.9rem;">
+                            <a href="{% url 'resources:resource_detail' slug=resource.slug %}" title="{{ resource.title }}" style="font-weight:700;">{{ resource.title|highlight_terms:highlight_terms }}</a>
+                            <p class="small muted" style="margin:0.35rem 0 0;">{{ resource.get_resource_type_display }}{% if resource.lesson %} · 第 {{ resource.lesson.order_no }} 课 {{ resource.lesson.title }}{% endif %}</p>
+                            <p class="small muted" style="margin:0.45rem 0 0; line-height:1.7;">{{ resource.search_snippet|highlight_terms:highlight_terms }}</p>
+                        </article>
+                    {% endfor %}
+                </div>
+            </section>
+        {% endif %}
+
         {% if posts %}
-            <ul>
-                {% for post in posts %}
-                    <li>
-                        <a href="{% url 'forum:post_detail' post_id=post.id %}">{{ post.title }}</a>
-                        <span class="small muted">（作者：{{ post.author.username|default:"匿名" }}）</span>
-                    </li>
-                {% endfor %}
-            </ul>
-        {% else %}
-            <p class="muted">未命中帖子。</p>
+            <section class="card">
+                <h2 style="margin-top:0;">帖子结果</h2>
+                <div class="stack">
+                    {% for post in posts %}
+                        <article style="border:1px solid var(--line); border-radius:10px; padding:0.9rem;">
+                            <a href="{% url 'forum:post_detail' post_id=post.id %}" title="{{ post.title }}" style="font-weight:700;">{{ post.title|highlight_terms:highlight_terms }}</a>
+                            <p class="small muted" style="margin:0.35rem 0 0;">{{ post.author.username|default:"匿名" }}{% if post.lesson %} · {{ post.lesson.title }}{% endif %}</p>
+                            <p class="small muted" style="margin:0.45rem 0 0; line-height:1.7;">{{ post.search_snippet|highlight_terms:highlight_terms }}</p>
+                        </article>
+                    {% endfor %}
+                </div>
+            </section>
         {% endif %}
-    </section>
 
-    <section class="card" style="margin-top:1rem;">
-        <h2 style="margin-top:0;">题目结果（{{ questions|length }}）</h2>
         {% if questions %}
-            <ul>
-                {% for question in questions %}
-                    <li>
-                        <a href="{% url 'courses:lesson_detail' lesson_id=question.lesson_id %}">
-                            {{ question.stem|truncatechars:90 }}
-                        </a>
-                        <span class="small muted">（课时：{{ question.lesson.title }}）</span>
-                    </li>
-                {% endfor %}
-            </ul>
-        {% else %}
-            <p class="muted">未命中题目。</p>
+            <section class="card">
+                <h2 style="margin-top:0;">题目结果</h2>
+                <div class="stack">
+                    {% for question in questions %}
+                        <article style="border:1px solid var(--line); border-radius:10px; padding:0.9rem;">
+                            <a href="{% url 'courses:lesson_detail' lesson_id=question.lesson_id %}" title="{{ question.stem }}" style="font-weight:700;">{{ question.stem|truncatechars:90|highlight_terms:highlight_terms }}</a>
+                            <p class="small muted" style="margin:0.35rem 0 0;">{{ question.lesson.title }}</p>
+                            <p class="small muted" style="margin:0.45rem 0 0; line-height:1.7;">{{ question.search_snippet|highlight_terms:highlight_terms }}</p>
+                        </article>
+                    {% endfor %}
+                </div>
+            </section>
         {% endif %}
-    </section>
+
+        {% if not total %}
+            <section class="card">
+                <p class="muted" style="margin:0;">没有找到匹配内容，请尝试更换关键词或放宽筛选条件。</p>
+            </section>
+        {% endif %}
+    </div>
 {% endif %}
+
+<script>
+    (function () {
+        const form = document.getElementById('search-form');
+        if (!form) {
+            return;
+        }
+        const textInput = form.querySelector('input[name="q"]');
+        const selects = form.querySelectorAll('select');
+        let timer = null;
+        const submitLater = () => {
+            clearTimeout(timer);
+            timer = setTimeout(() => {
+                if ((textInput && textInput.value.trim()) || form.querySelector('select[name="type"]').value || form.querySelector('select[name="lesson"]').value) {
+                    form.submit();
+                }
+            }, 350);
+        };
+        if (textInput) {
+            textInput.addEventListener('input', submitLater);
+        }
+        selects.forEach((node) => node.addEventListener('change', submitLater));
+    })();
+</script>
 {% endblock %}

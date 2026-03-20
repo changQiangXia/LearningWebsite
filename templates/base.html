@@ -13,15 +13,18 @@
             --line: #dbe3ee;
             --brand: #0f4c81;
             --brand-soft: #e7f0f9;
+            --brand-deep: #0b365d;
             --danger: #b42318;
+            --accent: #ffe5a5;
         }
         * { box-sizing: border-box; }
         body {
             margin: 0;
             font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-            background: var(--bg);
+            background: linear-gradient(180deg, #f5f8fc 0%, #eef3f9 100%);
             color: var(--text);
         }
+        a { color: var(--brand); }
         header {
             background: linear-gradient(120deg, #0f4c81 0%, #1f6aa8 100%);
             color: #fff;
@@ -29,53 +32,130 @@
             box-shadow: 0 4px 14px rgba(15, 76, 129, 0.24);
         }
         .header-wrap {
-            max-width: 1100px;
+            max-width: 1160px;
             margin: 0 auto;
+            display: grid;
+            gap: 0.9rem;
+        }
+        .top-row {
             display: flex;
-            flex-wrap: wrap;
-            gap: 0.8rem;
-            align-items: center;
             justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+            flex-wrap: wrap;
         }
         .brand {
-            font-size: 1.1rem;
+            font-size: 1.2rem;
             font-weight: 700;
             letter-spacing: 0.2px;
         }
+        .brand small {
+            display: block;
+            font-size: 0.76rem;
+            opacity: 0.8;
+            font-weight: 400;
+            margin-top: 0.1rem;
+        }
         nav {
             display: flex;
-            gap: 0.8rem;
+            gap: 0.65rem;
             flex-wrap: wrap;
         }
         nav a {
             color: #fff;
             text-decoration: none;
-            padding: 0.25rem 0.45rem;
-            border-radius: 5px;
+            padding: 0.3rem 0.5rem;
+            border-radius: 6px;
         }
         nav a:hover {
-            background: rgba(255, 255, 255, 0.18);
+            background: rgba(255, 255, 255, 0.16);
         }
-        .user-area {
-            font-size: 0.92rem;
+        .header-tools {
             display: flex;
-            gap: 0.8rem;
+            gap: 0.7rem;
             align-items: center;
+            flex-wrap: wrap;
         }
-        .user-area a {
+        .header-search {
+            display: flex;
+            gap: 0.45rem;
+            align-items: center;
+            min-width: min(100%, 340px);
+        }
+        .header-search input[type="text"] {
+            min-width: 220px;
+            background: rgba(255, 255, 255, 0.96);
+        }
+        .user-entry,
+        .user-entry a {
             color: #fff;
         }
+        .user-menu {
+            position: relative;
+        }
+        .user-menu summary {
+            list-style: none;
+            cursor: pointer;
+            padding: 0.35rem 0.6rem;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.12);
+        }
+        .user-menu summary::-webkit-details-marker {
+            display: none;
+        }
+        .user-menu[open] summary {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        .user-menu-panel {
+            position: absolute;
+            right: 0;
+            top: calc(100% + 0.4rem);
+            min-width: 220px;
+            background: #fff;
+            color: var(--text);
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            padding: 0.6rem;
+            box-shadow: 0 12px 24px rgba(13, 33, 53, 0.14);
+            z-index: 8;
+            display: grid;
+            gap: 0.35rem;
+        }
+        .user-menu-panel a {
+            color: var(--text);
+            text-decoration: none;
+            padding: 0.45rem 0.55rem;
+            border-radius: 8px;
+        }
+        .user-menu-panel a:hover {
+            background: var(--brand-soft);
+        }
         main {
-            max-width: 1100px;
+            max-width: 1160px;
             margin: 1.2rem auto;
             padding: 0 1rem 2rem;
         }
+        footer {
+            max-width: 1160px;
+            margin: 0 auto 2rem;
+            padding: 0 1rem;
+            color: var(--muted);
+            font-size: 0.9rem;
+        }
+        .footer-card {
+            border-top: 1px solid var(--line);
+            padding-top: 1rem;
+            display: flex;
+            justify-content: space-between;
+            gap: 0.8rem;
+            flex-wrap: wrap;
+        }
         .card {
             background: var(--card);
-            border-radius: 12px;
+            border-radius: 14px;
             border: 1px solid var(--line);
             padding: 1rem 1.2rem;
-            box-shadow: 0 8px 20px rgba(13, 33, 53, 0.05);
+            box-shadow: 0 10px 26px rgba(13, 33, 53, 0.05);
         }
         .muted {
             color: var(--muted);
@@ -83,8 +163,8 @@
         .btn {
             display: inline-block;
             border: none;
-            border-radius: 6px;
-            padding: 0.45rem 0.8rem;
+            border-radius: 8px;
+            padding: 0.5rem 0.85rem;
             text-decoration: none;
             cursor: pointer;
             font-size: 0.92rem;
@@ -103,11 +183,26 @@
             display: grid;
             gap: 0.8rem;
         }
-        input[type="text"], input[type="password"], textarea, select {
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 0.8rem;
+        }
+        .sidebar-layout {
+            display: grid;
+            grid-template-columns: minmax(220px, 280px) minmax(0, 1fr);
+            gap: 1rem;
+        }
+        .sidebar {
+            position: sticky;
+            top: 1rem;
+            align-self: start;
+        }
+        input[type="text"], input[type="password"], input[type="email"], input[type="number"], input[type="url"], textarea, select {
             width: 100%;
             border: 1px solid var(--line);
             border-radius: 8px;
-            padding: 0.5rem 0.6rem;
+            padding: 0.55rem 0.6rem;
             font-size: 0.95rem;
             background: #fff;
         }
@@ -157,48 +252,83 @@
             padding: 0.55rem 0.4rem;
             text-align: left;
             font-size: 0.92rem;
+            vertical-align: top;
         }
         .badge {
             display: inline-block;
             font-size: 0.78rem;
-            padding: 0.12rem 0.4rem;
+            padding: 0.12rem 0.45rem;
             border-radius: 999px;
             background: var(--brand-soft);
             color: var(--brand);
+        }
+        mark {
+            background: var(--accent);
+            padding: 0 0.12rem;
+        }
+        @media (max-width: 900px) {
+            .sidebar-layout {
+                grid-template-columns: 1fr;
+            }
+            .sidebar {
+                position: static;
+            }
         }
     </style>
 </head>
 <body>
     <header>
         <div class="header-wrap">
-            <div class="brand">LearningWebsite</div>
+            <div class="top-row">
+                <div class="brand">
+                    LearningWebsite
+                    <small>走进人工智能 · 课程学习与互动实践平台</small>
+                </div>
+                <div class="header-tools">
+                    <form class="header-search" method="get" action="{% url 'search:index' %}">
+                        <input type="text" name="q" placeholder="全局搜索课程、资源、帖子">
+                        <button type="submit" class="btn btn-outline">搜索</button>
+                    </form>
+                    {% if request.user.is_authenticated %}
+                        <details class="user-menu">
+                            <summary>{{ request.user.username }} · {{ request.user.profile.get_role_display }}</summary>
+                            <div class="user-menu-panel">
+                                <a href="{% url 'accounts:index' %}">个人中心</a>
+                                <a href="{% url 'forum:note_list' %}">我的笔记区</a>
+                                <a href="{% url 'quiz:submission_history' %}">答题历史</a>
+                                {% if request.user.is_staff or request.user.profile.role == "teacher" or request.user.profile.role == "admin" %}
+                                    <a href="{% url 'courses:manage_dashboard' %}">内容工作台</a>
+                                    <a href="{% url 'resources:teacher_resource_list' %}">教师资源页</a>
+                                {% endif %}
+                                <form method="post" action="{% url 'accounts:logout' %}" style="margin:0;">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-outline" style="width:100%; text-align:left;">退出登录</button>
+                                </form>
+                            </div>
+                        </details>
+                    {% else %}
+                        <div class="user-entry">
+                            <a href="{% url 'accounts:login' %}">登录</a>
+                            <span style="opacity:0.6;">/</span>
+                            <a href="{% url 'accounts:signup' %}">注册</a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
             <nav>
                 <a href="/">首页</a>
-                <a href="/forum/">论坛</a>
+                <a href="/courses/">课程内容</a>
+                <a href="/practice/">交互体验</a>
+                <a href="/resources/">资源库</a>
+                <a href="/forum/">社区</a>
                 <a href="/search/">搜索</a>
-                <a href="/courses/">课程</a>
-                {% if request.user.is_authenticated %}
-                    {% if request.user.is_staff or request.user.profile.role == "teacher" or request.user.profile.role == "admin" %}
-                        <a href="{% url 'courses:manage_dashboard' %}">内容工作台</a>
-                    {% endif %}
-                {% endif %}
-                <a href="/quiz/">测验</a>
+                <a href="/guides/">教学指引</a>
+                <a href="/quiz/">在线答题</a>
                 <a href="/analytics/">数据看板</a>
-                <a href="/admin/">后台管理</a>
-            </nav>
-            <div class="user-area">
-                {% if request.user.is_authenticated %}
-                    <a href="{% url 'accounts:index' %}">账户中心</a>
-                    <span>{{ request.user.username }}</span>
-                    <form method="post" action="{% url 'accounts:logout' %}" style="margin:0;">
-                        {% csrf_token %}
-                        <button type="submit" class="btn btn-outline">退出登录</button>
-                    </form>
-                {% else %}
-                    <a href="{% url 'accounts:login' %}">登录</a>
-                    <a href="{% url 'accounts:signup' %}">注册</a>
+                {% if request.user.is_staff %}
+                    <a href="/admin/">后台管理</a>
                 {% endif %}
-            </div>
+            </nav>
         </div>
     </header>
     <main>
@@ -211,5 +341,11 @@
         {% endif %}
         {% block content %}{% endblock %}
     </main>
+    <footer>
+        <div class="footer-card">
+            <div>LearningWebsite 课程站点已按照“课程内容 + AI 互动 + 资源共享 + 社区交流 + 教学指引”结构组织。</div>
+            <div><a href="{% url 'guides:guide_list' %}">教学指引入口</a> · <a href="{% url 'core:health' %}">系统健康检查</a></div>
+        </div>
+    </footer>
 </body>
 </html>

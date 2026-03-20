@@ -3,6 +3,8 @@ from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils import timezone
 
+from courses.models import Lesson
+
 
 User = get_user_model()
 
@@ -29,6 +31,13 @@ class ForumPost(models.Model):
     )
     title = models.CharField(max_length=200, db_index=True)
     content = models.TextField()
+    lesson = models.ForeignKey(
+        Lesson,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="forum_posts",
+    )
     category = models.CharField(
         max_length=20,
         choices=ForumPostCategory.choices,
@@ -53,6 +62,7 @@ class ForumPost(models.Model):
         indexes = [
             models.Index(fields=["category", "status"], name="idx_forum_cate_stat"),
             models.Index(fields=["status", "created_at"], name="idx_forum_stat_ctime"),
+            models.Index(fields=["lesson", "status"], name="idx_forum_lesson_status"),
         ]
 
     def __str__(self) -> str:
@@ -102,3 +112,21 @@ class ForumComment(models.Model):
             self.post.last_activity_at = timezone.now()
             self.post.save(update_fields=["last_activity_at"])
         return super().save(*args, **kwargs)
+
+
+class ForumPostLike(models.Model):
+    post = models.ForeignKey(ForumPost, on_delete=models.CASCADE, related_name="likes")
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="forum_post_likes")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at", "-id"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["post", "user"],
+                name="uniq_forum_post_like",
+            )
+        ]
+
+    def __str__(self) -> str:
+        return f"Like post={self.post_id} user={self.user_id}"

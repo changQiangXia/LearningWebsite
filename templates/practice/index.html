@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block title %}AI 交互实践 | LearningWebsite{% endblock %}
+
+{% block content %}
+<section class="card">
+    <h1 style="margin-top:0;">AI 交互实践模块</h1>
+    <p class="muted">提供语音识别、AI 对话、图像识别和在线答题训练入口，用于体验 AI 在学习场景中的应用。</p>
+    <div style="display:flex; gap:0.6rem; flex-wrap:wrap;">
+        <a class="btn" href="{% url 'practice:speech_lab' %}">语音识别体验</a>
+        <a class="btn btn-outline" href="{% url 'practice:dialogue_lab' %}">AI 对话体验</a>
+        <a class="btn btn-outline" href="{% url 'practice:image_lab' %}">图像识别体验</a>
+        <a class="btn btn-outline" href="{% url 'quiz:index' %}">在线答题训练</a>
+    </div>
+</section>
+
+<section class="card" style="margin-top:1rem;">
+    <h2 style="margin-top:0;">推荐答题课时</h2>
+    {% if lessons %}
+        <div class="stack">
+            {% for lesson in lessons %}
+                <article style="border:1px solid var(--line); border-radius:10px; padding:0.9rem;">
+                    <h3 style="margin:0;">{{ lesson.title }}</h3>
+                    <p class="small muted">课程：{{ lesson.chapter.course.title }} / 章节：{{ lesson.chapter.title }}</p>
+                    <div style="display:flex; gap:0.6rem; flex-wrap:wrap;">
+                        <a class="btn" href="{% url 'quiz:take_lesson_quiz' lesson_id=lesson.id %}">开始测验</a>
+                        <a class="btn btn-outline" href="{% url 'courses:lesson_detail' lesson_id=lesson.id %}">查看课时</a>
+                    </div>
+                </article>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p class="muted">当前暂无可用练习课时。</p>
+    {% endif %}
+</section>
+{% endblock %}

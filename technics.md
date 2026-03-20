@@ -16,7 +16,17 @@
   - 默认：SQLite（`db.sqlite3`）
   - 可选：MySQL（驱动 `mysqlclient==2.2.7`）
 
-### 1.2 业务子系统（Apps）
+### 1.2 前端实现栈（论文可直接引用）
+
+- 前端技术：Django Template + HTML5 + CSS3（原生）
+- 渲染模式：SSR（服务端渲染）
+- 交互方式：以传统表单提交为主（`GET/POST`）
+- 方案定位：全 Python 单体架构，不采用 Vue/React 前后端分离
+
+可用于论文的标准表述：
+“本系统前端采用 Django Template 服务端渲染技术，页面由后端视图函数直接携带上下文渲染输出；前端界面主要使用原生 HTML/CSS 构建，交互以表单与路由跳转为主，未引入 Vue/React 等单页应用框架。”
+
+### 1.3 业务子系统（Apps）
 
 - `accounts`：注册登录、用户资料、角色体系
 - `courses`：课程-章节-课时建模、学习进度、内容工作台
@@ -26,14 +36,14 @@
 - `analytics`：学习行为统计与 CSV 导出
 - `core`：首页、健康检查、演示数据命令
 
-### 1.3 工程化与质量保障
+### 1.4 工程化与质量保障
 
 - 测试：`pytest`、`pytest-django`、Django `TestCase`
 - 代码规范：`black`、`isort`、`flake8`
 - 覆盖率：`coverage`
 - 环境管理：Conda + pip（隔离环境 `learningwebsite`）
 
-### 1.4 依赖清单出处
+### 1.5 依赖清单出处
 
 源码出处：`requirements.txt`
 
@@ -650,10 +660,25 @@ lesson, _ = Lesson.objects.update_or_create(...)
 - 采用母版模板统一导航、消息提示、视觉规范。
 - 各页面只需填充 `block content`，复用性强。
 
-### 12.2 服务端渲染（SSR）
+### 12.2 页面渲染入口（后端直接返回模板）
+
+源码出处：`core/views.py`
+
+```python
+def home(request):
+    return render(request, "core/home.html")
+```
+
+解析：
+
+- 视图函数直接调用 `render` 返回 HTML，符合 SSR 模式。
+- 前端页面并非通过前端框架二次渲染，而是后端一次性输出。
+
+### 12.3 服务端渲染（SSR）与前后端分离对比
 
 - 页面由视图直接 `render(request, template, context)` 输出。
 - 优势：技术栈统一、开发成本低、适合毕设快速迭代。
+- 本项目不使用 Vue/React，不依赖前端打包工具链（如 Vite/Webpack）。
 
 ---
 

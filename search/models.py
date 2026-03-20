@@ -6,6 +6,7 @@ class SearchSourceType(models.TextChoices):
     LESSON = "lesson", "Lesson"
     FORUM_POST = "forum_post", "Forum Post"
     QUESTION = "question", "Question"
+    RESOURCE = "resource", "Resource"
 
 
 class SearchDocument(models.Model):

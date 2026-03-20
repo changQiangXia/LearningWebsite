@@ -48,6 +48,22 @@
             <div class="small muted">题目总数</div>
             <div style="font-size:1.2rem; font-weight:700;">{{ total_questions }}</div>
         </div>
+        <div style="border:1px solid var(--line); border-radius:10px; padding:0.8rem;">
+            <div class="small muted">资源总数</div>
+            <div style="font-size:1.2rem; font-weight:700;">{{ total_resources }}</div>
+        </div>
+        <div style="border:1px solid var(--line); border-radius:10px; padding:0.8rem;">
+            <div class="small muted">教学指引数</div>
+            <div style="font-size:1.2rem; font-weight:700;">{{ total_guides }}</div>
+        </div>
+    </div>
+</section>
+
+<section class="card" style="margin-top:1rem;">
+    <h2 style="margin-top:0;">扩展模块入口</h2>
+    <div style="display:flex; gap:0.6rem; flex-wrap:wrap;">
+        <a class="btn btn-outline" href="{% url 'resources:manage_resource_list' %}">资源管理</a>
+        <a class="btn btn-outline" href="{% url 'guides:manage_guide_list' %}">教学指引管理</a>
     </div>
 </section>
 
@@ -145,6 +161,38 @@
         </ul>
     {% else %}
         <p class="muted">暂无题目记录。</p>
+    {% endif %}
+</section>
+
+<section class="card" style="margin-top:1rem;">
+    <h2 style="margin-top:0;">最近更新资源</h2>
+    {% if recent_resources %}
+        <ul>
+            {% for resource in recent_resources %}
+                <li>
+                    <a href="{% url 'resources:resource_detail' slug=resource.slug %}">{{ resource.title }}</a>
+                    <span class="small muted">({{ resource.course.title|default:"未关联课程" }})</span>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p class="muted">暂无资源记录。</p>
+    {% endif %}
+</section>
+
+<section class="card" style="margin-top:1rem;">
+    <h2 style="margin-top:0;">最近更新教学指引</h2>
+    {% if recent_guides %}
+        <ul>
+            {% for guide in recent_guides %}
+                <li>
+                    <a href="{% url 'guides:guide_detail' guide_id=guide.id %}">{{ guide.title }}</a>
+                    <span class="small muted">({{ guide.course.title }})</span>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p class="muted">暂无教学指引记录。</p>
     {% endif %}
 </section>
 

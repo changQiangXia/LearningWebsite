@@ -9,6 +9,7 @@ urlpatterns = [
     path("", views.index, name="index"),
     path("signup/", views.signup, name="signup"),
     path("profile/edit/", views.profile_edit, name="profile_edit"),
+    path("favorite/<str:target_type>/<int:target_id>/toggle/", views.toggle_favorite, name="toggle_favorite"),
     path(
         "login/",
         auth_views.LoginView.as_view(template_name="accounts/login.html"),

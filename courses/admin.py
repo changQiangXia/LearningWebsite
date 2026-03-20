@@ -1,12 +1,18 @@
 from django.contrib import admin
 
-from .models import Chapter, ContentAuditLog, Course, LearningProgress, Lesson
+from .models import Chapter, ContentAuditLog, Course, CourseGlossaryTerm, LearningProgress, Lesson
 
 
 class ChapterInline(admin.TabularInline):
     model = Chapter
     extra = 0
     fields = ("title", "order_no", "is_active")
+
+
+class CourseGlossaryTermInline(admin.TabularInline):
+    model = CourseGlossaryTerm
+    extra = 0
+    fields = ("term", "order_no")
 
 
 @admin.register(Course)
@@ -16,7 +22,7 @@ class CourseAdmin(admin.ModelAdmin):
     search_fields = ("title", "description", "slug")
     prepopulated_fields = {"slug": ("title",)}
     raw_id_fields = ("created_by",)
-    inlines = [ChapterInline]
+    inlines = [ChapterInline, CourseGlossaryTermInline]
 
 
 class LessonInline(admin.TabularInline):
@@ -56,3 +62,11 @@ class ContentAuditLogAdmin(admin.ModelAdmin):
     list_filter = ("target_type", "action", "created_at")
     search_fields = ("message", "actor__username", "course__title")
     raw_id_fields = ("actor", "course", "chapter", "lesson")
+
+
+@admin.register(CourseGlossaryTerm)
+class CourseGlossaryTermAdmin(admin.ModelAdmin):
+    list_display = ("term", "course", "order_no")
+    list_filter = ("course",)
+    search_fields = ("term", "definition", "course__title")
+    raw_id_fields = ("course",)

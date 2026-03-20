@@ -105,6 +105,25 @@ class Lesson(models.Model):
         return f"{self.chapter.title} / {self.title}"
 
 
+class CourseGlossaryTerm(models.Model):
+    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name="glossary_terms")
+    term = models.CharField(max_length=100)
+    definition = models.TextField()
+    order_no = models.PositiveIntegerField(default=1)
+
+    class Meta:
+        ordering = ["course_id", "order_no", "id"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["course", "order_no"],
+                name="uniq_glossary_order_per_course",
+            )
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.course.title} / {self.term}"
+
+
 class LearningProgress(models.Model):
     """Per-user learning state for a lesson."""
 

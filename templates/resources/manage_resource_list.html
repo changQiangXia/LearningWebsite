@@ -1,0 +1,60 @@
+﻿{% extends "base.html" %}
+
+{% block title %}资源管理 | LearningWebsite{% endblock %}
+
+{% block content %}
+<section class="card">
+    <div style="display:flex; justify-content:space-between; gap:0.8rem; flex-wrap:wrap; align-items:center;">
+        <div>
+            <h1 style="margin:0;">资源管理</h1>
+            <p class="muted small" style="margin:0.35rem 0 0;">统一管理学生资源、教师资源与公开状态。</p>
+        </div>
+        <a class="btn" href="{% url 'resources:manage_resource_create' %}">新增资源</a>
+    </div>
+</section>
+
+<section class="card" style="margin-top:1rem;">
+    {% if resources %}
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>标题</th>
+                    <th>类型</th>
+                    <th>课程</th>
+                    <th>课时</th>
+                    <th>受众</th>
+                    <th>排序</th>
+                    <th>状态</th>
+                    <th>更新时间</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for resource in resources %}
+                    <tr>
+                        <td><a href="{% url 'resources:resource_detail' slug=resource.slug %}">{{ resource.title }}</a></td>
+                        <td>{{ resource.get_resource_type_display }}</td>
+                        <td>{{ resource.course.title|default:"-" }}</td>
+                        <td>{% if resource.lesson %}第 {{ resource.lesson.order_no }} 课 {{ resource.lesson.title }}{% else %}-{% endif %}</td>
+                        <td>{{ resource.get_audience_display }}</td>
+                        <td>{{ resource.sort_order }}</td>
+                        <td>{% if resource.is_published %}公开{% else %}隐藏{% endif %}</td>
+                        <td>{{ resource.updated_at|date:"Y-m-d H:i" }}</td>
+                        <td>
+                            <div style="display:flex; gap:0.4rem; flex-wrap:wrap;">
+                                <a class="btn btn-outline" href="{% url 'resources:manage_resource_edit' resource_id=resource.id %}">编辑</a>
+                                <form method="post" action="{% url 'resources:manage_resource_toggle_publish' resource_id=resource.id %}" style="margin:0;">
+                                    {% csrf_token %}
+                                    <button class="btn btn-outline" type="submit">{% if resource.is_published %}隐藏{% else %}公开{% endif %}</button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p class="muted">暂无可管理资源。</p>
+    {% endif %}
+</section>
+{% endblock %}

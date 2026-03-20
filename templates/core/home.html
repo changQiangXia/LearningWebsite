@@ -1,25 +1,149 @@
-{% extends "base.html" %}
+﻿{% extends "base.html" %}
 
 {% block title %}首页 | LearningWebsite{% endblock %}
 
 {% block content %}
-<section class="card">
-    <h1 style="margin-top:0;">LearningWebsite 开发基线已就绪</h1>
-    <p class="muted">当前项目运行在隔离 conda 环境 <code>learningwebsite</code> 中。</p>
-    <p>推荐启动命令：<code>conda run -n learningwebsite python manage.py runserver</code></p>
+<section class="card" style="background:linear-gradient(135deg, #ffffff 0%, #eef5fc 100%);">
+    <div style="display:grid; grid-template-columns:minmax(0, 1.2fr) minmax(280px, 0.8fr); gap:1rem; align-items:center;">
+        <div>
+            <p class="small muted" style="margin:0 0 0.4rem;">课程门户</p>
+            <h1 style="margin:0 0 0.6rem;">走进人工智能</h1>
+            <p class="muted" style="line-height:1.8; margin:0;">
+                面向中学主题化学习场景，整合四课时课程内容、语音识别、图像识别、AI 对话、在线答题、资源共享、社区交流与教学指引，
+                形成“学内容、做体验、看资源、发笔记、做答题、查进度”的完整学习闭环。
+            </p>
+            <div style="display:flex; gap:0.7rem; flex-wrap:wrap; margin-top:1rem;">
+                <a class="btn" href="{% url 'courses:course_list' %}">进入课程内容</a>
+                <a class="btn btn-outline" href="{% url 'practice:index' %}">体验 AI 互动</a>
+                <a class="btn btn-outline" href="{% url 'search:index' %}">全局搜索</a>
+            </div>
+        </div>
+        <div class="card" style="margin:0; background:#0f4c81; color:#fff;">
+            <div class="stats-grid">
+                <div>
+                    <div class="small" style="opacity:0.75;">发布课程</div>
+                    <div style="font-size:1.5rem; font-weight:700;">{{ published_course_count }}</div>
+                </div>
+                <div>
+                    <div class="small" style="opacity:0.75;">课时总数</div>
+                    <div style="font-size:1.5rem; font-weight:700;">{{ lesson_count }}</div>
+                </div>
+                <div>
+                    <div class="small" style="opacity:0.75;">开放资源</div>
+                    <div style="font-size:1.5rem; font-weight:700;">{{ resource_count }}</div>
+                </div>
+                <div>
+                    <div class="small" style="opacity:0.75;">教学指引</div>
+                    <div style="font-size:1.5rem; font-weight:700;">{{ guide_count }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
 </section>
 
 <section class="card" style="margin-top:1rem;">
-    <h2 style="margin-top:0;">模块入口</h2>
-    <div class="stack">
-        <a href="/accounts/">账户中心</a>
-        <a href="/forum/">论坛</a>
-        <a href="/search/">搜索</a>
-        <a href="/courses/">课程</a>
-        <a href="/quiz/">测验</a>
-        <a href="/analytics/">数据看板</a>
-        <a href="/admin/">后台管理</a>
-        <a href="/health/">健康检查</a>
+    <div style="display:flex; justify-content:space-between; gap:0.8rem; flex-wrap:wrap; align-items:center;">
+        <div>
+            <h2 style="margin:0;">网站整体结构</h2>
+            <p class="muted small" style="margin:0.35rem 0 0;">对应“课程内容、交互体验、资源库、社区、搜索、个人中心、教学指引”七个入口。</p>
+        </div>
+        <form method="get" action="{% url 'search:index' %}" style="display:flex; gap:0.5rem; min-width:min(100%, 360px);">
+            <input type="text" name="q" placeholder="例如：人工智能、图像识别、AI 伦理">
+            <button class="btn" type="submit">搜索站内内容</button>
+        </form>
+    </div>
+    <div class="stats-grid" style="margin-top:1rem;">
+        <a class="card" href="{% url 'courses:course_list' %}" style="text-decoration:none;">
+            <strong>课程内容</strong>
+            <p class="muted small">第 1-4 课时导航、图文内容、嵌入视频与术语表。</p>
+        </a>
+        <a class="card" href="{% url 'practice:index' %}" style="text-decoration:none;">
+            <strong>交互体验</strong>
+            <p class="muted small">语音识别、图像识别、AI 对话与在线答题。</p>
+        </a>
+        <a class="card" href="{% url 'resources:resource_list' %}" style="text-decoration:none;">
+            <strong>资源库</strong>
+            <p class="muted small">按课时分类组织视频、阅读、图解、模板和工具资源。</p>
+        </a>
+        <a class="card" href="{% url 'forum:post_list' %}" style="text-decoration:none;">
+            <strong>社区交流</strong>
+            <p class="muted small">最新帖子、最热讨论、学习笔记与课时话题。</p>
+        </a>
+        <a class="card" href="{% url 'search:index' %}" style="text-decoration:none;">
+            <strong>搜索模块</strong>
+            <p class="muted small">支持关键词检索、类型筛选、课时筛选与高亮显示。</p>
+        </a>
+        <a class="card" href="{% url 'accounts:index' %}" style="text-decoration:none;">
+            <strong>个人中心</strong>
+            <p class="muted small">查看学习进度、收藏、笔记、错题和学习统计。</p>
+        </a>
+    </div>
+</section>
+
+{% if featured_course %}
+    <section class="card" style="margin-top:1rem;">
+        <div style="display:flex; justify-content:space-between; gap:0.8rem; flex-wrap:wrap; align-items:center;">
+            <div>
+                <h2 style="margin:0;">推荐专题课程</h2>
+                <p class="muted small" style="margin:0.35rem 0 0;">首页直接展示课时导航，方便演示课程门户结构。</p>
+            </div>
+            <a class="btn" href="{% url 'courses:course_detail' slug=featured_course.slug %}">查看课程详情</a>
+        </div>
+        <div style="margin-top:1rem; border:1px solid var(--line); border-radius:12px; padding:1rem; background:#fbfdff;">
+            <h3 style="margin:0;">{{ featured_course.title }}</h3>
+            <p class="muted" style="margin:0.45rem 0 0; line-height:1.75;">{{ featured_course.description|truncatechars:180 }}</p>
+            <div class="stats-grid" style="grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); margin-top:1rem;">
+                {% for chapter in featured_course.chapters.all %}
+                    {% for lesson in chapter.lessons.all %}
+                        <article style="border:1px solid var(--line); border-radius:10px; padding:0.9rem; background:#fff;">
+                            <div class="small muted">第 {{ lesson.order_no }} 课时</div>
+                            <div style="font-weight:700; margin-top:0.25rem;">{{ lesson.title }}</div>
+                            <p class="small muted" style="margin:0.45rem 0 0; line-height:1.6;">{{ lesson.content|truncatechars:70 }}</p>
+                            <a class="btn btn-outline" style="margin-top:0.8rem;" href="{% url 'courses:lesson_detail' lesson_id=lesson.id %}">进入本课</a>
+                        </article>
+                    {% endfor %}
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+{% endif %}
+
+<section class="card" style="margin-top:1rem;">
+    <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:1rem;">
+        <div>
+            <h2 style="margin-top:0;">最新笔记</h2>
+            {% if latest_notes %}
+                <div class="stack">
+                    {% for post in latest_notes %}
+                        <article style="border:1px solid var(--line); border-radius:10px; padding:0.8rem;">
+                            <a href="{% url 'forum:post_detail' post_id=post.id %}" style="font-weight:700;">{{ post.title }}</a>
+                            <p class="small muted" style="margin:0.35rem 0 0;">
+                                {% if post.lesson %}{{ post.lesson.title }} · {% endif %}{{ post.author.username|default:"匿名" }}
+                            </p>
+                        </article>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="muted">暂时还没有笔记内容。</p>
+            {% endif %}
+        </div>
+        <div>
+            <h2 style="margin-top:0;">最新讨论</h2>
+            {% if latest_discussions %}
+                <div class="stack">
+                    {% for post in latest_discussions %}
+                        <article style="border:1px solid var(--line); border-radius:10px; padding:0.8rem;">
+                            <a href="{% url 'forum:post_detail' post_id=post.id %}" style="font-weight:700;">{{ post.title }}</a>
+                            <p class="small muted" style="margin:0.35rem 0 0;">
+                                {% if post.lesson %}{{ post.lesson.title }} · {% endif %}浏览 {{ post.view_count }}
+                            </p>
+                        </article>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="muted">社区讨论正在建设中。</p>
+            {% endif %}
+        </div>
     </div>
 </section>
 {% endblock %}

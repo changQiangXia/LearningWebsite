@@ -1,0 +1,92 @@
+﻿{% extends "base.html" %}
+
+{% block title %}资源库 | LearningWebsite{% endblock %}
+
+{% block content %}
+<section class="card" style="background:linear-gradient(135deg, #ffffff 0%, #eef5fc 100%);">
+    <div style="display:flex; justify-content:space-between; gap:0.8rem; flex-wrap:wrap; align-items:center;">
+        <div>
+            <h1 style="margin:0;">资源库</h1>
+            <p class="muted" style="margin:0.4rem 0 0; line-height:1.7;">围绕“走进人工智能”专题按课时组织视频、阅读、图解、模板与工具资源，支持学生检索与教师二次备课。</p>
+        </div>
+        <div style="display:flex; gap:0.6rem; flex-wrap:wrap;">
+            {% if can_manage_resources %}
+                <a class="btn" href="{% url 'resources:manage_resource_create' %}">上传资源</a>
+                <a class="btn btn-outline" href="{% url 'resources:manage_resource_list' %}">资源管理</a>
+                <a class="btn btn-outline" href="{% url 'resources:teacher_resource_list' %}">教师资源页</a>
+            {% endif %}
+        </div>
+    </div>
+
+    <form method="get" style="margin-top:1rem;">
+        <div style="display:grid; grid-template-columns:minmax(200px, 1.6fr) repeat(3, minmax(140px, 1fr)) auto; gap:0.6rem;">
+            <input type="text" name="q" value="{{ keyword }}" placeholder="搜索标题、简介或标签">
+            <select name="type">
+                <option value="">全部类型</option>
+                <option value="courseware" {% if resource_type == "courseware" %}selected{% endif %}>课件</option>
+                <option value="video" {% if resource_type == "video" %}selected{% endif %}>视频</option>
+                <option value="reading" {% if resource_type == "reading" %}selected{% endif %}>阅读</option>
+                <option value="tool" {% if resource_type == "tool" %}selected{% endif %}>工具</option>
+            </select>
+            <select name="course">
+                <option value="">全部课程</option>
+                {% for item in course_options %}
+                    <option value="{{ item.id }}" {% if course_id == item.id|stringformat:"s" %}selected{% endif %}>{{ item.title }}</option>
+                {% endfor %}
+            </select>
+            <select name="lesson">
+                <option value="">全部课时</option>
+                {% for item in lesson_options %}
+                    <option value="{{ item.id }}" {% if lesson_id == item.id|stringformat:"s" %}selected{% endif %}>第 {{ item.order_no }} 课 {{ item.title }}</option>
+                {% endfor %}
+            </select>
+            <button class="btn" type="submit">筛选</button>
+        </div>
+    </form>
+</section>
+
+<section class="card" style="margin-top:1rem;">
+    <div style="display:flex; justify-content:space-between; gap:0.8rem; flex-wrap:wrap; align-items:center;">
+        <div>
+            <h2 style="margin:0;">按课时分类展示</h2>
+            <p class="small muted" style="margin:0.35rem 0 0;">当前共检索到 {{ resources|length }} 份可见资源。</p>
+        </div>
+        {% if can_manage_resources %}
+            <span class="badge">当前账号可查看教师专用资源</span>
+        {% endif %}
+    </div>
+
+    {% if resource_groups %}
+        <div class="stack" style="margin-top:1rem;">
+            {% for group in resource_groups %}
+                <section style="border:1px solid var(--line); border-radius:14px; padding:1rem; background:#fbfdff;">
+                    <div style="display:flex; justify-content:space-between; gap:0.8rem; flex-wrap:wrap; align-items:center;">
+                        <h3 style="margin:0;">{{ group.label }}</h3>
+                        <span class="badge">{{ group.resources|length }} 份资源</span>
+                    </div>
+                    <div class="stats-grid" style="grid-template-columns:repeat(auto-fit, minmax(240px, 1fr)); margin-top:0.9rem;">
+                        {% for resource in group.resources %}
+                            <article style="border:1px solid var(--line); border-radius:10px; padding:0.9rem; background:#fff;">
+                                <div style="display:flex; gap:0.35rem; flex-wrap:wrap; margin-bottom:0.5rem;">
+                                    <span class="badge">{{ resource.get_resource_type_display }}</span>
+                                    {% if resource.audience == 'teacher' %}<span class="badge">教师专用</span>{% endif %}
+                                    {% if not resource.is_published %}<span class="badge">未公开</span>{% endif %}
+                                </div>
+                                <a href="{% url 'resources:resource_detail' slug=resource.slug %}" style="font-weight:700;">{{ resource.title }}</a>
+                                <p class="muted small" style="margin:0.45rem 0 0; line-height:1.7;">{{ resource.description|truncatechars:96|default:"暂无资源简介。" }}</p>
+                                <p class="small muted" style="margin:0.55rem 0 0;">
+                                    {% if resource.course %}课程：{{ resource.course.title }}{% endif %}
+                                    {% if resource.lesson %}<br>课时：第 {{ resource.lesson.order_no }} 课 {{ resource.lesson.title }}{% endif %}
+                                    {% if resource.tags %}<br>标签：{{ resource.tags }}{% endif %}
+                                </p>
+                            </article>
+                        {% endfor %}
+                    </div>
+                </section>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p class="muted" style="margin-top:1rem;">当前筛选条件下暂无资源。</p>
+    {% endif %}
+</section>
+{% endblock %}

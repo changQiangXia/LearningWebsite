@@ -4,11 +4,13 @@ from django.dispatch import receiver
 from courses.models import Chapter, Course, Lesson
 from forum.models import ForumPost
 from quiz.models import Question
+from resources.models import Resource
 from search.indexing import (
     index_course,
     index_forum_post,
     index_lesson,
     index_question,
+    index_resource,
     remove_document,
 )
 from search.models import SearchSourceType
@@ -72,3 +74,13 @@ def index_question_on_save(sender, instance: Question, **kwargs):
 @receiver(post_delete, sender=Question)
 def remove_question_on_delete(sender, instance: Question, **kwargs):
     remove_document(SearchSourceType.QUESTION, instance.id)
+
+
+@receiver(post_save, sender=Resource)
+def index_resource_on_save(sender, instance: Resource, **kwargs):
+    index_resource(instance)
+
+
+@receiver(post_delete, sender=Resource)
+def remove_resource_on_delete(sender, instance: Resource, **kwargs):
+    remove_document(SearchSourceType.RESOURCE, instance.id)

@@ -32,6 +32,9 @@ INSTALLED_APPS = [
     "search",
     "analytics",
     "core",
+    "resources",
+    "guides",
+    "practice",
 ]
 
 MIDDLEWARE = [

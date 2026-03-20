@@ -7,6 +7,7 @@ from django.urls import reverse
 from courses.models import Chapter, Course, CourseStatus, Lesson
 from forum.models import ForumPost, ForumPostStatus
 from quiz.models import Question, QuestionType
+from resources.models import Resource, ResourceType
 from search.models import SearchDocument, SearchSourceType
 
 
@@ -54,14 +55,9 @@ class SearchSignalAndCommandTests(TestCase):
             description="Draft description",
             created_by=self.user,
         )
-        chapter = Chapter.objects.create(course=published_course, title="Chapter 1", order_no=1)
-        lesson = Lesson.objects.create(chapter=chapter, title="Lesson 1", content="Lesson body", order_no=1)
-        post = ForumPost.objects.create(
-            author=self.user,
-            title="Forum title",
-            content="Forum body",
-            status=ForumPostStatus.PUBLISHED,
-        )
+        chapter = Chapter.objects.create(course=published_course, title="C1", order_no=1)
+        lesson = Lesson.objects.create(chapter=chapter, title="Lesson 1", order_no=1, content="Lesson body")
+        post = ForumPost.objects.create(author=self.user, title="Forum Post", content="Forum body")
         question = Question.objects.create(
             lesson=lesson,
             question_type=QuestionType.SINGLE_CHOICE,
@@ -69,6 +65,26 @@ class SearchSignalAndCommandTests(TestCase):
             options=[{"key": "A", "text": "Framework"}, {"key": "B", "text": "Database"}],
             correct_answer=["A"],
             created_by=self.user,
+        )
+        published_resource = Resource.objects.create(
+            title="Published Resource",
+            description="Searchable resource body",
+            resource_type=ResourceType.READING,
+            course=published_course,
+            external_url="https://example.com/public-resource",
+            tags="django, resource",
+            created_by=self.user,
+            is_published=True,
+        )
+        hidden_resource = Resource.objects.create(
+            title="Hidden Resource",
+            description="Should be inactive in search.",
+            resource_type=ResourceType.TOOL,
+            course=published_course,
+            external_url="https://example.com/hidden-resource",
+            tags="hidden",
+            created_by=self.user,
+            is_published=False,
         )
 
         self.assertTrue(
@@ -106,6 +122,20 @@ class SearchSignalAndCommandTests(TestCase):
                 is_active=True,
             ).exists()
         )
+        self.assertTrue(
+            SearchDocument.objects.filter(
+                source_type=SearchSourceType.RESOURCE,
+                source_id=published_resource.id,
+                is_active=True,
+            ).exists()
+        )
+        self.assertTrue(
+            SearchDocument.objects.filter(
+                source_type=SearchSourceType.RESOURCE,
+                source_id=hidden_resource.id,
+                is_active=False,
+            ).exists()
+        )
 
     def test_rebuild_search_index_command(self):
         course = Course.objects.create(
@@ -124,12 +154,27 @@ class SearchSignalAndCommandTests(TestCase):
             correct_answer=["A"],
             created_by=self.user,
         )
+        resource = Resource.objects.create(
+            title="Command Resource",
+            description="abc",
+            resource_type=ResourceType.COURSEWARE,
+            course=course,
+            external_url="https://example.com/command-resource",
+            tags="command",
+            created_by=self.user,
+        )
 
         SearchDocument.objects.all().delete()
         self.assertEqual(SearchDocument.objects.count(), 0)
 
         call_command("rebuild_search_index")
-        self.assertGreater(SearchDocument.objects.count(), 0)
+        self.assertTrue(
+            SearchDocument.objects.filter(
+                source_type=SearchSourceType.RESOURCE,
+                source_id=resource.id,
+                is_active=True,
+            ).exists()
+        )
 
 
 class SearchViewTests(TestCase):
@@ -141,7 +186,7 @@ class SearchViewTests(TestCase):
             status=CourseStatus.PUBLISHED,
             created_by=self.user,
         )
-        self.course_draft = Course.objects.create(
+        Course.objects.create(
             title="Hidden Course",
             description="Should not be shown",
             status=CourseStatus.DRAFT,
@@ -149,19 +194,39 @@ class SearchViewTests(TestCase):
         )
         chapter = Chapter.objects.create(course=self.course_pub, title="Chapter 1", order_no=1)
         self.lesson = Lesson.objects.create(chapter=chapter, title="Django Model Basics", content="ORM intro", order_no=1)
-        self.post = ForumPost.objects.create(
+        ForumPost.objects.create(
             author=self.user,
             title="Django Help",
             content="How to write models?",
             status=ForumPostStatus.PUBLISHED,
         )
-        self.question = Question.objects.create(
+        Question.objects.create(
             lesson=self.lesson,
             question_type=QuestionType.SINGLE_CHOICE,
             stem="What does ORM stand for?",
             options=[{"key": "A", "text": "Object Relational Mapping"}, {"key": "B", "text": "Other"}],
             correct_answer=["A"],
             created_by=self.user,
+        )
+        Resource.objects.create(
+            title="Django Resource Pack",
+            description="Useful Django references",
+            resource_type=ResourceType.READING,
+            course=self.course_pub,
+            external_url="https://example.com/django-resource",
+            tags="Django, ORM",
+            created_by=self.user,
+            is_published=True,
+        )
+        Resource.objects.create(
+            title="Hidden Django Resource",
+            description="Should not be shown",
+            resource_type=ResourceType.TOOL,
+            course=self.course_pub,
+            external_url="https://example.com/hidden-django-resource",
+            tags="hidden",
+            created_by=self.user,
+            is_published=False,
         )
 
     def test_search_returns_expected_sections(self):
@@ -171,4 +236,6 @@ class SearchViewTests(TestCase):
         self.assertContains(response, "Django Model Basics")
         self.assertContains(response, "Django Help")
         self.assertContains(response, "What does ORM stand for?")
+        self.assertContains(response, "Django Resource Pack")
         self.assertNotContains(response, "Hidden Course")
+        self.assertNotContains(response, "Hidden Django Resource")

@@ -3,7 +3,8 @@ from django.core.management.base import BaseCommand
 from courses.models import Course, Lesson
 from forum.models import ForumPost
 from quiz.models import Question
-from search.indexing import index_course, index_forum_post, index_lesson, index_question
+from resources.models import Resource
+from search.indexing import index_course, index_forum_post, index_lesson, index_question, index_resource
 from search.models import SearchDocument
 
 
@@ -29,6 +30,10 @@ class Command(BaseCommand):
         self.stdout.write("Indexing questions...")
         for question in Question.objects.select_related("lesson", "lesson__chapter", "lesson__chapter__course").iterator():
             index_question(question)
+
+        self.stdout.write("Indexing resources...")
+        for resource in Resource.objects.select_related("course").iterator():
+            index_resource(resource)
 
         count = SearchDocument.objects.count()
         self.stdout.write(self.style.SUCCESS(f"Search index rebuild completed. documents={count}"))

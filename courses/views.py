@@ -7,11 +7,13 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 
 from accounts.models import UserRole
+from guides.models import TeachingGuide
 from quiz.models import Question
+from resources.models import Resource, ResourceAudience
 
 from .audit import log_content_action
 from .forms import ManageChapterForm, ManageCourseForm, ManageLessonForm
-from .models import AuditTargetType, Chapter, ContentAuditLog, Course, CourseStatus, LearningProgress, Lesson
+from .models import AuditTargetType, Chapter, ContentAuditLog, Course, CourseGlossaryTerm, CourseStatus, LearningProgress, Lesson
 
 
 def _is_manager(user):
@@ -86,6 +88,50 @@ def _add_form_validation_error(form, exc):
     form.add_error(None, str(exc))
 
 
+def _embed_video_url(url):
+    if not url:
+        return ""
+    if "youtube.com/watch?v=" in url:
+        video_id = url.split("watch?v=", 1)[1].split("&", 1)[0]
+        return f"https://www.youtube.com/embed/{video_id}"
+    if "youtu.be/" in url:
+        video_id = url.split("youtu.be/", 1)[1].split("?", 1)[0]
+        return f"https://www.youtube.com/embed/{video_id}"
+    if "bilibili.com/video/" in url:
+        video_id = url.split("bilibili.com/video/", 1)[1].split("?", 1)[0].strip("/")
+        if video_id:
+            return f"https://player.bilibili.com/player.html?bvid={video_id}&page=1"
+    return url
+
+
+def _interactive_prompt_for_lesson(lesson):
+    prompt_map = {
+        1: {
+            "title": "互动节点：身边的 AI 观察",
+            "body": "试着说出一个生活中的 AI 场景，例如推荐系统、地图导航或人脸解锁，并思考它依赖了什么数据。",
+        },
+        2: {
+            "title": "互动节点：技术基石配对",
+            "body": "把“数据、算法、算力”分别和一个真实案例联系起来，例如语音识别为什么既需要大量语音数据，也需要算力支持。",
+        },
+        3: {
+            "title": "互动节点：AI 伦理判断",
+            "body": "阅读案例后思考：如果算法偏见影响了招聘结果，责任应该由谁承担？",
+        },
+        4: {
+            "title": "互动节点：单元总结反思",
+            "body": "用一句话总结本单元最重要的一个观点，并写下未来最想继续探索的 AI 方向。",
+        },
+    }
+    return prompt_map.get(
+        lesson.order_no,
+        {
+            "title": "互动节点：开放反思",
+            "body": "结合本课时内容，提出一个值得继续追问的问题。",
+        },
+    )
+
+
 def course_list(request):
     courses = list(
         _visible_courses(request.user)
@@ -157,6 +203,27 @@ def course_detail(request, slug: str):
     total_lessons = sum(len(chapter.lessons.all()) for chapter in chapters)
     completed_count = len(completed_lesson_ids)
     completion_rate = round((completed_count / total_lessons) * 100, 2) if total_lessons else 0
+    if can_manage_course:
+        related_resources = list(
+            Resource.objects.filter(course=course).order_by("-updated_at", "-id")[:6]
+        )
+        related_guides = list(
+            TeachingGuide.objects.filter(course=course).order_by("order_no", "id")[:6]
+        )
+    else:
+        related_resources = list(
+            Resource.objects.filter(course=course, is_published=True, audience=ResourceAudience.ALL).order_by(
+                "lesson__order_no",
+                "sort_order",
+                "-updated_at",
+                "-id",
+            )[:8]
+        )
+        related_guides = list(
+            TeachingGuide.objects.filter(course=course, is_published=True).order_by("order_no", "id")[:6]
+        )
+    glossary_terms = list(CourseGlossaryTerm.objects.filter(course=course).order_by("order_no", "id")[:20])
+    featured_videos = [lesson for chapter in chapters for lesson in chapter.lessons.all() if lesson.video_url][:4]
 
     return render(
         request,
@@ -169,6 +236,10 @@ def course_detail(request, slug: str):
             "completed_count": completed_count,
             "completion_rate": completion_rate,
             "can_manage_course": can_manage_course,
+            "related_resources": related_resources,
+            "related_guides": related_guides,
+            "glossary_terms": glossary_terms,
+            "featured_videos": featured_videos,
         },
     )
 
@@ -198,6 +269,33 @@ def lesson_detail(request, lesson_id: int):
             progress.view_count += 1
             progress.save(update_fields=["view_count", "last_viewed_at"])
 
+    if can_manage_lesson:
+        related_resources = list(
+            Resource.objects.filter(Q(lesson=lesson) | Q(course=course, lesson__isnull=True))
+            .order_by("sort_order", "-updated_at", "-id")[:10]
+        )
+    elif _is_manager(request.user):
+        related_resources = list(
+            Resource.objects.filter(
+                Q(lesson=lesson) | Q(course=course, lesson__isnull=True),
+                is_published=True,
+            )
+            .filter(Q(audience=ResourceAudience.ALL) | Q(audience=ResourceAudience.TEACHER))
+            .order_by("sort_order", "-updated_at", "-id")[:10]
+        )
+    else:
+        related_resources = list(
+            Resource.objects.filter(
+                Q(lesson=lesson) | Q(course=course, lesson__isnull=True),
+                is_published=True,
+                audience=ResourceAudience.ALL,
+            ).order_by("sort_order", "-updated_at", "-id")[:10]
+        )
+    guide_qs = TeachingGuide.objects.filter(course=course)
+    if not can_manage_lesson:
+        guide_qs = guide_qs.filter(is_published=True)
+    glossary_terms = list(CourseGlossaryTerm.objects.filter(course=course).order_by("order_no", "id")[:15])
+
     return render(
         request,
         "courses/lesson_detail.html",
@@ -206,9 +304,15 @@ def lesson_detail(request, lesson_id: int):
             "course": course,
             "previous_lesson": previous_lesson,
             "next_lesson": next_lesson,
+            "all_lessons": all_lessons,
             "question_count": question_count,
             "progress": progress,
             "can_manage_lesson": can_manage_lesson,
+            "interactive_prompt": _interactive_prompt_for_lesson(lesson),
+            "embedded_video_url": _embed_video_url(lesson.video_url),
+            "related_resources": related_resources,
+            "teaching_guides": list(guide_qs.order_by("order_no", "id")[:4]),
+            "glossary_terms": glossary_terms,
         },
     )
 
@@ -259,6 +363,12 @@ def manage_dashboard(request):
         "courses": courses[:12],
         "recent_lessons": recent_lessons,
         "recent_questions": recent_questions,
+        "recent_resources": list(
+            Resource.objects.filter(course_id__in=course_ids).select_related("course").order_by("-updated_at", "-id")[:8]
+        ),
+        "recent_guides": list(
+            TeachingGuide.objects.filter(course_id__in=course_ids).select_related("course").order_by("-updated_at", "-id")[:8]
+        ),
         "recent_logs": recent_logs,
         "total_courses": len(courses),
         "published_courses": sum(1 for c in courses if c.status == CourseStatus.PUBLISHED),
@@ -268,6 +378,8 @@ def manage_dashboard(request):
         "inactive_chapters": Chapter.objects.filter(course_id__in=course_ids, is_active=False).count(),
         "inactive_lessons": lessons_qs.filter(Q(is_active=False) | Q(chapter__is_active=False)).count(),
         "total_questions": Question.objects.filter(lesson__chapter__course_id__in=course_ids).count(),
+        "total_resources": Resource.objects.filter(course_id__in=course_ids).count(),
+        "total_guides": TeachingGuide.objects.filter(course_id__in=course_ids).count(),
     }
     return render(request, "courses/manage_dashboard.html", context)
 
