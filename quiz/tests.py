@@ -92,6 +92,25 @@ class QuizPersistenceTests(TestCase):
         self.assertEqual(wrong.wrong_count, 1)
         self.assertFalse(wrong.resolved)
 
+    def test_course_quiz_page_renders(self):
+        self.client.login(username="quiz_view_user", password="Password123!")
+        response = self.client.get(reverse("quiz:take_course_quiz", kwargs={"course_slug": self.course.slug}))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "单元综合测验")
+        self.assertContains(response, self.q1.stem)
+
+    def test_course_quiz_submission_creates_records(self):
+        self.client.login(username="quiz_view_user", password="Password123!")
+        response = self.client.post(
+            reverse("quiz:take_course_quiz", kwargs={"course_slug": self.course.slug}),
+            {f"q_{self.q1.id}": "B", f"q_{self.q2.id}": "A"},
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "单元综合测验")
+        submission = QuizSubmission.objects.order_by("-id").first()
+        self.assertEqual(submission.total_questions, 2)
+        self.assertEqual(submission.correct_count, 2)
+
     def test_wrong_question_counter_and_resolve_flow(self):
         self.client.login(username="quiz_view_user", password="Password123!")
         url = reverse("quiz:take_lesson_quiz", kwargs={"lesson_id": self.lesson.id})

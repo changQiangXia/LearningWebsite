@@ -1,14 +1,19 @@
 import csv
 
+from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
 from django.db.models import Avg, Count
 from django.http import HttpResponse
-from django.shortcuts import render
+from django.shortcuts import get_object_or_404, redirect, render
+from django.utils.http import url_has_allowed_host_and_scheme
 
 from courses.models import Course, CourseStatus, LearningProgress, Lesson
 from forum.models import ForumPost, ForumPostStatus
 from quiz.models import QuizSubmission, WrongQuestion
+
+from .forms import LearningFeedbackForm
+from .models import LearningFeedback
 
 
 User = get_user_model()
@@ -44,6 +49,18 @@ def _build_student_context(user):
 
     open_wrong_count = WrongQuestion.objects.filter(user=user, resolved=False).count()
     resolved_wrong_count = WrongQuestion.objects.filter(user=user, resolved=True).count()
+    feedback_qs = LearningFeedback.objects.filter(user=user, course__in=courses_qs).select_related("course")
+    feedback_count = feedback_qs.count()
+    feedback_completion_rate = round((feedback_count / len(courses)) * 100, 2) if courses else 0
+    feedback_summary = feedback_qs.aggregate(
+        concept_avg=Avg("concept_score"),
+        mechanism_avg=Avg("mechanism_score"),
+        ethics_avg=Avg("ethics_score"),
+        expression_avg=Avg("expression_score"),
+        exploration_avg=Avg("exploration_score"),
+    )
+    feedback_course_ids = set(feedback_qs.values_list("course_id", flat=True))
+    recent_feedback = list(feedback_qs.order_by("-updated_at", "-id")[:3])
 
     total_by_course = {
         row["chapter__course_id"]: row["total"]
@@ -86,6 +103,13 @@ def _build_student_context(user):
         "resolved_wrong_count": resolved_wrong_count,
         "recent_submissions": recent_submissions,
         "course_progress_rows": course_progress_rows,
+        "feedback_count": feedback_count,
+        "feedback_completion_rate": feedback_completion_rate,
+        "feedback_course_ids": feedback_course_ids,
+        "feedback_summary": {
+            key: round(float(value or 0), 2) for key, value in feedback_summary.items()
+        },
+        "recent_feedback": recent_feedback,
     }
 
 
@@ -112,6 +136,14 @@ def _build_staff_context():
 
     open_wrong_count = WrongQuestion.objects.filter(resolved=False).count()
     resolved_wrong_count = WrongQuestion.objects.filter(resolved=True).count()
+    feedback_count = LearningFeedback.objects.count()
+    feedback_summary = LearningFeedback.objects.aggregate(
+        concept_avg=Avg("concept_score"),
+        mechanism_avg=Avg("mechanism_score"),
+        ethics_avg=Avg("ethics_score"),
+        expression_avg=Avg("expression_score"),
+        exploration_avg=Avg("exploration_score"),
+    )
 
     completed_lessons_by_user = {
         row["user_id"]: row["completed_lessons"]
@@ -196,6 +228,10 @@ def _build_staff_context():
         "avg_accuracy": avg_accuracy,
         "open_wrong_count": open_wrong_count,
         "resolved_wrong_count": resolved_wrong_count,
+        "feedback_count": feedback_count,
+        "feedback_summary": {
+            key: round(float(value or 0), 2) for key, value in feedback_summary.items()
+        },
         "learner_rows": learner_rows,
         "course_rows": course_rows,
     }
@@ -210,6 +246,8 @@ def _write_student_csv(writer, context):
     writer.writerow(["Summary", "Average Accuracy", f'{context["avg_accuracy"]}%'])
     writer.writerow(["Summary", "Open Wrong Questions", context["open_wrong_count"]])
     writer.writerow(["Summary", "Resolved Wrong Questions", context["resolved_wrong_count"]])
+    writer.writerow(["Summary", "Feedback Count", context["feedback_count"]])
+    writer.writerow(["Summary", "Feedback Completion Rate", f'{context["feedback_completion_rate"]}%'])
     writer.writerow([])
     writer.writerow(["Course", "Completed", "Total", "Completion Rate"])
     for row in context["course_progress_rows"]:
@@ -241,6 +279,7 @@ def _write_staff_csv(writer, context):
     writer.writerow(["Quiz", "Average Accuracy", f'{context["avg_accuracy"]}%'])
     writer.writerow(["Quiz", "Open Wrong Questions", context["open_wrong_count"]])
     writer.writerow(["Quiz", "Resolved Wrong Questions", context["resolved_wrong_count"]])
+    writer.writerow(["Feedback", "Submitted Forms", context["feedback_count"]])
     writer.writerow([])
     writer.writerow(["Top Learners"])
     writer.writerow(["Username", "Completed Lessons", "Quiz Submissions", "Average Accuracy"])
@@ -292,3 +331,41 @@ def export_csv(request):
         _write_student_csv(writer, context)
 
     return response
+
+
+@login_required
+def feedback_form(request, course_slug: str):
+    course_qs = _visible_courses(request.user)
+    course = get_object_or_404(course_qs, slug=course_slug)
+    feedback = LearningFeedback.objects.filter(user=request.user, course=course).first()
+
+    if request.method == "POST":
+        form = LearningFeedbackForm(request.POST, instance=feedback)
+        if form.is_valid():
+            feedback = form.save(commit=False)
+            feedback.user = request.user
+            feedback.course = course
+            feedback.save()
+            messages.success(request, "????????")
+            next_url = request.POST.get("next") or request.GET.get("next") or ""
+            if next_url and url_has_allowed_host_and_scheme(
+                url=next_url,
+                allowed_hosts={request.get_host()},
+                require_https=request.is_secure(),
+            ):
+                return redirect(next_url)
+            return redirect("analytics:index")
+    else:
+        form = LearningFeedbackForm(instance=feedback)
+
+    return render(
+        request,
+        "analytics/feedback_form.html",
+        {
+            "form": form,
+            "course": course,
+            "feedback": feedback,
+            "next": request.GET.get("next", ""),
+        },
+    )
+

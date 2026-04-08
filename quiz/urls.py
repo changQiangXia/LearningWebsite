@@ -6,6 +6,7 @@ app_name = "quiz"
 
 urlpatterns = [
     path("", views.index, name="index"),
+    path("course/<slug:course_slug>/", views.take_course_quiz, name="take_course_quiz"),
     path("manage/lesson/<int:lesson_id>/questions/", views.manage_question_list, name="manage_question_list"),
     path("manage/lesson/<int:lesson_id>/question/new/", views.manage_question_create, name="manage_question_create"),
     path("manage/question/<int:question_id>/edit/", views.manage_question_edit, name="manage_question_edit"),

@@ -1,0 +1,74 @@
+﻿{% extends "base.html" %}
+
+{% block title %}发布成果展示 | LearningWebsite{% endblock %}
+
+{% block content %}
+<div class="sidebar-layout">
+    <aside class="sidebar stack">
+        <section class="card">
+            <h2 style="margin-top:0; font-size:1.05rem;">展示建议</h2>
+            <p class="small muted" style="line-height:1.7; margin:0;">建议围绕“核心观点、案例依据、个人反思、展示结构”组织内容，避免只贴结论不解释过程。</p>
+        </section>
+        <section class="card">
+            <h2 style="margin-top:0; font-size:1.05rem;">可展示方向</h2>
+            <div class="stack" style="gap:0.55rem;">
+                <div style="border:1px solid var(--line); border-radius:10px; padding:0.75rem;">
+                    <div style="font-weight:700;">单元海报</div>
+                    <div class="small muted" style="margin-top:0.3rem; line-height:1.6;">概括“概念 - 技术 - 伦理 - 展望”四部分内容。</div>
+                </div>
+                <div style="border:1px solid var(--line); border-radius:10px; padding:0.75rem;">
+                    <div style="font-weight:700;">案例分析</div>
+                    <div class="small muted" style="margin-top:0.3rem; line-height:1.6;">围绕一个 AI 应用，说明数据、算法、算力与社会影响。</div>
+                </div>
+                <div style="border:1px solid var(--line); border-radius:10px; padding:0.75rem;">
+                    <div style="font-weight:700;">答辩讲解提纲</div>
+                    <div class="small muted" style="margin-top:0.3rem; line-height:1.6;">用条理化结构整理展示顺序，便于后续做 PPT 或口头汇报。</div>
+                </div>
+            </div>
+        </section>
+    </aside>
+
+    <section class="card">
+        <h1 style="margin-top:0;">发布成果展示</h1>
+        <p class="muted" style="line-height:1.7;">发布后可在帖子详情页继续补充教师点评、同伴评论和点赞数据。</p>
+        <div id="topic-hint" class="card" style="margin:0 0 1rem; background:#fbfdff;">
+            <strong>展示提示</strong>
+            <p class="small muted" style="margin:0.45rem 0 0;">请选择课时后查看对应的话题引导。</p>
+        </div>
+        <form method="post">
+            {% csrf_token %}
+            {% for field in form %}
+                <div class="form-row">
+                    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                    {{ field }}
+                    {{ field.errors }}
+                </div>
+            {% endfor %}
+            <div style="display:flex; gap:0.6rem; flex-wrap:wrap;">
+                <button class="btn" type="submit">提交展示</button>
+                <a class="btn btn-outline" href="{% url 'forum:showcase_list' %}">取消</a>
+            </div>
+        </form>
+    </section>
+</div>
+
+{{ topic_prompts|json_script:"forum-showcase-prompts" }}
+<script>
+    (function () {
+        const lessonField = document.getElementById('id_lesson');
+        const hint = document.getElementById('topic-hint');
+        const dataNode = document.getElementById('forum-showcase-prompts');
+        if (!lessonField || !hint || !dataNode) {
+            return;
+        }
+        const prompts = JSON.parse(dataNode.textContent);
+        const renderHint = () => {
+            const value = lessonField.value;
+            const text = prompts[value] || '请选择课时后查看对应的话题引导。';
+            hint.innerHTML = '<strong>展示提示</strong><p class="small muted" style="margin:0.45rem 0 0;">' + text + '</p>';
+        };
+        lessonField.addEventListener('change', renderHint);
+        renderHint();
+    })();
+</script>
+{% endblock %}

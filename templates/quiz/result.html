@@ -1,16 +1,18 @@
-{% extends "base.html" %}
+﻿{% extends "base.html" %}
 
 {% block title %}测验结果 | LearningWebsite{% endblock %}
 
 {% block content %}
 <section class="card">
-    <h1 style="margin-top:0;">测验结果：{{ lesson.title }}</h1>
+    <h1 style="margin-top:0;">{{ result_title|default:lesson.title }}</h1>
     <p class="small">
         提交编号：<strong>#{{ submission.id }}</strong><br>
         模式：
         <strong>
             {% if quiz_mode == "wrong_retry" %}
                 错题重练
+            {% elif quiz_mode == "course_unit" %}
+                单元综合测验
             {% else %}
                 课时测验
             {% endif %}
@@ -22,6 +24,8 @@
     <div style="display:flex; gap:0.6rem; flex-wrap:wrap;">
         {% if quiz_mode == "wrong_retry" %}
             <a class="btn" href="{% url 'quiz:retry_wrong_questions' lesson_id=lesson.id %}">继续重练未解决错题</a>
+        {% elif quiz_mode == "course_unit" %}
+            <a class="btn" href="{% url 'quiz:take_course_quiz' course_slug=lesson.chapter.course.slug %}">再次进行综合测验</a>
         {% else %}
             <a class="btn" href="{% url 'quiz:take_lesson_quiz' lesson_id=lesson.id %}">再次测验</a>
         {% endif %}

@@ -13,6 +13,7 @@ class ForumPostCategory(models.TextChoices):
     DISCUSSION = "discussion", "讨论"
     HELP = "help", "求助"
     SHARE = "share", "分享"
+    SHOWCASE = "showcase", "成果展示"
 
 
 class ForumPostStatus(models.TextChoices):

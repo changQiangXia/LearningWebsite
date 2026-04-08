@@ -103,11 +103,11 @@
             <div class="hero-subgrid">
                 <div class="metric-panel">
                     <div class="panel-label">学习提示</div>
-                    <p class="panel-copy">建议先阅读课时内容，再进入互动学习节点完成体验，最后通过课时测验检验掌握情况。</p>
+                    <p class="panel-copy">建议先阅读课时内容，再完成课堂练习与互动体验，最后通过课时测验或单元问卷检验掌握情况。</p>
                     <div class="metric-grid">
                         <div class="metric-item">
-                            <span>互动实验</span>
-                            <strong>语音 / 图像 / 对话</strong>
+                            <span>轻量练习</span>
+                            <strong>{% if lesson_activities %}本页内嵌 {{ lesson_activities|length }} 项{% else %}暂无内嵌练习{% endif %}</strong>
                         </div>
                         <div class="metric-item">
                             <span>知识巩固</span>
@@ -154,12 +154,83 @@
             </div>
         </section>
 
+        {% if lesson_activities %}
+            <section class="card reveal">
+                <div class="section-head">
+                    <div>
+                        <span class="eyebrow">Embedded Activities</span>
+                        <h2>课堂练习</h2>
+                    </div>
+                </div>
+                <div class="stack">
+                    {% for activity in lesson_activities %}
+                        <article class="content-panel lesson-activity-card">
+                            <div class="hero-meta" style="margin-top:0; margin-bottom:0.7rem;">
+                                <span class="badge">{% if activity.type == 'single_choice' %}即时判断{% else %}开放反思{% endif %}</span>
+                            </div>
+                            <strong>{{ activity.title }}</strong>
+                            <p class="section-copy">{{ activity.prompt }}</p>
+                            {% if activity.type == "single_choice" %}
+                                <div class="lesson-choice-group" data-answer="{{ activity.answer }}">
+                                    <div class="stack" style="gap:0.6rem; margin-top:0.9rem;">
+                                        {% for option in activity.options %}
+                                            <label class="lesson-choice-pill">
+                                                <input type="radio" name="activity-{{ forloop.parentloop.counter }}" value="{{ forloop.counter0 }}">
+                                                <span>{{ option }}</span>
+                                            </label>
+                                        {% endfor %}
+                                    </div>
+                                    <div class="hero-actions" style="margin-top:0.9rem;">
+                                        <button class="btn btn-outline lesson-check-btn" type="button">检查答案</button>
+                                    </div>
+                                    <p class="lesson-choice-feedback small muted" hidden></p>
+                                    <div class="content-panel" style="margin-top:0.9rem; background:rgba(238, 244, 255, 0.7);">
+                                        <strong>解析</strong>
+                                        <p class="section-copy">{{ activity.explanation }}</p>
+                                    </div>
+                                </div>
+                            {% else %}
+                                <div class="content-panel" style="margin-top:0.9rem; background:rgba(255, 248, 240, 0.72);">
+                                    <strong>作答提示</strong>
+                                    <ul class="lesson-tip-list">
+                                        {% for tip in activity.tips %}
+                                            <li>{{ tip }}</li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                            {% endif %}
+                        </article>
+                    {% endfor %}
+                </div>
+            </section>
+        {% endif %}
+
+        {% if application_cards %}
+            <section class="card reveal">
+                <div class="section-head">
+                    <div>
+                        <span class="eyebrow">Application Cases</span>
+                        <h2>应用案例拆解</h2>
+                    </div>
+                </div>
+                <div class="split-grid">
+                    {% for card in application_cards %}
+                        <article class="content-panel">
+                            <strong>{{ card.title }}</strong>
+                            <p class="section-copy">{{ card.scenario }}</p>
+                            <p class="section-copy"><span class="muted">三要素映射：</span>{{ card.mapping }}</p>
+                        </article>
+                    {% endfor %}
+                </div>
+            </section>
+        {% endif %}
+
         {% if embedded_video_url %}
             <section class="card reveal">
                 <div class="section-head">
                     <div>
-                        <span class="eyebrow">Embedded Media</span>
-                        <h2>嵌入视频</h2>
+                        <span class="eyebrow">Video Resource</span>
+                        <h2>视频资源</h2>
                     </div>
                     <a class="btn btn-outline" href="{{ lesson.video_url }}" target="_blank" rel="noopener">单独打开视频</a>
                 </div>
@@ -180,6 +251,52 @@
                     </div>
                 </div>
                 <a class="btn btn-outline" href="{{ lesson.video_url }}" target="_blank" rel="noopener">打开视频资源</a>
+            </section>
+        {% endif %}
+
+        {% if feedback_url or showcase_list_url %}
+            <section class="card reveal">
+                <div class="section-head">
+                    <div>
+                        <span class="eyebrow">Unit Wrap-up</span>
+                        <h2>单元总结与成果展示</h2>
+                    </div>
+                </div>
+                <div class="split-grid">
+                    {% if feedback_url %}
+                        <article class="content-panel">
+                            <strong>学习自评问卷</strong>
+                            <p class="section-copy">围绕概念理解、技术机制、伦理认知和表达意愿完成单元自评，支持后续在数据看板中汇总展示。</p>
+                            <div class="hero-actions">
+                                <a class="btn {% if feedback_exists %}btn-outline{% endif %}" href="{{ feedback_url }}?next={% url 'courses:lesson_detail' lesson_id=lesson.id %}">{% if feedback_exists %}查看或修改问卷{% else %}填写自评问卷{% endif %}</a>
+                                {% if unit_quiz_url %}
+                                    <a class="btn btn-outline" href="{{ unit_quiz_url }}">进入10题综合测验</a>
+                                {% endif %}
+                            </div>
+                        </article>
+                    {% endif %}
+                    {% if showcase_list_url %}
+                        <article class="content-panel">
+                            <strong>成果展示区</strong>
+                            <p class="section-copy">将单元海报、PPT 结构、学习收获或案例分析发布到成果展示区，教师可直接在帖子详情中点评。</p>
+                            <div class="hero-actions">
+                                <a class="btn btn-outline" href="{{ showcase_list_url }}">浏览成果展示</a>
+                                <a class="btn" href="{{ showcase_create_url }}">发布成果展示</a>
+                            </div>
+                        </article>
+                    {% endif %}
+                </div>
+                {% if showcase_posts %}
+                    <div class="stack" style="margin-top:1rem;">
+                        {% for post in showcase_posts %}
+                            <article class="content-panel">
+                                <strong><a href="{% url 'forum:post_detail' post_id=post.id %}">{{ post.title }}</a></strong>
+                                <p class="section-copy">{{ post.content|truncatechars:120 }}</p>
+                                <p class="section-copy">发布者：{{ post.author.username|default:"匿名" }} · {{ post.created_at|date:"Y-m-d H:i" }}</p>
+                            </article>
+                        {% endfor %}
+                    </div>
+                {% endif %}
             </section>
         {% endif %}
 
@@ -228,4 +345,31 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    (function () {
+        const groups = document.querySelectorAll('.lesson-choice-group');
+        groups.forEach((group) => {
+            const button = group.querySelector('.lesson-check-btn');
+            const feedback = group.querySelector('.lesson-choice-feedback');
+            if (!button || !feedback) {
+                return;
+            }
+            button.addEventListener('click', () => {
+                const selected = group.querySelector('input[type="radio"]:checked');
+                if (!selected) {
+                    feedback.hidden = false;
+                    feedback.textContent = '请先选择一个选项，再检查答案。';
+                    return;
+                }
+                const expected = group.dataset.answer;
+                const isCorrect = selected.value === expected;
+                feedback.hidden = false;
+                feedback.textContent = isCorrect ? '回答正确，可继续看下方解析巩固原因。' : '回答未命中参考答案，可结合解析继续回看本课内容。';
+            });
+        });
+    })();
+</script>
 {% endblock %}

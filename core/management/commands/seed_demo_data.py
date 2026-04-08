@@ -5,6 +5,7 @@ from django.urls import reverse
 from django.utils import timezone
 
 from accounts.models import FavoriteItem, FavoriteTargetType, UserRole
+from analytics.models import LearningFeedback
 from courses.audit import log_content_action
 from courses.models import (
     AuditTargetType,
@@ -268,6 +269,32 @@ class Command(BaseCommand):
         return progress
 
     @staticmethod
+    def _ensure_feedback(
+        *,
+        user,
+        course,
+        concept_score,
+        mechanism_score,
+        ethics_score,
+        expression_score,
+        exploration_score,
+        reflection="",
+    ):
+        feedback, _ = LearningFeedback.objects.update_or_create(
+            user=user,
+            course=course,
+            defaults={
+                "concept_score": concept_score,
+                "mechanism_score": mechanism_score,
+                "ethics_score": ethics_score,
+                "expression_score": expression_score,
+                "exploration_score": exploration_score,
+                "reflection": reflection,
+            },
+        )
+        return feedback
+
+    @staticmethod
     def _ensure_practice_record(*, user, practice_type, input_text="", output_text="", metadata=None):
         PracticeRecord.objects.update_or_create(
             user=user,
@@ -340,36 +367,36 @@ class Command(BaseCommand):
             lesson_specs = [
                 {
                     "order_no": 1,
-                    "title": "第1课时 人工智能是什么",
-                    "estimated_minutes": 18,
+                    "title": "什么是人工智能",
+                    "estimated_minutes": 45,
                     "is_free_preview": True,
-                    "video_url": "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4",
+                    "video_url": "https://www.bilibili.com/video/BV1qJ4m1P7N1?p=1",
                     "attachment_url": "https://www.ibm.com/topics/artificial-intelligence",
-                    "content": "课程概述：本课时从“什么是人工智能”切入，说明人工智能并不是神秘黑箱，而是让机器表现出感知、判断、学习和生成能力的技术集合。\n\n重点内容：1. 区分人工智能、机器学习与深度学习的关系。2. 通过推荐系统、语音助手、人脸识别等生活案例认识 AI。3. 用时间线梳理图灵测试、专家系统、机器学习浪潮与生成式 AI 的发展。\n\n学习任务：观察生活中的一个 AI 场景，尝试说明它输入了什么数据、输出了什么结果。",
+                    "content": "学习目标：理解人工智能的基本概念，认识生活中的 AI 应用。\n\n文字内容：人工智能是让机器模拟人类感知、思考、学习、判断与决策的技术。我们身边常见的人工智能应用有语音助手、人脸识别、拍照搜题、智能推荐等。通过本节课学习，初步建立对人工智能的基本认知。",
                 },
                 {
                     "order_no": 2,
-                    "title": "第2课时 数据、算法与算力",
-                    "estimated_minutes": 22,
-                    "video_url": "https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4",
+                    "title": "人工智能的应用",
+                    "estimated_minutes": 45,
+                    "video_url": "https://www.bilibili.com/video/BV1Er421773P?p=1",
                     "attachment_url": "https://www.cloudflare.com/learning/ai/what-is-machine-learning/",
-                    "content": "单元导学：理解 AI 为什么能“学会”任务，关键在于数据、算法和算力三者协同工作。\n\n重点内容：1. 数据像教材，为模型提供经验。2. 算法像方法，决定机器如何从数据中提炼规律。3. 算力像发动机，决定训练和推理效率。\n\n学习任务：以语音识别为例，分析如果缺少高质量语音数据、合适算法或足够算力，会出现什么问题。",
+                    "content": "学习目标：了解 AI 在医疗、交通、教育、家居等领域的典型应用。\n\n文字内容：人工智能已广泛应用于医疗辅助诊断、自动驾驶、智能导航、个性化教育、智能家居等多个领域，极大提升了社会生产效率与生活便利度。本节课通过案例认识 AI 的实际价值。",
                 },
                 {
                     "order_no": 3,
-                    "title": "第3课时 AI 的社会影响与伦理",
-                    "estimated_minutes": 20,
-                    "video_url": "https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4",
+                    "title": "人工智能的伦理问题",
+                    "estimated_minutes": 45,
+                    "video_url": "https://www.bilibili.com/video/BV1Az421m7Wc?p=1",
                     "attachment_url": "https://www.unesco.org/en/artificial-intelligence/recommendation-ethics",
-                    "content": "课程目标：认识 AI 带来便利的同时，也可能引发隐私泄露、算法偏见、虚假生成和就业结构变化等问题。\n\n重点内容：1. AI 在医疗、教育、交通中的积极价值。2. 数据偏见如何导致不公平结果。3. 面对 AI 工具时，为什么仍然需要人的判断和责任承担。\n\n学习任务：阅读一个 AI 伦理案例后，尝试从开发者、平台和用户三个角色分析责任边界。",
+                    "content": "学习目标：了解 AI 带来的隐私安全、算法偏见等伦理问题，树立理性使用观念。\n\n文字内容：AI 在带来便利的同时，也伴随着个人隐私泄露、数据滥用、算法不公平、就业结构变化等伦理与安全问题。我们应辩证看待技术，做到安全、负责、理性地使用人工智能。",
                 },
                 {
                     "order_no": 4,
-                    "title": "第4课时 单元总结与未来展望",
-                    "estimated_minutes": 16,
-                    "video_url": "https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMeltdowns.mp4",
+                    "title": "人工智能的未来与总结",
+                    "estimated_minutes": 45,
+                    "video_url": "https://www.bilibili.com/video/BV1vs421N7pf?p=1",
                     "attachment_url": "https://education.microsoft.com/zh-cn/resource/ai",
-                    "content": "单元总结：回顾人工智能的概念、技术基石和社会影响，形成知识思维导图。\n\n重点内容：1. 用“概念-技术-应用-伦理”框架整理课程知识。2. 结合个人兴趣，思考未来可继续探索的 AI 方向。3. 为成果展示或课堂汇报准备结构化表达。\n\n学习任务：完成一页学习成果展示，概括最重要的知识点和个人观察。",
+                    "content": "学习目标：了解 AI 未来发展趋势，完成单元学习总结。\n\n文字内容：未来人工智能将朝着多模态融合、自主学习、人机协同等方向发展。通过本单元四节课的学习，我们认识了 AI 概念、应用、伦理与未来，形成了完整的人工智能认知体系。",
                 },
             ]
             lessons = [
@@ -386,6 +413,16 @@ class Command(BaseCommand):
                 for item in lesson_specs
             ]
             lesson_map = {lesson.order_no: lesson for lesson in lessons}
+
+            Resource.objects.filter(course=course, created_by=teacher).delete()
+            TeachingGuide.objects.filter(course=course).delete()
+            ForumPost.objects.filter(lesson__chapter__course=course, author__in=[teacher, student, admin]).delete()
+            Question.objects.filter(lesson__chapter__course=course).delete()
+            LearningProgress.objects.filter(user=student, lesson__chapter__course=course).delete()
+            QuizSubmission.objects.filter(user=student, lesson__chapter__course=course).delete()
+            WrongQuestion.objects.filter(user=student, question__lesson__chapter__course=course).delete()
+            LearningFeedback.objects.filter(user=student, course=course).delete()
+            FavoriteItem.objects.filter(user=student).delete()
 
             glossary_terms = [
                 (1, "人工智能", "让机器具备感知、推理、学习或生成能力的一类技术总称。"),
@@ -407,31 +444,126 @@ class Command(BaseCommand):
             for item in glossary_terms:
                 self._ensure_glossary_term(course=course, order_no=item[0], term=item[1], definition=item[2])
             resource_specs = [
-                ("AI 概念导入动画", ResourceType.VIDEO, 1, ResourceAudience.ALL, 1, "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4", "视频, 导入, 概念", "用于第1课时导入，帮助学生快速建立对人工智能的直观认识。"),
-                ("AI 发展简史阅读卡", ResourceType.READING, 1, ResourceAudience.ALL, 2, "https://www.ibm.com/topics/artificial-intelligence", "阅读, 历史, 概念", "梳理人工智能从早期研究到生成式 AI 的关键节点。"),
-                ("生活中的 AI 应用图解", ResourceType.COURSEWARE, 1, ResourceAudience.ALL, 3, "https://www.cloudflare.com/learning/ai/what-is-ai/", "图解, 案例, 生活应用", "用图文方式展示推荐系统、导航、刷脸支付等典型应用。"),
-                ("图灵测试案例页", ResourceType.READING, 1, ResourceAudience.ALL, 4, "https://en.wikipedia.org/wiki/Turing_test", "图灵测试, 阅读", "帮助学生理解“机器像不像人在思考”这一经典问题。"),
-                ("机器学习原理动画", ResourceType.VIDEO, 2, ResourceAudience.ALL, 1, "https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4", "视频, 机器学习", "作为第2课时导入视频，说明模型如何从样本中学习规律。"),
-                ("语音识别原理科普", ResourceType.READING, 2, ResourceAudience.ALL, 2, "https://developer.mozilla.org/en-US/docs/Web/API/Web_Speech_API", "语音识别, 阅读", "介绍从采集语音到转写文本的基本流程。"),
-                ("图像识别原理科普", ResourceType.READING, 2, ResourceAudience.ALL, 3, "https://cloud.google.com/vision/docs", "图像识别, 阅读", "介绍图像分类和目标识别的常见任务。"),
-                ("数据-算法-算力三角图", ResourceType.COURSEWARE, 2, ResourceAudience.ALL, 4, "https://www.nvidia.com/en-us/glossary/data-science/", "数据, 算法, 算力", "用一张图说明 AI 三大技术基石之间的关系。"),
-                ("算力发展小视频", ResourceType.VIDEO, 2, ResourceAudience.ALL, 5, "https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4", "视频, 算力", "用于说明算力提升如何推动 AI 应用落地。"),
-                ("AI 伦理案例动画", ResourceType.VIDEO, 3, ResourceAudience.ALL, 1, "https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMeltdowns.mp4", "视频, 伦理", "通过案例动画导入算法偏见与责任问题。"),
-                ("AI 隐私问题阅读", ResourceType.READING, 3, ResourceAudience.ALL, 2, "https://www.unesco.org/en/artificial-intelligence/recommendation-ethics", "隐私, 阅读", "帮助学生理解数据采集与个人信息保护之间的张力。"),
-                ("算法偏见案例文章", ResourceType.READING, 3, ResourceAudience.ALL, 3, "https://www.ibm.com/topics/ai-ethics", "算法偏见, 伦理", "通过真实案例理解偏见为何会进入模型。"),
-                ("AI 辩论素材包", ResourceType.COURSEWARE, 3, ResourceAudience.ALL, 4, "https://www.unesco.org/en/artificial-intelligence", "辩论, 素材包", "支持课堂开展“AI 会不会取代人类工作”的辩论活动。"),
-                ("AI 治理案例清单", ResourceType.COURSEWARE, 3, ResourceAudience.ALL, 5, "https://oecd.ai/en/ai-principles", "治理, 案例", "汇总国际上关于负责任 AI 的原则与案例。"),
-                ("单元知识思维导图", ResourceType.COURSEWARE, 4, ResourceAudience.ALL, 1, "https://www.mindmeister.com/", "思维导图, 总结", "帮助学生完成全单元知识梳理。"),
-                ("成果展示 PPT 模板", ResourceType.COURSEWARE, 4, ResourceAudience.ALL, 2, "https://www.canva.com/presentations/templates/education/", "模板, 汇报", "用于课程成果展示与答辩演示截图。"),
-                ("单元总结微课视频", ResourceType.VIDEO, 4, ResourceAudience.ALL, 3, "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4", "总结, 视频", "用于第4课时收束，帮助学生回看整单元重点。"),
-                ("豆包体验入口", ResourceType.TOOL, 0, ResourceAudience.ALL, 1, "https://www.doubao.com/", "工具, AI 对话", "推荐学生体验中文大模型对话。"),
-                ("通义千问体验入口", ResourceType.TOOL, 0, ResourceAudience.ALL, 2, "https://tongyi.aliyun.com/", "工具, AI 对话", "作为综合在线体验工具，扩展学生视野。"),
-                ("文心一言体验入口", ResourceType.TOOL, 0, ResourceAudience.ALL, 3, "https://yiyan.baidu.com/", "工具, 文本生成", "用于对比不同 AI 问答系统的回答风格。"),
-                ("AI 职业方向介绍", ResourceType.READING, 0, ResourceAudience.ALL, 4, "https://www.ibm.com/careers/artificial-intelligence", "职业, 拓展阅读", "介绍 AI 产品经理、算法工程师、数据标注等岗位。"),
-                ("AIGC 安全使用清单", ResourceType.READING, 0, ResourceAudience.ALL, 5, "https://www.microsoft.com/ai/responsible-ai", "安全, 使用规范", "帮助学生建立规范使用生成式 AI 的意识。"),
-                ("课堂讨论任务单", ResourceType.COURSEWARE, 2, ResourceAudience.TEACHER, 90, "https://education.microsoft.com/", "教师, 讨论组织", "教师专用资源，用于组织第2课时的小组讨论。"),
-                ("AI 伦理评价量规模板", ResourceType.COURSEWARE, 3, ResourceAudience.TEACHER, 91, "https://www.canva.com/", "教师, 评价模板", "教师专用资源，用于对学生伦理讨论成果进行过程性评价。"),
-                ("单元项目展示评分表", ResourceType.READING, 4, ResourceAudience.TEACHER, 92, "https://education.google.com/", "教师, 评分表", "教师专用资源，用于第4课时成果展示评分。"),
+                (
+                    "生活中的人工智能案例阅读",
+                    ResourceType.READING,
+                    1,
+                    ResourceAudience.ALL,
+                    1,
+                    "https://www.ibm.com/topics/artificial-intelligence",
+                    "案例, 阅读, 第1课",
+                    "围绕语音助手、人脸识别、拍照搜题、智能推荐等案例，帮助学生理解生活中的人工智能场景。",
+                ),
+                (
+                    "人工智能发展简史资料",
+                    ResourceType.READING,
+                    1,
+                    ResourceAudience.ALL,
+                    2,
+                    "https://en.wikipedia.org/wiki/History_of_artificial_intelligence",
+                    "历史, 阅读, 第1课",
+                    "梳理人工智能发展过程中的关键节点，帮助学生建立基础历史认知。",
+                ),
+                (
+                    "语音识别、图像识别原理简介",
+                    ResourceType.COURSEWARE,
+                    1,
+                    ResourceAudience.ALL,
+                    3,
+                    "https://developer.mozilla.org/en-US/docs/Web/API/Web_Speech_API",
+                    "语音识别, 图像识别, 第1课",
+                    "用简明图文介绍语音识别和图像识别的基本原理，便于后续进入交互体验。",
+                ),
+                (
+                    "AI在各行业应用图文资料",
+                    ResourceType.COURSEWARE,
+                    2,
+                    ResourceAudience.ALL,
+                    1,
+                    "https://www.cloudflare.com/learning/ai/what-is-ai/",
+                    "应用, 图文, 第2课",
+                    "概括医疗、交通、教育、家居等领域中人工智能的典型应用场景。",
+                ),
+                (
+                    "典型人工智能产品介绍",
+                    ResourceType.READING,
+                    2,
+                    ResourceAudience.ALL,
+                    2,
+                    "https://cloud.google.com/vision/docs",
+                    "产品, 阅读, 第2课",
+                    "介绍常见人工智能产品类型，帮助学生理解技术如何转化为实际服务。",
+                ),
+                (
+                    "AI对话交互使用说明",
+                    ResourceType.TOOL,
+                    2,
+                    ResourceAudience.ALL,
+                    3,
+                    "https://www.doubao.com/",
+                    "AI对话, 工具, 第2课",
+                    "说明 AI 对话交互的基本使用方法，引导学生规范体验与观察回答效果。",
+                ),
+                (
+                    "AI隐私安全与伦理案例",
+                    ResourceType.READING,
+                    3,
+                    ResourceAudience.ALL,
+                    1,
+                    "https://www.unesco.org/en/artificial-intelligence/recommendation-ethics",
+                    "伦理, 隐私, 第3课",
+                    "通过案例帮助学生认识 AI 使用中的隐私安全与责任边界问题。",
+                ),
+                (
+                    "算法公平性阅读材料",
+                    ResourceType.READING,
+                    3,
+                    ResourceAudience.ALL,
+                    2,
+                    "https://www.ibm.com/topics/ai-ethics",
+                    "公平性, 阅读, 第3课",
+                    "围绕算法偏见、公平性与数据质量展开阅读，支撑课堂伦理讨论。",
+                ),
+                (
+                    "科技伦理规范说明",
+                    ResourceType.COURSEWARE,
+                    3,
+                    ResourceAudience.ALL,
+                    3,
+                    "https://oecd.ai/en/ai-principles",
+                    "规范, 伦理, 第3课",
+                    "概括负责任使用人工智能的基本原则，帮助学生形成理性使用观念。",
+                ),
+                (
+                    "人工智能未来发展趋势资料",
+                    ResourceType.READING,
+                    4,
+                    ResourceAudience.ALL,
+                    1,
+                    "https://education.microsoft.com/zh-cn/resource/ai",
+                    "未来, 阅读, 第4课",
+                    "介绍多模态融合、自主学习、人机协同等人工智能发展趋势。",
+                ),
+                (
+                    "单元知识思维导图",
+                    ResourceType.COURSEWARE,
+                    4,
+                    ResourceAudience.ALL,
+                    2,
+                    "https://www.mindmeister.com/",
+                    "思维导图, 总结, 第4课",
+                    "用于整理本单元的概念、应用、伦理与未来四部分知识结构。",
+                ),
+                (
+                    "学习总结与反思模板",
+                    ResourceType.COURSEWARE,
+                    4,
+                    ResourceAudience.ALL,
+                    3,
+                    "https://www.canva.com/presentations/templates/education/",
+                    "总结, 反思, 第4课",
+                    "帮助学生完成单元学习总结、个人反思与成果展示准备。",
+                ),
             ]
             created_resources = {}
             for title, resource_type, lesson_no, audience, sort_order, external_url, tags, description in resource_specs:
@@ -452,68 +584,95 @@ class Command(BaseCommand):
             guide_specs = [
                 {
                     "order_no": 1,
-                    "title": "单元教学目标与学情定位",
-                    "objectives": "知识目标：理解人工智能基本概念与典型应用。\n技能目标：能够用数据、算法、算力解释 AI 工作机制。\n情感目标：形成对 AI 价值与风险并重的理性认识。",
-                    "key_points": "课程导入、生活案例连接、四课时学习路径设计。",
-                    "difficult_points": "帮助学生区分人工智能、机器学习与生成式 AI。",
-                    "learning_methods": "采用案例导入、图解讲授与情境提问结合的方式。",
-                    "assignment_suggestion": "请学生课后记录一个身边的 AI 场景并拍照或截图说明。",
-                    "evaluation_suggestion": "可通过课堂提问、学习单填写和生活案例描述三种方式进行形成性评价。",
-                },
-                {
-                    "order_no": 2,
-                    "title": "课时重难点与课堂组织建议",
-                    "objectives": "围绕四课时分别明确概念理解、技术分析、伦理讨论与成果表达目标。",
-                    "key_points": "第1课重概念，第2课重机制，第3课重判断，第4课重总结。",
-                    "difficult_points": "第2课时学生容易把数据、算法、算力混为一谈；第3课时容易只谈观点不举例。",
-                    "learning_methods": "建议采用小组讨论、板书共建和案例拆解的方式推进。",
-                    "assignment_suggestion": "课后布置一页图文总结，要求包含关键词和生活实例。",
-                    "evaluation_suggestion": "可设置“概念是否准确、案例是否贴切、表达是否清晰”三项课堂观察指标。",
-                },
-                {
-                    "order_no": 3,
-                    "title": "互动实践实施建议",
-                    "objectives": "引导学生通过语音识别、图像识别、AI 对话和在线答题完成“体验式学习”。",
-                    "key_points": "每 5-8 分钟插入一个交互节点，保持注意力与参与度。",
-                    "difficult_points": "学生容易把互动体验当作娱乐，需要教师及时回扣知识点。",
-                    "learning_methods": "先操作体验，再追问原理，最后回到课程知识结构。",
-                    "assignment_suggestion": "要求学生至少完成 1 次 AI 对话体验并写出对回答质量的评价。",
-                    "evaluation_suggestion": "根据体验记录、答题正确率和反思文字评价学生实践效果。",
-                },
-                {
-                    "order_no": 4,
-                    "title": "学习评价与成果展示建议",
-                    "objectives": "帮助教师从知识掌握、实践表现、合作表达三方面综合评价学习效果。",
-                    "key_points": "终结性评价应结合成果展示，避免只看选择题成绩。",
-                    "difficult_points": "评价标准需要兼顾准确性、思辨性与表达能力。",
-                    "learning_methods": "采用“自评 + 同伴互评 + 教师评价”三元结合方式。",
-                    "assignment_suggestion": "组织学生用 PPT 或海报展示“我理解的人工智能”。",
-                    "evaluation_suggestion": "建议设置四个维度：概念理解 30%、实践完成度 25%、案例分析 25%、表达展示 20%。",
+                    "title": "走进人工智能——教学指引",
+                    "objectives": "1. 理解人工智能基本概念与典型应用。\n2. 能够使用语音识别、图像识别、AI 对话等交互功能。\n3. 了解人工智能伦理与安全问题，树立正确技术观。\n4. 能够通过网站完成学习、答题、交流、总结全过程。",
+                    "key_points": "课程内容 → 交互体验 → 资源库拓展 → 在线答题检测 → 社区交流分享 → 数据看板查看学习情况",
+                    "difficult_points": "初中7-9年级学生",
+                    "learning_methods": "1. 学生按课时顺序依次学习，观看微课视频。\n2. 每节课完成对应交互体验与练习题。\n3. 拓展内容可在资源库自主学习。\n4. 学习心得与成果可发布至社区交流。\n5. 学习数据可在数据看板查看。",
+                    "assignment_suggestion": "共4课时，每课时45分钟",
+                    "evaluation_suggestion": "课程围绕人工智能概念、应用、伦理与未来四部分内容展开，适合作为初中阶段的信息科技专题学习单元。",
                 },
             ]
             for item in guide_specs:
                 self._ensure_guide(course=course, created_by=teacher, **item)
             question_bank = {
                 1: [
-                    ("人工智能更强调机器具备哪一类能力？", QuestionType.SINGLE_CHOICE, [{"key": "A", "text": "机械重复"}, {"key": "B", "text": "感知与判断"}, {"key": "C", "text": "完全随机"}, {"key": "D", "text": "只会计算"}], ["B"], "人工智能强调感知、推理、学习与生成等能力。"),
-                    ("以下哪些属于生活中的 AI 应用？", QuestionType.MULTIPLE_CHOICE, [{"key": "A", "text": "短视频推荐"}, {"key": "B", "text": "语音助手"}, {"key": "C", "text": "人脸解锁"}, {"key": "D", "text": "普通尺子"}], ["A", "B", "C"], "推荐系统、语音助手和人脸解锁都属于常见 AI 应用。"),
-                    ("图灵测试常被用来讨论机器是否表现出类似人类的智能。", QuestionType.TRUE_FALSE, [{"key": "A", "text": "正确"}, {"key": "B", "text": "错误"}], ["A"], "图灵测试是人工智能发展史上的经典概念。"),
-                    ("生成式 AI 与传统检索系统相比，最大的特点是？", QuestionType.SINGLE_CHOICE, [{"key": "A", "text": "只能背诵资料"}, {"key": "B", "text": "能够生成新内容"}, {"key": "C", "text": "完全不需要数据"}, {"key": "D", "text": "只能离线运行"}], ["B"], "生成式 AI 可以生成文本、图像、音频等内容。"),
-                    ("人工智能的发展不需要数据支持。", QuestionType.TRUE_FALSE, [{"key": "A", "text": "正确"}, {"key": "B", "text": "错误"}], ["B"], "数据是很多 AI 系统学习和推理的基础。"),
+                    (
+                        "人工智能的英文缩写是？",
+                        QuestionType.SINGLE_CHOICE,
+                        [{"key": "A", "text": "AI"}, {"key": "B", "text": "VR"}, {"key": "C", "text": "AR"}, {"key": "D", "text": "IoT"}],
+                        ["A"],
+                        "Artificial Intelligence 的常用英文缩写是 AI。",
+                    ),
+                    (
+                        "下列属于人工智能应用的是？",
+                        QuestionType.SINGLE_CHOICE,
+                        [{"key": "A", "text": "普通计算器"}, {"key": "B", "text": "人脸识别"}, {"key": "C", "text": "笔记本"}, {"key": "D", "text": "台灯"}],
+                        ["B"],
+                        "人脸识别属于典型的人工智能应用场景。",
+                    ),
                 ],
                 2: [
-                    ("下列哪一项不属于 AI 的三大技术基石？", QuestionType.SINGLE_CHOICE, [{"key": "A", "text": "数据"}, {"key": "B", "text": "算法"}, {"key": "C", "text": "算力"}, {"key": "D", "text": "运气"}], ["D"], "数据、算法和算力是 AI 的三大技术基石。"),
-                    ("训练一个图像识别模型通常需要哪些要素？", QuestionType.MULTIPLE_CHOICE, [{"key": "A", "text": "标注数据"}, {"key": "B", "text": "学习算法"}, {"key": "C", "text": "计算资源"}, {"key": "D", "text": "完全手写规则"}], ["A", "B", "C"], "图像识别模型通常需要数据、算法与算力配合。"),
-                    ("算力越高，就一定能得到完全正确的 AI 结果。", QuestionType.TRUE_FALSE, [{"key": "A", "text": "正确"}, {"key": "B", "text": "错误"}], ["B"], "算力重要，但数据质量和算法设计同样关键。"),
-                    ("语音识别系统输出的最终结果通常是什么？", QuestionType.SINGLE_CHOICE, [{"key": "A", "text": "一段文字"}, {"key": "B", "text": "一张图片"}, {"key": "C", "text": "一段代码"}, {"key": "D", "text": "随机符号"}], ["A"], "语音识别的目标通常是将语音转换为文本。"),
-                    ("机器学习的核心思想更接近以下哪一项？", QuestionType.SINGLE_CHOICE, [{"key": "A", "text": "完全手工编写每条规则"}, {"key": "B", "text": "让系统通过样本学习规律"}, {"key": "C", "text": "只靠硬件升级"}, {"key": "D", "text": "只依赖网络速度"}], ["B"], "机器学习强调从数据中自动学习。"),
+                    (
+                        "AI工作的三大基础不包括？",
+                        QuestionType.SINGLE_CHOICE,
+                        [{"key": "A", "text": "数据"}, {"key": "B", "text": "算法"}, {"key": "C", "text": "电线"}, {"key": "D", "text": "算力"}],
+                        ["C"],
+                        "AI 的三大基础通常指数据、算法和算力。",
+                    ),
+                    (
+                        "语音识别的主要作用是？",
+                        QuestionType.SINGLE_CHOICE,
+                        [{"key": "A", "text": "声音转文字"}, {"key": "B", "text": "文字转声音"}, {"key": "C", "text": "图片转文字"}, {"key": "D", "text": "文字转图片"}],
+                        ["A"],
+                        "语音识别的核心作用是将语音内容转成文字。",
+                    ),
+                    (
+                        "下列属于AI在交通领域应用的是？",
+                        QuestionType.SINGLE_CHOICE,
+                        [{"key": "A", "text": "智能音箱"}, {"key": "B", "text": "自动驾驶"}, {"key": "C", "text": "拍照搜题"}, {"key": "D", "text": "药物研发"}],
+                        ["B"],
+                        "自动驾驶是人工智能在交通领域的典型应用。",
+                    ),
                 ],
                 3: [
-                    ("算法偏见属于 AI 伦理问题的一部分。", QuestionType.TRUE_FALSE, [{"key": "A", "text": "正确"}, {"key": "B", "text": "错误"}], ["A"], "算法偏见会影响公平性，因此属于伦理问题。"),
-                    ("以下哪项更接近 AI 隐私风险？", QuestionType.SINGLE_CHOICE, [{"key": "A", "text": "未经同意收集人脸数据"}, {"key": "B", "text": "显示器尺寸不同"}, {"key": "C", "text": "鼠标颜色变化"}, {"key": "D", "text": "键盘布局调整"}], ["A"], "未经同意采集和使用个人数据会带来隐私风险。"),
-                    ("负责任的 AI 一般强调哪些原则？", QuestionType.MULTIPLE_CHOICE, [{"key": "A", "text": "公平"}, {"key": "B", "text": "透明"}, {"key": "C", "text": "安全"}, {"key": "D", "text": "越神秘越好"}], ["A", "B", "C"], "公平、透明和安全是常见的负责任 AI 原则。"),
-                    ("面对 AI 工具，人类更适合承担哪一项角色？", QuestionType.SINGLE_CHOICE, [{"key": "A", "text": "完全放弃判断"}, {"key": "B", "text": "负责监督和决策"}, {"key": "C", "text": "永远不用工具"}, {"key": "D", "text": "只做重复劳动"}], ["B"], "人机协作中，人类仍应承担监督、判断和责任。"),
-                    ("AI 会完全、立刻取代所有工作岗位。", QuestionType.TRUE_FALSE, [{"key": "A", "text": "正确"}, {"key": "B", "text": "错误"}], ["B"], "AI 会改变岗位结构，但并不意味着立刻取代所有工作。"),
+                    (
+                        "下列属于AI伦理问题的是？",
+                        QuestionType.SINGLE_CHOICE,
+                        [{"key": "A", "text": "电脑卡顿"}, {"key": "B", "text": "隐私泄露"}, {"key": "C", "text": "屏幕太暗"}, {"key": "D", "text": "键盘失灵"}],
+                        ["B"],
+                        "隐私泄露属于人工智能使用中需要重点关注的伦理问题。",
+                    ),
+                    (
+                        "关于AI说法正确的是？",
+                        QuestionType.SINGLE_CHOICE,
+                        [{"key": "A", "text": "AI拥有人类情感"}, {"key": "B", "text": "AI是模拟人类智能的技术"}, {"key": "C", "text": "AI不需要数据"}, {"key": "D", "text": "AI能完全取代人类"}],
+                        ["B"],
+                        "AI 是模拟人类智能活动的一类技术，而不是拥有人类情感的生命体。",
+                    ),
+                    (
+                        "我们应如何对待人工智能？",
+                        QuestionType.SINGLE_CHOICE,
+                        [{"key": "A", "text": "完全依赖"}, {"key": "B", "text": "害怕拒绝"}, {"key": "C", "text": "理性、安全、负责任使用"}, {"key": "D", "text": "随意使用"}],
+                        ["C"],
+                        "面对人工智能，应保持理性、安全和负责任的使用态度。",
+                    ),
+                ],
+                4: [
+                    (
+                        "本单元“走进人工智能”共有几课时？",
+                        QuestionType.SINGLE_CHOICE,
+                        [{"key": "A", "text": "2"}, {"key": "B", "text": "4"}, {"key": "C", "text": "6"}, {"key": "D", "text": "8"}],
+                        ["B"],
+                        "本单元共 4 课时，依次介绍概念、应用、伦理和未来总结。",
+                    ),
+                    (
+                        "学习人工智能最重要的是？",
+                        QuestionType.SINGLE_CHOICE,
+                        [{"key": "A", "text": "只会使用"}, {"key": "B", "text": "只会体验"}, {"key": "C", "text": "守规则、会思考"}, {"key": "D", "text": "不用学习"}],
+                        ["C"],
+                        "学习人工智能既要会使用，也要守规则、会思考，形成正确技术观。",
+                    ),
                 ],
             }
             lesson_questions = {}
@@ -534,87 +693,87 @@ class Command(BaseCommand):
                     )
 
             discussion_1 = self._ensure_post(
-                title="我身边最典型的 AI 应用是什么？",
+                title="我身边的人工智能",
                 author=student,
                 lesson=lesson_map[1],
                 category=ForumPostCategory.DISCUSSION,
-                content="本课学完后，发现短视频推荐、导航、拍照美颜都在使用 AI。最明显的感受是，AI 让服务越来越“懂我”，但也会让我担心信息茧房。",
+                content="分享自己生活中遇到的AI应用，如语音助手、刷脸支付、拍照搜题等。",
                 is_pinned=True,
             )
             discussion_2 = self._ensure_post(
-                title="语音识别为什么离不开大量数据？",
+                title="AI伦理小讨论",
                 author=student,
-                lesson=lesson_map[2],
-                category=ForumPostCategory.HELP,
-                content="体验语音识别后发现，同一句话不同人读出来差别很大。是不是因为模型必须见过大量不同口音、速度和环境噪声的数据，才能做出更稳定的判断？",
-                is_solved=True,
-            )
-            discussion_3 = self._ensure_post(
-                title="AI 会取代人类工作吗？",
-                author=teacher,
                 lesson=lesson_map[3],
                 category=ForumPostCategory.DISCUSSION,
-                content="欢迎围绕第3课时案例进行讨论：哪些工作会被 AI 明显改变？哪些工作依然高度依赖人的判断、共情与责任承担？",
+                content="你认为使用人工智能时，最需要注意什么问题？",
             )
-            note_1 = self._ensure_post(
-                title="学习笔记：人工智能并不神秘",
-                author=student,
-                lesson=lesson_map[1],
-                category=ForumPostCategory.SHARE,
-                content="我的理解是，人工智能不等于什么都会的机器人，而是一组完成具体任务的技术。真正重要的是它背后的数据、算法和目标。",
-            )
-            note_2 = self._ensure_post(
-                title="学习笔记：数据、算法、算力的关系",
-                author=student,
-                lesson=lesson_map[2],
-                category=ForumPostCategory.SHARE,
-                content="可以把数据看成教材，算法看成学习方法，算力看成学习速度。三者缺一不可，否则模型很难表现稳定。",
-            )
-            note_3 = self._ensure_post(
-                title="学习笔记：AI 伦理讨论后的反思",
-                author=student,
-                lesson=lesson_map[3],
-                category=ForumPostCategory.SHARE,
-                content="AI 工具确实提高效率，但如果没有透明规则和责任边界，技术越强，风险也可能越大。",
-            )
-            note_4 = self._ensure_post(
-                title="学习笔记：单元总结与未来期待",
+            discussion_3 = self._ensure_post(
+                title="我的学习总结",
                 author=student,
                 lesson=lesson_map[4],
                 category=ForumPostCategory.SHARE,
-                content="本单元最重要的收获是，不应只把 AI 当工具，更要理解它如何影响社会。未来最想继续探索的是生成式 AI 的创作边界。",
+                content="分享本单元学习收获、体会与反思。",
+            )
+            showcase_1 = self._ensure_post(
+                title="成果展示：我理解的人工智能",
+                author=student,
+                lesson=lesson_map[4],
+                category=ForumPostCategory.SHOWCASE,
+                content="本次展示按“概念认知、技术基石、伦理判断、未来展望”四部分展开，并结合语音识别与推荐系统案例说明 AI 如何进入真实生活场景。",
+                is_pinned=True,
+            )
+            showcase_2 = self._ensure_post(
+                title="成果展示：AI 应用案例分析卡",
+                author=teacher,
+                lesson=lesson_map[4],
+                category=ForumPostCategory.SHOWCASE,
+                content="围绕导航推荐、图像识别和生成式对话三个案例，梳理数据、算法、算力与社会影响之间的联系，可作为课堂展示参考样例。",
             )
 
-            self._ensure_comment(post=discussion_1, author=teacher, content="推荐系统是非常好的例子，可以继续思考它依赖了哪些用户数据。")
-            reply = self._ensure_comment(post=discussion_2, author=teacher, content="是的，数据量和数据多样性都会影响语音识别效果。")
-            self._ensure_comment(post=discussion_2, author=student, content="明白了，噪声环境和口音差异也应该算在数据多样性里。", parent=reply)
-            self._ensure_comment(post=discussion_3, author=admin, content="这也是课程答辩里很适合展开的一道思辨题。")
-            self._ensure_comment(post=note_2, author=teacher, content="这个类比很清晰，适合作为课堂展示发言的开头。")
+            self._ensure_comment(post=discussion_1, author=teacher, content="可以结合语音助手、导航、人脸识别这些具体例子继续补充。")
+            self._ensure_comment(post=discussion_2, author=teacher, content="隐私安全和算法公平性都是讨论中很值得展开的方向。")
+            self._ensure_comment(post=discussion_3, author=admin, content="这类总结帖很适合整理成答辩展示稿或课堂分享卡片。")
+            self._ensure_comment(post=showcase_1, author=teacher, content="结构完整，后续展示时可以再补一个伦理风险案例，让总结更有层次。")
+            self._ensure_comment(post=showcase_2, author=student, content="这个案例卡结构很适合直接改成答辩 PPT 页面。")
 
-            for target_post in [discussion_1, discussion_2, discussion_3, note_2]:
+            for target_post in [discussion_1, discussion_2, discussion_3]:
                 self._ensure_like(post=target_post, user=teacher)
-            for target_post in [discussion_1, discussion_2, note_1, note_2, note_3]:
+            for target_post in [discussion_1, discussion_2, discussion_3]:
                 self._ensure_like(post=target_post, user=student)
-            for target_post in [discussion_1, discussion_3, note_4]:
+            for target_post in [discussion_1, discussion_3]:
                 self._ensure_like(post=target_post, user=admin)
+            for target_post in [showcase_1, showcase_2]:
+                self._ensure_like(post=target_post, user=teacher)
+                self._ensure_like(post=target_post, user=student)
 
             self._ensure_progress(user=student, lesson=lesson_map[1], view_count=5, completed=True)
             self._ensure_progress(user=student, lesson=lesson_map[2], view_count=4, completed=True)
-            self._ensure_progress(user=student, lesson=lesson_map[3], view_count=2, completed=False)
-            self._ensure_progress(user=student, lesson=lesson_map[4], view_count=1, completed=False)
-            QuizSubmission.objects.filter(user=student, lesson__in=[lesson_map[1], lesson_map[2]]).delete()
-            WrongQuestion.objects.filter(user=student, question__lesson__in=[lesson_map[1], lesson_map[2], lesson_map[3]]).delete()
+            self._ensure_progress(user=student, lesson=lesson_map[3], view_count=3, completed=True)
+            self._ensure_progress(user=student, lesson=lesson_map[4], view_count=2, completed=True)
+            self._ensure_feedback(
+                user=student,
+                course=course,
+                concept_score=4,
+                mechanism_score=4,
+                ethics_score=4,
+                expression_score=4,
+                exploration_score=5,
+                reflection="已经能够从概念、应用、伦理和未来四个角度理解人工智能，下一步想把单元内容整理成更完整的展示稿。",
+            )
+            QuizSubmission.objects.filter(user=student, lesson__chapter__course=course).delete()
+            WrongQuestion.objects.filter(user=student, question__lesson__chapter__course=course).delete()
 
+            unit_questions = lesson_questions[1] + lesson_questions[2] + lesson_questions[3] + lesson_questions[4]
             submission_1 = QuizSubmission.objects.create(
                 user=student,
-                lesson=lesson_map[1],
-                total_questions=5,
-                correct_count=4,
-                total_score=25,
-                earned_score=20,
+                lesson=lesson_map[4],
+                total_questions=10,
+                correct_count=8,
+                total_score=50,
+                earned_score=40,
                 accuracy=80,
             )
-            for question in lesson_questions[1][:4]:
+            for question in unit_questions[:4] + unit_questions[5:9]:
                 QuizAnswer.objects.create(
                     submission=submission_1,
                     question=question,
@@ -624,7 +783,7 @@ class Command(BaseCommand):
                     score_awarded=question.score,
                     explanation_snapshot=question.explanation,
                 )
-            wrong_question = lesson_questions[1][4]
+            wrong_question = unit_questions[4]
             QuizAnswer.objects.create(
                 submission=submission_1,
                 question=wrong_question,
@@ -635,26 +794,17 @@ class Command(BaseCommand):
                 explanation_snapshot=wrong_question.explanation,
             )
             WrongQuestion.objects.create(user=student, question=wrong_question, wrong_count=1, resolved=False)
-
-            submission_2 = QuizSubmission.objects.create(
-                user=student,
-                lesson=lesson_map[2],
-                total_questions=5,
-                correct_count=5,
-                total_score=25,
-                earned_score=25,
-                accuracy=100,
+            second_wrong_question = unit_questions[9]
+            QuizAnswer.objects.create(
+                submission=submission_1,
+                question=second_wrong_question,
+                user_answer=["A"],
+                expected_answer=second_wrong_question.correct_answer,
+                is_correct=False,
+                score_awarded=0,
+                explanation_snapshot=second_wrong_question.explanation,
             )
-            for question in lesson_questions[2]:
-                QuizAnswer.objects.create(
-                    submission=submission_2,
-                    question=question,
-                    user_answer=question.correct_answer,
-                    expected_answer=question.correct_answer,
-                    is_correct=True,
-                    score_awarded=question.score,
-                    explanation_snapshot=question.explanation,
-                )
+            WrongQuestion.objects.create(user=student, question=second_wrong_question, wrong_count=1, resolved=False)
 
             self._ensure_practice_record(
                 user=student,
@@ -685,7 +835,7 @@ class Command(BaseCommand):
                 },
             )
 
-            guide_4 = TeachingGuide.objects.get(course=course, order_no=4)
+            guide_1 = TeachingGuide.objects.get(course=course, order_no=1)
             self._ensure_favorite(
                 user=student,
                 target_type=FavoriteTargetType.COURSE,
@@ -696,23 +846,23 @@ class Command(BaseCommand):
             self._ensure_favorite(
                 user=student,
                 target_type=FavoriteTargetType.RESOURCE,
-                target_id=created_resources["AI 辩论素材包"].id,
-                title_snapshot="AI 辩论素材包",
-                url_snapshot=created_resources["AI 辩论素材包"].get_absolute_url(),
+                target_id=created_resources["单元知识思维导图"].id,
+                title_snapshot="单元知识思维导图",
+                url_snapshot=created_resources["单元知识思维导图"].get_absolute_url(),
             )
             self._ensure_favorite(
                 user=student,
                 target_type=FavoriteTargetType.POST,
-                target_id=discussion_3.id,
-                title_snapshot=discussion_3.title,
-                url_snapshot=reverse("forum:post_detail", kwargs={"post_id": discussion_3.id}),
+                target_id=discussion_1.id,
+                title_snapshot=discussion_1.title,
+                url_snapshot=reverse("forum:post_detail", kwargs={"post_id": discussion_1.id}),
             )
             self._ensure_favorite(
                 user=student,
                 target_type=FavoriteTargetType.GUIDE,
-                target_id=guide_4.id,
-                title_snapshot=guide_4.title,
-                url_snapshot=guide_4.get_absolute_url(),
+                target_id=guide_1.id,
+                title_snapshot=guide_1.title,
+                url_snapshot=guide_1.get_absolute_url(),
             )
 
             log_content_action(

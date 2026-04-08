@@ -8,7 +8,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from accounts.models import FavoriteItem, FavoriteTargetType, UserRole
 from courses.models import CourseStatus, Lesson
 
-from .forms import ForumCommentForm, ForumPostForm, NoteShareForm
+from .forms import ForumCommentForm, ForumPostForm, NoteShareForm, ShowcaseShareForm
 from .models import ForumComment, ForumPost, ForumPostCategory, ForumPostLike, ForumPostStatus
 
 
@@ -39,7 +39,7 @@ def _topic_prompts():
         elif lesson.order_no == 3:
             prompts[lesson.id] = "示例话题：AI 会取代哪些工作？哪些能力仍然需要人来完成？"
         else:
-            prompts[lesson.id] = "示例话题：总结本单元最有启发的一个观点，并给出个人反思。"
+            prompts[lesson.id] = "示例话题：用一页成果展示概括本单元最重要的收获，并说明最想继续探究的 AI 方向。"
     return prompts
 
 
@@ -131,6 +131,44 @@ def note_list(request):
     )
 
 
+def showcase_list(request):
+    keyword = request.GET.get("q", "").strip()
+    lesson_id = request.GET.get("lesson", "").strip()
+    order_by = request.GET.get("order", "latest").strip().lower() or "latest"
+    showcases = _visible_post_queryset(request.user).filter(category=ForumPostCategory.SHOWCASE)
+    if keyword:
+        showcases = showcases.filter(Q(title__icontains=keyword) | Q(content__icontains=keyword))
+    if lesson_id.isdigit():
+        showcases = showcases.filter(lesson_id=int(lesson_id))
+
+    if order_by == "hot":
+        showcases = showcases.order_by(
+            "-is_pinned",
+            "-like_total",
+            "-view_count",
+            "-comment_total",
+            "-last_activity_at",
+            "-id",
+        )
+    else:
+        order_by = "latest"
+        showcases = showcases.order_by("-is_pinned", "-created_at", "-id")
+
+    paginator = Paginator(showcases, 10)
+    page_obj = paginator.get_page(request.GET.get("page"))
+    return render(
+        request,
+        "forum/showcase_list.html",
+        {
+            "keyword": keyword,
+            "lesson_id": lesson_id,
+            "order_by": order_by,
+            "page_obj": page_obj,
+            **_list_context_base(),
+        },
+    )
+
+
 def post_detail(request, post_id: int):
     post = get_object_or_404(_visible_post_queryset(request.user), id=post_id)
 
@@ -209,6 +247,28 @@ def note_create(request):
     return render(
         request,
         "forum/note_form.html",
+        {"form": form, "topic_prompts": _topic_prompts(), "lessons": list(_lesson_queryset())},
+    )
+
+
+@login_required
+def showcase_create(request):
+    if request.method == "POST":
+        form = _prepare_post_form(ShowcaseShareForm(request.POST))
+        if form.is_valid():
+            post = form.save(commit=False)
+            post.author = request.user
+            post.category = ForumPostCategory.SHOWCASE
+            post.status = ForumPostStatus.PUBLISHED
+            post.save()
+            messages.success(request, "成果展示已发布。")
+            return redirect("forum:post_detail", post_id=post.id)
+    else:
+        form = _prepare_post_form(ShowcaseShareForm(initial={"lesson": request.GET.get("lesson")}))
+
+    return render(
+        request,
+        "forum/showcase_form.html",
         {"form": form, "topic_prompts": _topic_prompts(), "lessons": list(_lesson_queryset())},
     )
 

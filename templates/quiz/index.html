@@ -7,7 +7,7 @@
     <div class="hero-copy">
         <span class="eyebrow">Quiz Center</span>
         <h1>测验中心</h1>
-        <p class="display-copy">选择课时即可开始测验；登录后可查看提交历史与错题本，形成“学习内容 - 测验反馈 - 错题复习”的闭环。</p>
+        <p class="display-copy">支持单元综合测验与课时测验。登录后可查看提交历史与错题本，形成“学习内容 - 测验反馈 - 错题复习”的闭环。</p>
         <div class="hero-actions">
             {% if request.user.is_authenticated %}
                 <a class="btn btn-outline" href="{% url 'quiz:submission_history' %}">我的提交历史</a>
@@ -20,12 +20,43 @@
     <div class="hero-subgrid">
         <div class="content-panel">
             <strong>答题说明</strong>
-            <p class="section-copy">测验入口会按课时列出，教师可在内容工作台中为课时配置题目，学生完成后可在个人中心和数据看板中查看结果。</p>
+            <p class="section-copy">优先完成单元综合测验，随后也可以按课时继续答题练习。综合测验默认抽取本课程前 10 道启用题目。</p>
         </div>
     </div>
 </section>
 
 <section class="card reveal">
+    <div class="section-head">
+        <div>
+            <span class="eyebrow">Unit Quiz</span>
+            <h2>单元综合测验</h2>
+        </div>
+    </div>
+    {% if course_quiz_rows %}
+        <div class="collection-grid">
+            {% for row in course_quiz_rows %}
+                <article class="content-panel">
+                    <strong>{{ row.course.title }}</strong>
+                    <p class="section-copy">综合检测 {{ row.question_total }} 题，覆盖课程核心概念、典型应用、伦理问题与单元总结。</p>
+                    <div class="hero-actions">
+                        <a class="btn" href="{% url 'quiz:take_course_quiz' course_slug=row.course.slug %}">开始综合测验</a>
+                        <a class="btn btn-outline" href="{% url 'courses:course_detail' slug=row.course.slug %}">查看课程</a>
+                    </div>
+                </article>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p class="empty-state">暂无可用的单元综合测验。</p>
+    {% endif %}
+</section>
+
+<section class="card reveal">
+    <div class="section-head">
+        <div>
+            <span class="eyebrow">Lesson Quiz</span>
+            <h2>按课时答题</h2>
+        </div>
+    </div>
     {% if lessons %}
         <div class="collection-grid">
             {% for lesson in lessons %}

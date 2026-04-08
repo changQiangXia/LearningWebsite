@@ -1149,6 +1149,46 @@ mark {
     border: 0;
 }
 
+.lesson-activity-card {
+    overflow: visible;
+}
+
+.lesson-choice-group {
+    display: grid;
+}
+
+.lesson-choice-pill {
+    display: flex;
+    gap: 0.7rem;
+    align-items: flex-start;
+    padding: 0.9rem 1rem;
+    border-radius: 20px;
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    background: rgba(255, 255, 255, 0.78);
+    cursor: pointer;
+}
+
+.lesson-choice-pill input[type="radio"] {
+    width: auto;
+    margin-top: 0.15rem;
+    flex-shrink: 0;
+}
+
+.lesson-choice-pill span {
+    line-height: 1.75;
+}
+
+.lesson-choice-feedback {
+    margin-top: 0.9rem;
+}
+
+.lesson-tip-list {
+    margin: 0.7rem 0 0;
+    padding-left: 1.2rem;
+    color: var(--muted);
+    line-height: 1.8;
+}
+
 @keyframes float {
     0%,
     100% {

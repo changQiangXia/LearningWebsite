@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+﻿{% extends "base.html" %}
 
 {% block title %}在线测验 | LearningWebsite{% endblock %}
 
@@ -16,6 +16,9 @@
                 <article style="border:1px solid var(--line); border-radius:10px; padding:0.9rem;">
                     <h3 style="margin:0;">第 {{ forloop.counter }} 题（{{ q.score }} 分）</h3>
                     <p style="margin:0.5rem 0; white-space:pre-wrap;">{{ q.stem }}</p>
+                    {% if q.lesson %}
+                        <p class="small muted">来源课时：第 {{ q.lesson.order_no }} 课 {{ q.lesson.title }}</p>
+                    {% endif %}
                     <p class="small muted">题型：{{ q.get_question_type_display }}</p>
 
                     {% if q.question_type == question_type.SHORT_ANSWER %}

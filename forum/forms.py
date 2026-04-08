@@ -46,3 +46,20 @@ class NoteShareForm(forms.ModelForm):
             "title": forms.TextInput(attrs={"placeholder": "请输入学习笔记标题"}),
             "content": forms.Textarea(attrs={"placeholder": "整理学习收获、关键知识点或答题经验"}),
         }
+
+
+class ShowcaseShareForm(forms.ModelForm):
+    class Meta:
+        model = ForumPost
+        fields = ["title", "lesson", "content"]
+        labels = {
+            "title": "展示标题",
+            "lesson": "关联课时",
+            "content": "展示说明",
+        }
+        widgets = {
+            "title": forms.TextInput(attrs={"placeholder": "请输入成果展示标题"}),
+            "content": forms.Textarea(
+                attrs={"placeholder": "可填写展示摘要、核心观点、案例分析或作品说明"}
+            ),
+        }

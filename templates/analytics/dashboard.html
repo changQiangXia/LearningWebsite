@@ -8,9 +8,9 @@
         <span class="eyebrow">Analytics</span>
         <h1>数据看板</h1>
         {% if mode == "staff" %}
-            <p class="display-copy">面向教务与管理员账号的平台级指标，展示用户、课程、社区与测验数据，为教学管理和项目答辩提供量化支撑。</p>
+            <p class="display-copy">面向教务与管理员账号的平台级指标，展示用户、课程、社区、测验和学习自评数据，为教学管理和项目答辩提供量化支撑。</p>
         {% else %}
-            <p class="display-copy">当前账号的学习与测验数据概览，用于直观展示学习进度、测验表现与课程参与情况。</p>
+            <p class="display-copy">当前账号的学习、测验与课程自评概览，用于直观展示学习进度、掌握情况和单元反思完成度。</p>
         {% endif %}
         <div class="hero-actions">
             <a class="btn btn-outline" href="{% url 'analytics:export_csv' %}">导出 CSV</a>
@@ -19,7 +19,7 @@
     <div class="hero-subgrid">
         <div class="content-panel">
             <strong>{% if mode == "staff" %}平台概览{% else %}个人概览{% endif %}</strong>
-            <p class="section-copy">通过统计信息、排行榜、课程完成率和测验历史，将系统运行状态可视化呈现。</p>
+            <p class="section-copy">通过统计信息、排行榜、课程完成率、测验历史与学习反馈，将系统运行状态可视化呈现。</p>
         </div>
     </div>
 </section>
@@ -43,7 +43,28 @@
             <article class="metric-card"><strong>{{ submission_count }}</strong><p class="section-copy">测验提交次数</p></article>
             <article class="metric-card"><strong>{{ avg_accuracy }}%</strong><p class="section-copy">平均正确率</p></article>
             <article class="metric-card"><strong>{{ open_wrong_count }} / {{ resolved_wrong_count }}</strong><p class="section-copy">未解决错题 / 已解决错题</p></article>
+            <article class="metric-card"><strong>{{ feedback_count }}</strong><p class="section-copy">已提交自评问卷</p></article>
         </div>
+    </section>
+
+    <section class="card reveal">
+        <div class="section-head">
+            <div>
+                <span class="eyebrow">Feedback Insights</span>
+                <h2>学习自评概览</h2>
+            </div>
+        </div>
+        {% if feedback_count %}
+            <div class="stats-grid">
+                <article class="metric-card"><strong>{{ feedback_summary.concept_avg }}</strong><p class="section-copy">概念理解均分</p></article>
+                <article class="metric-card"><strong>{{ feedback_summary.mechanism_avg }}</strong><p class="section-copy">机制理解均分</p></article>
+                <article class="metric-card"><strong>{{ feedback_summary.ethics_avg }}</strong><p class="section-copy">伦理认知均分</p></article>
+                <article class="metric-card"><strong>{{ feedback_summary.expression_avg }}</strong><p class="section-copy">展示表达均分</p></article>
+                <article class="metric-card"><strong>{{ feedback_summary.exploration_avg }}</strong><p class="section-copy">继续探索意愿均分</p></article>
+            </div>
+        {% else %}
+            <p class="empty-state">当前还没有学生提交学习自评问卷。</p>
+        {% endif %}
     </section>
 
     <section class="card reveal">
@@ -129,6 +150,8 @@
             <article class="metric-card"><strong>{{ avg_accuracy }}%</strong><p class="section-copy">平均正确率</p></article>
             <article class="metric-card"><strong>{{ open_wrong_count }}</strong><p class="section-copy">未解决错题</p></article>
             <article class="metric-card"><strong>{{ resolved_wrong_count }}</strong><p class="section-copy">已解决错题</p></article>
+            <article class="metric-card"><strong>{{ feedback_count }}</strong><p class="section-copy">已完成自评</p></article>
+            <article class="metric-card"><strong>{{ feedback_completion_rate }}%</strong><p class="section-copy">课程自评完成率</p></article>
         </div>
     </section>
 
@@ -162,6 +185,69 @@
             </table>
         {% else %}
             <p class="empty-state">暂无课程数据。</p>
+        {% endif %}
+    </section>
+
+    <section class="card reveal">
+        <div class="section-head">
+            <div>
+                <span class="eyebrow">Learning Feedback</span>
+                <h2>课程自评问卷</h2>
+            </div>
+        </div>
+        {% if course_progress_rows %}
+            <div class="stack">
+                {% for row in course_progress_rows %}
+                    <article class="content-panel">
+                        <div class="section-head" style="margin-bottom:0.6rem; align-items:start;">
+                            <div>
+                                <strong>{{ row.course.title }}</strong>
+                                <p class="section-copy">课程进度 {{ row.completion_rate }}% · 课时 {{ row.completed_lessons }} / {{ row.total_lessons }}</p>
+                            </div>
+                            {% if row.course.id in feedback_course_ids %}
+                                <a class="btn btn-outline" href="{% url 'analytics:feedback_form' course_slug=row.course.slug %}?next={% url 'analytics:index' %}">查看或修改自评</a>
+                            {% else %}
+                                <a class="btn" href="{% url 'analytics:feedback_form' course_slug=row.course.slug %}?next={% url 'analytics:index' %}">填写自评问卷</a>
+                            {% endif %}
+                        </div>
+                    </article>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p class="empty-state">暂无可填写的课程。</p>
+        {% endif %}
+    </section>
+
+    <section class="card reveal">
+        <div class="section-head">
+            <div>
+                <span class="eyebrow">Feedback Summary</span>
+                <h2>最近自评与反思</h2>
+            </div>
+        </div>
+        {% if recent_feedback %}
+            <div class="stats-grid">
+                <article class="metric-card"><strong>{{ feedback_summary.concept_avg }}</strong><p class="section-copy">概念理解均分</p></article>
+                <article class="metric-card"><strong>{{ feedback_summary.mechanism_avg }}</strong><p class="section-copy">机制理解均分</p></article>
+                <article class="metric-card"><strong>{{ feedback_summary.ethics_avg }}</strong><p class="section-copy">伦理认知均分</p></article>
+                <article class="metric-card"><strong>{{ feedback_summary.expression_avg }}</strong><p class="section-copy">展示表达均分</p></article>
+                <article class="metric-card"><strong>{{ feedback_summary.exploration_avg }}</strong><p class="section-copy">继续探索意愿均分</p></article>
+            </div>
+            <div class="stack" style="margin-top:1rem;">
+                {% for item in recent_feedback %}
+                    <article class="content-panel">
+                        <strong>{{ item.course.title }}</strong>
+                        <p class="section-copy">最近更新：{{ item.updated_at|date:"Y-m-d H:i" }}</p>
+                        {% if item.reflection %}
+                            <p class="section-copy">{{ item.reflection|truncatechars:160 }}</p>
+                        {% else %}
+                            <p class="section-copy">未填写文字反思。</p>
+                        {% endif %}
+                    </article>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p class="empty-state">还没有自评记录，可以在完成课程后填写单元反思。</p>
         {% endif %}
     </section>
 

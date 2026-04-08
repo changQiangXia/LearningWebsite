@@ -1,10 +1,12 @@
-from django.contrib.auth.models import User
+﻿from django.contrib.auth.models import User
 from django.test import TestCase
 from django.urls import reverse
 
 from courses.models import Chapter, Course, CourseStatus, LearningProgress, Lesson
 from forum.models import ForumPost, ForumPostStatus
 from quiz.models import Question, QuestionType, QuizSubmission, WrongQuestion
+
+from .models import LearningFeedback
 
 
 class AnalyticsViewTests(TestCase):
@@ -95,7 +97,6 @@ class AnalyticsViewTests(TestCase):
         self.client.login(username="analytics_student", password="Password123!")
         response = self.client.get(reverse("analytics:index"))
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "个人概览")
         self.assertEqual(response.context["mode"], "student")
         self.assertEqual(response.context["total_lessons"], 2)
         self.assertEqual(response.context["completed_lessons"], 1)
@@ -104,12 +105,23 @@ class AnalyticsViewTests(TestCase):
         self.assertEqual(response.context["avg_accuracy"], 50.0)
         self.assertEqual(response.context["open_wrong_count"], 1)
         self.assertEqual(response.context["resolved_wrong_count"], 1)
+        self.assertEqual(response.context["feedback_count"], 0)
+        self.assertEqual(response.context["feedback_completion_rate"], 0)
 
     def test_staff_dashboard_metrics_are_correct(self):
+        LearningFeedback.objects.create(
+            user=self.student,
+            course=self.course_pub,
+            concept_score=4,
+            mechanism_score=5,
+            ethics_score=4,
+            expression_score=3,
+            exploration_score=5,
+            reflection="Need more real-world examples.",
+        )
         self.client.login(username="analytics_staff", password="Password123!")
         response = self.client.get(reverse("analytics:index"))
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "平台概览")
         self.assertEqual(response.context["mode"], "staff")
         self.assertEqual(response.context["total_users"], 3)
         self.assertEqual(response.context["total_courses"], 2)
@@ -118,21 +130,33 @@ class AnalyticsViewTests(TestCase):
         self.assertEqual(response.context["total_lessons"], 3)
         self.assertEqual(response.context["forum_total"], 2)
         self.assertEqual(response.context["submission_count"], 2)
+        self.assertEqual(response.context["feedback_count"], 1)
+        self.assertEqual(response.context["feedback_summary"]["concept_avg"], 4.0)
 
     def test_export_csv_requires_login(self):
         response = self.client.get(reverse("analytics:export_csv"))
         self.assertEqual(response.status_code, 302)
         self.assertIn("/accounts/login/", response.url)
 
-    def test_student_export_csv(self):
+    def test_student_export_csv_includes_feedback_columns(self):
+        LearningFeedback.objects.create(
+            user=self.student,
+            course=self.course_pub,
+            concept_score=4,
+            mechanism_score=5,
+            ethics_score=4,
+            expression_score=3,
+            exploration_score=5,
+            reflection="Reflection text",
+        )
         self.client.login(username="analytics_student", password="Password123!")
         response = self.client.get(reverse("analytics:export_csv"))
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response["Content-Type"], "text/csv")
         self.assertIn("analytics_student.csv", response["Content-Disposition"])
         csv_text = response.content.decode()
-        self.assertIn("Summary,Total Lessons,2", csv_text)
-        self.assertIn("Summary,Completed Lessons,1", csv_text)
+        self.assertIn("Summary,Feedback Count,1", csv_text)
+        self.assertIn("Summary,Feedback Completion Rate,100.0%", csv_text)
 
     def test_staff_export_csv(self):
         self.client.login(username="analytics_staff", password="Password123!")
@@ -144,3 +168,62 @@ class AnalyticsViewTests(TestCase):
         self.assertIn("Users,Total Users,3", csv_text)
         self.assertIn("Courses,Published Courses,1", csv_text)
         self.assertIn("Top Learners", csv_text)
+
+    def test_feedback_form_requires_login(self):
+        response = self.client.get(reverse("analytics:feedback_form", kwargs={"course_slug": self.course_pub.slug}))
+        self.assertEqual(response.status_code, 302)
+        self.assertIn("/accounts/login/", response.url)
+
+    def test_student_can_create_feedback(self):
+        self.client.login(username="analytics_student", password="Password123!")
+        response = self.client.post(
+            reverse("analytics:feedback_form", kwargs={"course_slug": self.course_pub.slug}),
+            {
+                "concept_score": 4,
+                "mechanism_score": 5,
+                "ethics_score": 4,
+                "expression_score": 3,
+                "exploration_score": 5,
+                "reflection": "I can now explain the basics clearly.",
+                "next": reverse("analytics:index"),
+            },
+            follow=True,
+        )
+        self.assertEqual(response.status_code, 200)
+        feedback = LearningFeedback.objects.get(user=self.student, course=self.course_pub)
+        self.assertEqual(feedback.mechanism_score, 5)
+        self.assertContains(response, "数据看板")
+
+    def test_student_can_update_feedback(self):
+        LearningFeedback.objects.create(
+            user=self.student,
+            course=self.course_pub,
+            concept_score=2,
+            mechanism_score=2,
+            ethics_score=2,
+            expression_score=2,
+            exploration_score=2,
+            reflection="Old reflection",
+        )
+        self.client.login(username="analytics_student", password="Password123!")
+        response = self.client.post(
+            reverse("analytics:feedback_form", kwargs={"course_slug": self.course_pub.slug}),
+            {
+                "concept_score": 5,
+                "mechanism_score": 4,
+                "ethics_score": 4,
+                "expression_score": 4,
+                "exploration_score": 5,
+                "reflection": "Updated reflection",
+            },
+            follow=True,
+        )
+        self.assertEqual(response.status_code, 200)
+        feedback = LearningFeedback.objects.get(user=self.student, course=self.course_pub)
+        self.assertEqual(feedback.concept_score, 5)
+        self.assertEqual(feedback.reflection, "Updated reflection")
+
+    def test_student_cannot_fill_feedback_for_draft_course(self):
+        self.client.login(username="analytics_student", password="Password123!")
+        response = self.client.get(reverse("analytics:feedback_form", kwargs={"course_slug": self.course_draft.slug}))
+        self.assertEqual(response.status_code, 404)

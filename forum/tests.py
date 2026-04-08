@@ -91,6 +91,37 @@ class ForumViewTests(TestCase):
         self.assertContains(response, "Shared Note")
         self.assertNotContains(response, "Discussion Post")
 
+    def test_logged_in_user_can_create_showcase(self):
+        self.client.login(username="forum_u1", password="Password123!")
+        response = self.client.post(
+            reverse("forum:showcase_create"),
+            {"title": "My Showcase", "content": "Presentation outline and reflections."},
+            follow=True,
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(
+            ForumPost.objects.filter(title="My Showcase", category=ForumPostCategory.SHOWCASE, author=self.user).exists()
+        )
+
+    def test_showcase_list_shows_only_showcase_posts(self):
+        ForumPost.objects.create(
+            author=self.user,
+            title="Final Showcase",
+            content="Showcase content",
+            category=ForumPostCategory.SHOWCASE,
+        )
+        ForumPost.objects.create(
+            author=self.user,
+            title="Regular Discussion",
+            content="Discussion content",
+            category=ForumPostCategory.DISCUSSION,
+        )
+
+        response = self.client.get(reverse("forum:showcase_list"))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Final Showcase")
+        self.assertNotContains(response, "Regular Discussion")
+
     def test_logged_in_user_can_comment_post(self):
         self.client.login(username="forum_u1", password="Password123!")
         response = self.client.post(

@@ -4,7 +4,9 @@ from django.test import TestCase
 from django.urls import reverse
 
 from accounts.models import UserRole
+from analytics.models import LearningFeedback
 from courses.models import AuditTargetType, Chapter, ContentAuditLog, Course, CourseStatus, LearningProgress, Lesson
+from forum.models import ForumPost, ForumPostCategory
 
 
 class CourseModelTests(TestCase):
@@ -102,6 +104,46 @@ class CourseViewTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "已完成课时")
+
+    def test_lesson_detail_includes_embedded_activities(self):
+        self.client.login(username="student1", password="Password123!")
+        response = self.client.get(reverse("courses:lesson_detail", kwargs={"lesson_id": self.lesson.id}))
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.context["lesson_activities"])
+        self.assertContains(response, "课堂练习")
+
+    def test_lesson_four_exposes_feedback_and_showcase_context(self):
+        lesson_four = Lesson.objects.create(
+            chapter=self.lesson.chapter,
+            title="Lesson 4",
+            order_no=4,
+            content="Summary lesson",
+        )
+        ForumPost.objects.create(
+            author=self.student,
+            title="Showcase Post",
+            content="My final project reflection",
+            lesson=lesson_four,
+            category=ForumPostCategory.SHOWCASE,
+        )
+        LearningFeedback.objects.create(
+            user=self.student,
+            course=self.course_published,
+            concept_score=4,
+            mechanism_score=4,
+            ethics_score=4,
+            expression_score=4,
+            exploration_score=5,
+            reflection="Ready for presentation.",
+        )
+
+        self.client.login(username="student1", password="Password123!")
+        response = self.client.get(reverse("courses:lesson_detail", kwargs={"lesson_id": lesson_four.id}))
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.context["feedback_url"])
+        self.assertTrue(response.context["feedback_exists"])
+        self.assertTrue(response.context["showcase_list_url"])
+        self.assertTrue(response.context["showcase_posts"])
 
 
 class CourseManageViewTests(TestCase):

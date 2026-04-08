@@ -7,7 +7,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 
 from accounts.models import UserRole
 from courses.audit import log_content_action
-from courses.models import AuditTargetType, CourseStatus, Lesson
+from courses.models import AuditTargetType, Course, CourseStatus, Lesson
 
 from .forms import ManageQuestionForm
 from .models import Question, QuestionType, QuizAnswer, QuizSubmission, WrongQuestion
@@ -30,6 +30,13 @@ def _visible_lessons(user):
         chapter__is_active=True,
         is_active=True,
     )
+
+
+def _visible_courses(user):
+    queryset = Course.objects.all()
+    if user.is_authenticated and user.is_staff:
+        return queryset
+    return queryset.filter(status=CourseStatus.PUBLISHED)
 
 
 def _managed_lessons(user):
@@ -57,7 +64,36 @@ def index(request):
         .distinct()
         .order_by("chapter__course_id", "chapter__order_no", "order_no")
     )
-    return render(request, "quiz/index.html", {"lessons": lessons})
+    courses = (
+        _visible_courses(request.user)
+        .filter(chapters__lessons__questions__is_active=True)
+        .distinct()
+        .order_by("title", "id")
+    )
+    course_quiz_rows = []
+    for course in courses:
+        question_total = Question.objects.filter(
+            lesson__chapter__course=course,
+            lesson__chapter__is_active=True,
+            lesson__is_active=True,
+            is_active=True,
+        ).count()
+        if not question_total:
+            continue
+        course_quiz_rows.append(
+            {
+                "course": course,
+                "question_total": min(question_total, 10),
+            }
+        )
+    return render(
+        request,
+        "quiz/index.html",
+        {
+            "lessons": lessons,
+            "course_quiz_rows": course_quiz_rows,
+        },
+    )
 
 
 def _normalize_answer_list(values):
@@ -191,6 +227,70 @@ def take_lesson_quiz(request, lesson_id: int):
             "page_hint": f"课程：{lesson.chapter.course.title} / 章节：{lesson.chapter.title}",
             "submit_text": "提交测验",
             "lesson": lesson,
+            "questions": questions,
+            "question_type": QuestionType,
+        },
+    )
+
+
+@login_required
+def take_course_quiz(request, course_slug: str):
+    course = get_object_or_404(_visible_courses(request.user), slug=course_slug)
+    questions = list(
+        Question.objects.filter(
+            lesson__chapter__course=course,
+            lesson__chapter__is_active=True,
+            lesson__is_active=True,
+            is_active=True,
+        )
+        .select_related("lesson", "lesson__chapter")
+        .order_by("lesson__chapter__order_no", "lesson__order_no", "id")[:10]
+    )
+
+    if not questions:
+        raise Http404("当前课程暂无可用题目。")
+
+    anchor_lesson = questions[-1].lesson
+
+    if request.method == "POST":
+        result_rows, total_score, user_score, correct_count, accuracy = _evaluate_submission(
+            questions, request.POST
+        )
+        submission = _persist_submission(
+            request.user,
+            anchor_lesson,
+            result_rows,
+            total_score,
+            user_score,
+            correct_count,
+            accuracy,
+        )
+
+        return render(
+            request,
+            "quiz/result.html",
+            {
+                "submission": submission,
+                "quiz_mode": "course_unit",
+                "lesson": anchor_lesson,
+                "result_title": f"单元综合测验：{course.title}",
+                "result_rows": result_rows,
+                "correct_count": correct_count,
+                "question_count": len(result_rows),
+                "user_score": user_score,
+                "total_score": total_score,
+                "accuracy": accuracy,
+            },
+        )
+
+    return render(
+        request,
+        "quiz/take_quiz.html",
+        {
+            "page_title": f"单元综合测验：{course.title}",
+            "page_hint": f"共 {len(questions)} 题，覆盖课程概念、应用、伦理与总结内容。",
+            "submit_text": "提交综合测验",
+            "course": course,
             "questions": questions,
             "question_type": QuestionType,
         },

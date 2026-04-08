@@ -1,23 +1,16 @@
 ﻿{% extends "base.html" %}
 
-{% block title %}社区讨论 | LearningWebsite{% endblock %}
+{% block title %}成果展示 | LearningWebsite{% endblock %}
 
 {% block content %}
 <section class="card hero-panel reveal">
     <div class="hero-copy">
-        <span class="eyebrow">Community Forum</span>
-        <h1>社区讨论区</h1>
-        <p class="display-copy">围绕各课时开展问题交流、观点讨论与案例分享，支持按最新、最热和课时筛选，突出平台的学习共同体特征。</p>
+        <span class="eyebrow">Showcase</span>
+        <h1>成果展示区</h1>
+        <p class="display-copy">用于汇总单元海报、PPT 结构、案例分析和学习反思。教师可直接在帖子详情中评论，形成“展示 + 点评”的闭环。</p>
         <form method="get">
-            <div class="filter-grid resource-filter-grid">
-                <input type="text" name="q" value="{{ keyword }}" placeholder="搜索标题或正文">
-                <select name="category">
-                    <option value="">全部分类</option>
-                    <option value="discussion" {% if category == "discussion" %}selected{% endif %}>讨论</option>
-                    <option value="help" {% if category == "help" %}selected{% endif %}>求助</option>
-                    <option value="share" {% if category == "share" %}selected{% endif %}>分享</option>
-                    <option value="showcase" {% if category == "showcase" %}selected{% endif %}>成果展示</option>
-                </select>
+            <div class="filter-grid compact">
+                <input type="text" name="q" value="{{ keyword }}" placeholder="搜索展示标题或内容">
                 <select name="lesson">
                     <option value="">全部课时</option>
                     {% for item in lesson_options %}
@@ -28,31 +21,22 @@
                     <option value="latest" {% if order_by == "latest" %}selected{% endif %}>最新发布</option>
                     <option value="hot" {% if order_by == "hot" %}selected{% endif %}>最热优先</option>
                 </select>
-                <button class="btn filter-submit-round" type="submit" aria-label="搜索与筛选">
-                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                        <circle cx="11" cy="11" r="5.5" stroke="white" stroke-width="2"/>
-                        <path d="M15.2 15.2L19 19" stroke="white" stroke-width="2" stroke-linecap="round"/>
-                    </svg>
-                    <span>搜索与筛选</span>
-                </button>
+                <button class="btn" type="submit">筛选</button>
             </div>
         </form>
     </div>
     <div class="hero-subgrid">
         <div class="content-panel">
-            <strong>互动入口</strong>
-            <p class="section-copy">支持发帖、评论、点赞、收藏、置顶与已解决状态，既能展示社区功能，也能体现课程场景下的协作学习。</p>
+            <strong>推荐内容</strong>
+            <p class="section-copy">可发布单元总结海报、案例分析卡片、PPT 讲解结构、课堂展示稿或个人反思摘要。</p>
         </div>
         <div class="note-line">
             {% if request.user.is_authenticated %}
-                <a class="btn" href="{% url 'forum:post_create' %}">发布帖子</a>
-                <a class="btn btn-outline" href="{% url 'forum:note_list' %}">进入笔记区</a>
-                <a class="btn btn-outline" href="{% url 'forum:showcase_list' %}">成果展示区</a>
+                <a class="btn" href="{% url 'forum:showcase_create' %}">发布成果展示</a>
             {% else %}
-                <a class="btn btn-outline" href="{% url 'accounts:login' %}?next={% url 'forum:post_create' %}">登录后发帖</a>
-                <a class="btn btn-outline" href="{% url 'forum:note_list' %}">进入笔记区</a>
-                <a class="btn btn-outline" href="{% url 'forum:showcase_list' %}">成果展示区</a>
+                <a class="btn btn-outline" href="{% url 'accounts:login' %}?next={% url 'forum:showcase_create' %}">登录后发布</a>
             {% endif %}
+            <a class="btn btn-outline" href="{% url 'forum:post_list' %}">返回社区</a>
         </div>
     </div>
 </section>
@@ -65,13 +49,12 @@
                     <div class="section-head" style="margin-bottom:0.8rem; align-items:start;">
                         <div>
                             <div class="hero-meta">
-                                <span class="badge">{{ post.get_category_display }}</span>
+                                <span class="badge">成果展示</span>
                                 {% if post.lesson %}<span class="badge">第 {{ post.lesson.order_no }} 课时</span>{% endif %}
                                 {% if post.is_pinned %}<span class="badge">置顶</span>{% endif %}
-                                {% if post.is_solved %}<span class="badge">已解决</span>{% endif %}
                             </div>
                             <a href="{% url 'forum:post_detail' post_id=post.id %}"><strong style="margin-top:0.8rem;">{{ post.title }}</strong></a>
-                            <p class="section-copy">{{ post.content|truncatechars:150 }}</p>
+                            <p class="section-copy">{{ post.content|truncatechars:180 }}</p>
                         </div>
                         <div class="small muted" style="text-align:right; min-width:140px;">
                             {{ post.author.username|default:"匿名" }}<br>
@@ -91,16 +74,16 @@
         {% if page_obj.paginator.num_pages > 1 %}
             <div class="pagination">
                 {% if page_obj.has_previous %}
-                    <a class="btn btn-outline" href="?q={{ keyword }}&category={{ category }}&lesson={{ lesson_id }}&order={{ order_by }}&page={{ page_obj.previous_page_number }}">上一页</a>
+                    <a class="btn btn-outline" href="?q={{ keyword }}&lesson={{ lesson_id }}&order={{ order_by }}&page={{ page_obj.previous_page_number }}">上一页</a>
                 {% endif %}
                 <span class="small muted">第 {{ page_obj.number }} / {{ page_obj.paginator.num_pages }} 页</span>
                 {% if page_obj.has_next %}
-                    <a class="btn btn-outline" href="?q={{ keyword }}&category={{ category }}&lesson={{ lesson_id }}&order={{ order_by }}&page={{ page_obj.next_page_number }}">下一页</a>
+                    <a class="btn btn-outline" href="?q={{ keyword }}&lesson={{ lesson_id }}&order={{ order_by }}&page={{ page_obj.next_page_number }}">下一页</a>
                 {% endif %}
             </div>
         {% endif %}
     {% else %}
-        <p class="empty-state">暂无帖子，欢迎发布第一条内容。</p>
+        <p class="empty-state">暂无成果展示内容，欢迎发布第一条展示帖。</p>
     {% endif %}
 </section>
 {% endblock %}
