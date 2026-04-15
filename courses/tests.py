@@ -1,4 +1,4 @@
-from django.contrib.auth.models import User
+﻿from django.contrib.auth.models import User
 from django.db import IntegrityError
 from django.test import TestCase
 from django.urls import reverse
@@ -103,14 +103,15 @@ class CourseViewTests(TestCase):
         response = self.client.get(reverse("courses:course_detail", kwargs={"slug": self.course_published.slug}))
 
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "已完成课时")
+        self.assertContains(response, "已完成 1 / 1")
 
-    def test_lesson_detail_includes_embedded_activities(self):
+    def test_lesson_detail_uses_blueprint_sections(self):
         self.client.login(username="student1", password="Password123!")
         response = self.client.get(reverse("courses:lesson_detail", kwargs={"lesson_id": self.lesson.id}))
         self.assertEqual(response.status_code, 200)
-        self.assertTrue(response.context["lesson_activities"])
-        self.assertContains(response, "课堂练习")
+        self.assertTrue(response.context["lesson_page"])
+        self.assertTrue(response.context["lesson_page"]["sections"])
+        self.assertContains(response, "微课学习")
 
     def test_lesson_four_exposes_feedback_and_showcase_context(self):
         lesson_four = Lesson.objects.create(
@@ -464,3 +465,5 @@ class CourseManageViewTests(TestCase):
                 action="update",
             ).exists()
         )
+
+

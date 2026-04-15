@@ -241,11 +241,23 @@ def take_course_quiz(request, course_slug: str):
             lesson__chapter__course=course,
             lesson__chapter__is_active=True,
             lesson__is_active=True,
+            lesson__order_no=4,
             is_active=True,
         )
         .select_related("lesson", "lesson__chapter")
-        .order_by("lesson__chapter__order_no", "lesson__order_no", "id")[:10]
+        .order_by("id")[:10]
     )
+    if not questions:
+        questions = list(
+            Question.objects.filter(
+                lesson__chapter__course=course,
+                lesson__chapter__is_active=True,
+                lesson__is_active=True,
+                is_active=True,
+            )
+            .select_related("lesson", "lesson__chapter")
+            .order_by("lesson__chapter__order_no", "lesson__order_no", "id")[:10]
+        )
 
     if not questions:
         raise Http404("当前课程暂无可用题目。")

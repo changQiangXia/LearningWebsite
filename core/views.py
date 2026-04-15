@@ -34,8 +34,16 @@ def home(request):
     ).exclude(
         category=ForumPostCategory.SHARE,
     ).select_related("author", "lesson")[:5]
+    featured_course = published_courses.first()
+    featured_lessons = []
+    if featured_course:
+        for chapter in featured_course.chapters.all():
+            featured_lessons.extend(list(chapter.lessons.all()))
+    primary_guide = TeachingGuide.objects.filter(is_published=True).order_by("order_no", "id").first()
     context = {
-        "featured_course": published_courses.first(),
+        "featured_course": featured_course,
+        "featured_lessons": featured_lessons[:4],
+        "primary_guide": primary_guide,
         "published_course_count": published_courses.count(),
         "lesson_count": Lesson.objects.filter(
             chapter__course__status=CourseStatus.PUBLISHED,

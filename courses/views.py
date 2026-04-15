@@ -1,3 +1,5 @@
+﻿from copy import deepcopy
+
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
@@ -14,6 +16,7 @@ from guides.models import TeachingGuide
 from quiz.models import Question
 from resources.models import Resource, ResourceAudience
 
+from .ai_unit_data import LESSON_PAGE_DATA
 from .audit import log_content_action
 from .forms import ManageChapterForm, ManageCourseForm, ManageLessonForm
 from .models import AuditTargetType, Chapter, ContentAuditLog, Course, CourseGlossaryTerm, CourseStatus, LearningProgress, Lesson
@@ -107,156 +110,84 @@ def _embed_video_url(url):
     return url
 
 
-def _interactive_prompt_for_lesson(lesson):
-    prompt_map = {
-        1: {
-            "title": "互动节点：我身边的 AI",
-            "body": "观察生活中的一个人工智能场景，例如语音助手、拍照搜题或刷脸支付，并尝试说明它为生活带来了什么便利。",
-        },
-        2: {
-            "title": "互动节点：行业应用发现",
-            "body": "从医疗、交通、教育、家居中任选一个领域，说明人工智能是如何提升效率和便利度的。",
-        },
-        3: {
-            "title": "互动节点：伦理判断",
-            "body": "阅读一个人工智能伦理案例后，思考隐私安全、算法公平性和责任边界分别体现在哪里。",
-        },
-        4: {
-            "title": "互动节点：未来与总结",
-            "body": "用几句话概括本单元最重要的收获，并说出一个最想继续探索的人工智能方向。",
-        },
-    }
-    return prompt_map.get(
-        lesson.order_no,
-        {
-            "title": "互动节点：开放反思",
-            "body": "结合本课时内容，提出一个值得继续追问的问题。",
-        },
+def _resolve_button_url(button_spec, lesson_id: int, lesson_filter_value: int):
+    route = button_spec["route"]
+    if button_spec.get("lesson_query"):
+        return f'{reverse(route)}?lesson={lesson_id}'
+    if button_spec.get("lesson_filter"):
+        return f'{reverse(route)}?lesson={lesson_filter_value}'
+    return reverse(route)
+
+
+def _build_lesson_page(
+    lesson,
+    course,
+    question_count,
+    feedback_url,
+    feedback_exists,
+    showcase_list_url,
+    showcase_create_url,
+    unit_quiz_url,
+):
+    lesson_page = deepcopy(LESSON_PAGE_DATA.get(lesson.order_no, {}))
+    sections = lesson_page.get("sections", [])
+    for section in sections:
+        if section.get("type") == "video":
+            for video in section.get("videos", []):
+                video["embedded_url"] = _embed_video_url(video["url"])
+        if section.get("type") == "action_cards":
+            for item in section.get("items", []):
+                buttons = []
+                for button in item.get("buttons", []):
+                    buttons.append({**button, "url": _resolve_button_url(button, lesson.id, lesson.id)})
+                item["buttons"] = buttons
+        if section.get("type") == "exercise":
+            section["answer_items"] = [
+                f"{index}.{question['answer']}"
+                for index, question in enumerate(section.get("questions", []), start=1)
+            ]
+            if lesson.order_no == 4 and unit_quiz_url:
+                section["quiz_url"] = unit_quiz_url
+                section["quiz_label"] = "进入单元综合测验"
+            elif question_count > 0:
+                section["quiz_url"] = reverse("quiz:take_lesson_quiz", kwargs={"lesson_id": lesson.id})
+                section["quiz_label"] = "进入本课在线答题"
+
+    if lesson.order_no == 4:
+        for section in sections:
+            if section.get("title") == "学习成果展示":
+                for item in section.get("items", []):
+                    item["buttons"] = [
+                        {"label": "浏览成果展示", "url": showcase_list_url},
+                        {"label": "发布成果展示", "url": showcase_create_url},
+                    ]
+            if section.get("title") == "单元自评与总结":
+                for item in section.get("items", []):
+                    buttons = [{"label": "进入数据看板", "url": reverse("analytics:index")}]
+                    if feedback_url:
+                        buttons.insert(
+                            0,
+                            {
+                                "label": "查看或填写自评问卷" if feedback_exists else "填写自评问卷",
+                                "url": f"{feedback_url}?next={reverse('courses:lesson_detail', kwargs={'lesson_id': lesson.id})}",
+                            },
+                        )
+                    item["buttons"] = buttons
+
+    lesson_page["hero_title"] = lesson_page.get("full_title", lesson.title)
+    lesson_page["hero_summary"] = lesson_page.get("hero_summary", lesson.content or "")
+    lesson_page["content"] = lesson_page.get("content", lesson.content or "")
+    lesson_page["structure_flow"] = lesson_page.get("structure_flow") or " → ".join(
+        section.get("title", "")
+        for section in sections
+        if section.get("title")
     )
-
-
-def _lesson_activity_blocks(lesson):
-    activity_map = {
-        1: [
-            {
-                "title": "课堂练习 1：AI 场景辨认",
-                "type": "single_choice",
-                "prompt": "下面哪一项最符合“基于数据做感知与判断”的 AI 应用特征？",
-                "options": [
-                    "普通机械闹钟按固定时间响铃",
-                    "导航软件根据实时路况动态调整路线",
-                    "纸质课本按页码顺序排版",
-                    "黑板擦只能靠人工移动",
-                ],
-                "answer": 1,
-                "explanation": "导航会结合地图、定位和交通流量数据动态给出判断，因此更符合 AI 应用场景。",
-            },
-            {
-                "title": "课堂练习 2：生活观察",
-                "type": "reflection",
-                "prompt": "写出一个身边见过的 AI 场景，并尝试说明它的输入数据和输出结果。",
-                "tips": [
-                    "优先选择熟悉的真实场景，例如推荐系统、刷脸解锁、语音助手。",
-                    "可按“输入了什么数据”“给出了什么结果”两个维度组织表达。",
-                ],
-            },
-        ],
-        2: [
-            {
-                "title": "课堂练习 1：应用场景辨认",
-                "type": "single_choice",
-                "prompt": "下面哪一项最符合人工智能在交通领域的应用？",
-                "options": [
-                    "自动驾驶",
-                    "普通铅笔",
-                    "纸质作业本",
-                    "黑板擦",
-                ],
-                "answer": 0,
-                "explanation": "自动驾驶是人工智能在交通领域中的代表性应用，其核心是感知、识别与决策。",
-            },
-            {
-                "title": "课堂练习 2：应用案例观察",
-                "type": "reflection",
-                "prompt": "从医疗、交通、教育、家居四个方向中任选一个，说明人工智能带来了什么便利。",
-                "tips": [
-                    "可以围绕“它帮人完成了什么任务”“比传统方式方便在哪里”两个问题组织答案。",
-                    "尽量使用真实案例，例如智能导航、医疗辅助诊断、个性化学习推荐或智能音箱。",
-                ],
-            },
-        ],
-        3: [
-            {
-                "title": "课堂练习 1：伦理判断",
-                "type": "single_choice",
-                "prompt": "当 AI 招聘系统因训练数据偏差而长期忽视某类候选人时，更合理的做法是什么？",
-                "options": [
-                    "继续直接使用结果，不做人工复核",
-                    "停止关注公平性，只追求处理速度",
-                    "检查训练数据和规则，并加入人工监督",
-                    "把问题完全归咎于用户不会使用系统",
-                ],
-                "answer": 2,
-                "explanation": "AI 伦理问题通常需要从数据、算法和人工监督三个层面共同修正，而不是放任偏差继续扩大。",
-            },
-            {
-                "title": "课堂练习 2：责任讨论",
-                "type": "reflection",
-                "prompt": "如果 AI 结果影响了个人权益，开发者、平台和使用者分别应承担哪些责任？",
-                "tips": [
-                    "可从“设计是否合理”“是否及时告知”“是否有人类复核”三个角度回答。",
-                    "尽量结合具体案例，不只停留在抽象观点。",
-                ],
-            },
-        ],
-        4: [
-            {
-                "title": "课堂练习 1：未来趋势判断",
-                "type": "single_choice",
-                "prompt": "下面哪一项更符合人工智能未来发展的方向？",
-                "options": [
-                    "多模态融合与人机协同",
-                    "只依赖纸质记录，不再使用数据",
-                    "完全停止所有算法更新",
-                    "不再需要任何人类判断",
-                ],
-                "answer": 0,
-                "explanation": "人工智能未来通常会朝着多模态融合、自主学习和人机协同等方向继续发展。",
-            },
-            {
-                "title": "课堂练习 2：成果展示准备",
-                "type": "reflection",
-                "prompt": "用 2 到 3 句话概括本单元最重要的收获，并准备一个适合展示的案例或观点。",
-                "tips": [
-                    "可以从“我理解了什么”“我最认同什么观点”“我还想继续探究什么”三个问题切入。",
-                    "整理完成后，可继续填写自评问卷或发布成果展示帖子。",
-                ],
-            },
-        ],
-    }
-    return activity_map.get(lesson.order_no, [])
-
-
-def _application_cards_for_lesson(lesson):
-    if lesson.order_no != 2:
-        return []
-    return [
-        {
-            "title": "医疗辅助诊断",
-            "scenario": "通过医学影像、病例数据和模型分析，辅助医生发现潜在风险。",
-            "mapping": "典型价值：提升初筛效率，帮助医生更快定位异常区域。",
-        },
-        {
-            "title": "智能交通",
-            "scenario": "通过自动驾驶、智能导航和路况分析优化交通调度与出行体验。",
-            "mapping": "典型价值：减少拥堵，提高路线规划效率，增强驾驶辅助能力。",
-        },
-        {
-            "title": "教育与家居",
-            "scenario": "在教育中提供个性化学习推荐，在家居中实现语音控制和智能联动。",
-            "mapping": "典型价值：让学习更有针对性，让家庭生活更加便捷和智能。",
-        },
+    lesson_page["summary_badges"] = [
+        f"预计 {lesson_page.get('estimated_minutes', lesson.estimated_minutes)} 分钟",
+        "视频默认手动播放",
     ]
+    lesson_page["sections"] = sections
+    return lesson_page
 
 
 def course_list(request):
@@ -375,8 +306,6 @@ def lesson_detail(request, lesson_id: int):
     lesson = get_object_or_404(_visible_lessons(request.user), id=lesson_id)
     course = lesson.chapter.course
     can_manage_lesson = _is_manager(request.user) and _can_manage_course(request.user, course)
-    lesson_activities = _lesson_activity_blocks(lesson)
-    application_cards = _application_cards_for_lesson(lesson)
 
     lesson_nav_qs = Lesson.objects.filter(chapter__course=course).select_related("chapter")
     if not can_manage_lesson:
@@ -450,6 +379,17 @@ def lesson_detail(request, lesson_id: int):
             .order_by("-is_pinned", "-created_at", "-id")[:3]
         )
 
+    lesson_page = _build_lesson_page(
+        lesson,
+        course,
+        question_count,
+        feedback_url,
+        feedback_exists,
+        showcase_list_url,
+        showcase_create_url,
+        unit_quiz_url,
+    )
+
     return render(
         request,
         "courses/lesson_detail.html",
@@ -462,10 +402,7 @@ def lesson_detail(request, lesson_id: int):
             "question_count": question_count,
             "progress": progress,
             "can_manage_lesson": can_manage_lesson,
-            "interactive_prompt": _interactive_prompt_for_lesson(lesson),
-            "lesson_activities": lesson_activities,
-            "application_cards": application_cards,
-            "embedded_video_url": _embed_video_url(lesson.video_url),
+            "lesson_page": lesson_page,
             "related_resources": related_resources,
             "teaching_guides": list(guide_qs.order_by("order_no", "id")[:4]),
             "glossary_terms": glossary_terms,
@@ -493,7 +430,7 @@ def mark_lesson_complete(request, lesson_id: int):
         progress.save(update_fields=["completed", "completed_at", "last_viewed_at"])
         messages.success(request, "课时已标记为完成。")
     else:
-        messages.info(request, "该课时已是完成状态。")
+        messages.info(request, "该课时已经是完成状态。")
 
     return redirect("courses:lesson_detail", lesson_id=lesson_obj.id)
 
@@ -625,7 +562,7 @@ def manage_course_toggle_status(request, course_id: int):
     elif course.status == CourseStatus.DRAFT:
         course.status = CourseStatus.PUBLISHED
     else:
-        messages.info(request, "已归档课程不可直接发布，请先恢复为草稿。")
+        messages.info(request, "已归档课程不能直接发布，请先恢复为草稿。")
         return redirect("courses:manage_dashboard")
 
     course.save()
@@ -873,3 +810,5 @@ def manage_lesson_toggle_active(request, lesson_id: int):
     )
     messages.success(request, f"课时当前状态：{state_label}。")
     return redirect("courses:lesson_detail", lesson_id=lesson.id)
+
+

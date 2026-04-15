@@ -179,19 +179,32 @@ class AnalyticsViewTests(TestCase):
         response = self.client.post(
             reverse("analytics:feedback_form", kwargs={"course_slug": self.course_pub.slug}),
             {
-                "concept_score": 4,
-                "mechanism_score": 5,
-                "ethics_score": 4,
-                "expression_score": 3,
-                "exploration_score": 5,
-                "reflection": "I can now explain the basics clearly.",
+                "student_name": "张三",
+                "class_name": "七年级1班",
+                "knowledge_q1": "A",
+                "knowledge_q2": "B",
+                "knowledge_q3": "A",
+                "knowledge_q4": "B",
+                "practice_q5": "B",
+                "practice_q6": "B",
+                "practice_q7": "A",
+                "attitude_q8": "A",
+                "attitude_q9": "B",
+                "attitude_q10": "A",
+                "reflection_gain": "我已经能解释人工智能的基本概念。",
+                "reflection_gap": "还要继续加强原理理解。",
+                "reflection_advice": "希望增加更多生活案例。",
+                "overall_level": "good",
                 "next": reverse("analytics:index"),
             },
             follow=True,
         )
         self.assertEqual(response.status_code, 200)
         feedback = LearningFeedback.objects.get(user=self.student, course=self.course_pub)
-        self.assertEqual(feedback.mechanism_score, 5)
+        self.assertEqual(feedback.student_name, "张三")
+        self.assertEqual(feedback.class_name, "七年级1班")
+        self.assertEqual(feedback.knowledge_q1, "A")
+        self.assertEqual(feedback.overall_level, "good")
         self.assertContains(response, "数据看板")
 
     def test_student_can_update_feedback(self):
@@ -209,19 +222,30 @@ class AnalyticsViewTests(TestCase):
         response = self.client.post(
             reverse("analytics:feedback_form", kwargs={"course_slug": self.course_pub.slug}),
             {
-                "concept_score": 5,
-                "mechanism_score": 4,
-                "ethics_score": 4,
-                "expression_score": 4,
-                "exploration_score": 5,
-                "reflection": "Updated reflection",
+                "student_name": "李四",
+                "class_name": "七年级2班",
+                "knowledge_q1": "A",
+                "knowledge_q2": "A",
+                "knowledge_q3": "B",
+                "knowledge_q4": "B",
+                "practice_q5": "A",
+                "practice_q6": "B",
+                "practice_q7": "B",
+                "attitude_q8": "A",
+                "attitude_q9": "A",
+                "attitude_q10": "A",
+                "reflection_gain": "Updated gain",
+                "reflection_gap": "Updated gap",
+                "reflection_advice": "Updated advice",
+                "overall_level": "excellent",
             },
             follow=True,
         )
         self.assertEqual(response.status_code, 200)
         feedback = LearningFeedback.objects.get(user=self.student, course=self.course_pub)
-        self.assertEqual(feedback.concept_score, 5)
-        self.assertEqual(feedback.reflection, "Updated reflection")
+        self.assertEqual(feedback.student_name, "李四")
+        self.assertEqual(feedback.overall_level, "excellent")
+        self.assertIn("Updated gain", feedback.reflection)
 
     def test_student_cannot_fill_feedback_for_draft_course(self):
         self.client.login(username="analytics_student", password="Password123!")

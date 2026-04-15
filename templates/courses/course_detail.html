@@ -21,7 +21,7 @@
         {% endif %}
         <div class="hero-actions">
             <a class="btn" href="{% url 'courses:course_list' %}">返回课程列表</a>
-            <a class="btn btn-outline" href="{% url 'practice:index' %}">进入互动实践</a>
+            <a class="btn btn-outline" href="{% url 'practice:index' %}">进入实践体验</a>
             {% if request.user.is_authenticated %}
                 <form method="post" action="{% url 'accounts:toggle_favorite' target_type='course' target_id=course.id %}">
                     {% csrf_token %}
@@ -82,7 +82,6 @@
                                         <p class="section-copy">预计 {{ lesson.estimated_minutes }} 分钟</p>
                                         <div class="hero-meta">
                                             {% if lesson.id in completed_lesson_ids %}<span class="badge">已完成</span>{% endif %}
-                                            {% if lesson.is_free_preview %}<span class="badge">可试看</span>{% endif %}
                                             {% if not lesson.is_active %}<span class="badge">未启用</span>{% endif %}
                                         </div>
                                     </a>

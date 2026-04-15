@@ -1,9 +1,9 @@
 ﻿{% extends "base.html" %}
 
-{% block title %}{{ lesson.title }} | LearningWebsite{% endblock %}
+{% block title %}{{ lesson_page.hero_title|default:lesson.title }} | LearningWebsite{% endblock %}
 
 {% block content %}
-<div class="sidebar-layout">
+<div class="sidebar-layout lesson-page-layout">
     <aside class="sidebar stack">
         <section class="card reveal">
             <div class="section-head" style="margin-bottom:0.8rem;">
@@ -42,7 +42,7 @@
                     <a class="btn" href="{% url 'accounts:login' %}?next={% url 'courses:lesson_detail' lesson_id=lesson.id %}">登录后记录进度</a>
                 {% endif %}
                 {% if question_count > 0 %}
-                    <a class="btn btn-outline" href="{% url 'quiz:take_lesson_quiz' lesson_id=lesson.id %}">进入课时测验</a>
+                    <a class="btn btn-outline" href="{% url 'quiz:take_lesson_quiz' lesson_id=lesson.id %}">进入本课答题</a>
                 {% endif %}
                 {% if previous_lesson %}
                     <a class="btn btn-outline" href="{% url 'courses:lesson_detail' lesson_id=previous_lesson.id %}">上一课</a>
@@ -65,7 +65,7 @@
                     {% for term in glossary_terms %}
                         <article class="content-panel">
                             <strong>{{ term.term }}</strong>
-                            <p class="section-copy">{{ term.definition|truncatechars:72 }}</p>
+                            <p class="section-copy">{{ term.definition|truncatechars:88 }}</p>
                         </article>
                     {% endfor %}
                 </div>
@@ -76,13 +76,15 @@
     </aside>
 
     <div class="stack">
-        <section class="card hero-panel reveal">
+        <section class="card hero-panel reveal lesson-hero-panel">
             <div class="hero-copy">
                 <span class="eyebrow"><a href="{% url 'courses:course_detail' slug=course.slug %}">{{ course.title }}</a> / {{ lesson.chapter.title }}</span>
-                <h1>{{ lesson.title }}</h1>
+                <h1>{{ lesson_page.hero_title|default:lesson.title }}</h1>
+                <p class="display-copy">{{ lesson_page.hero_summary|default:lesson.content }}</p>
                 <div class="hero-meta">
-                    <span class="badge">预计 {{ lesson.estimated_minutes }} 分钟</span>
-                    {% if lesson.is_free_preview %}<span class="badge">免费试看</span>{% endif %}
+                    {% for badge in lesson_page.summary_badges %}
+                        <span class="badge">{{ badge }}</span>
+                    {% endfor %}
                     {% if progress and progress.completed %}<span class="badge">已完成</span>{% endif %}
                     {% if not lesson.is_active %}<span class="badge">未启用</span>{% endif %}
                 </div>
@@ -102,204 +104,188 @@
             </div>
             <div class="hero-subgrid">
                 <div class="metric-panel">
-                    <div class="panel-label">学习提示</div>
-                    <p class="panel-copy">建议先阅读课时内容，再完成课堂练习与互动体验，最后通过课时测验或单元问卷检验掌握情况。</p>
+                    <div class="panel-label">学习导向</div>
+                    <p class="panel-copy">{{ lesson_page.content }}</p>
                     <div class="metric-grid">
                         <div class="metric-item">
-                            <span>轻量练习</span>
-                            <strong>{% if lesson_activities %}本页内嵌 {{ lesson_activities|length }} 项{% else %}暂无内嵌练习{% endif %}</strong>
+                            <span>课程结构</span>
+                            <strong>{{ lesson_page.structure_flow }}</strong>
                         </div>
                         <div class="metric-item">
                             <span>知识巩固</span>
-                            <strong>{% if question_count > 0 %}可直接进入本课答题{% else %}当前未配置题目{% endif %}</strong>
+                            <strong>{% if question_count > 0 %}已配置 {{ question_count }} 道在线题目{% else %}当前未配置在线题目{% endif %}</strong>
                         </div>
                     </div>
                 </div>
             </div>
         </section>
-
-        <section class="card reveal">
-            <div class="section-head">
-                <div>
-                    <span class="eyebrow">Lesson Content</span>
-                    <h2>课时内容</h2>
-                </div>
-            </div>
-            <article class="rich-text">{{ lesson.content|default:"暂无课时内容。" }}</article>
-            {% if lesson.attachment_url %}
-                <div class="hero-actions">
-                    <a class="btn btn-outline" href="{{ lesson.attachment_url }}" target="_blank" rel="noopener">打开本课附件</a>
-                </div>
-            {% endif %}
-        </section>
-
-        <section class="card reveal">
-            <div class="section-head">
-                <div>
-                    <span class="eyebrow">Interactive Prompt</span>
-                    <h2>互动学习节点</h2>
-                </div>
-            </div>
-            <div class="content-panel">
-                <strong>{{ interactive_prompt.title }}</strong>
-                <p class="section-copy">{{ interactive_prompt.body }}</p>
-            </div>
-            <div class="hero-actions">
-                <a class="btn btn-outline" href="{% url 'practice:speech_lab' %}">语音识别体验</a>
-                <a class="btn btn-outline" href="{% url 'practice:image_lab' %}">图像识别体验</a>
-                <a class="btn btn-outline" href="{% url 'practice:dialogue_lab' %}">AI 对话体验</a>
-                {% if question_count > 0 %}
-                    <a class="btn" href="{% url 'quiz:take_lesson_quiz' lesson_id=lesson.id %}">完成本课答题</a>
-                {% endif %}
-            </div>
-        </section>
-
-        {% if lesson_activities %}
-            <section class="card reveal">
+        {% for section in lesson_page.sections %}
+            <section class="card reveal lesson-section-card">
                 <div class="section-head">
                     <div>
-                        <span class="eyebrow">Embedded Activities</span>
-                        <h2>课堂练习</h2>
+                        <span class="eyebrow">{{ section.eyebrow }}</span>
+                        <h2>{{ section.title }}</h2>
+                        {% if section.intro %}<p class="section-copy">{{ section.intro }}</p>{% endif %}
+                        {% if section.note %}<p class="section-copy">{{ section.note }}</p>{% endif %}
                     </div>
                 </div>
-                <div class="stack">
-                    {% for activity in lesson_activities %}
-                        <article class="content-panel lesson-activity-card">
-                            <div class="hero-meta" style="margin-top:0; margin-bottom:0.7rem;">
-                                <span class="badge">{% if activity.type == 'single_choice' %}即时判断{% else %}开放反思{% endif %}</span>
-                            </div>
-                            <strong>{{ activity.title }}</strong>
-                            <p class="section-copy">{{ activity.prompt }}</p>
-                            {% if activity.type == "single_choice" %}
-                                <div class="lesson-choice-group" data-answer="{{ activity.answer }}">
-                                    <div class="stack" style="gap:0.6rem; margin-top:0.9rem;">
-                                        {% for option in activity.options %}
-                                            <label class="lesson-choice-pill">
-                                                <input type="radio" name="activity-{{ forloop.parentloop.counter }}" value="{{ forloop.counter0 }}">
-                                                <span>{{ option }}</span>
-                                            </label>
-                                        {% endfor %}
+
+                {% if section.type == "list" %}
+                    <ul class="lesson-bullet-list">
+                        {% for point in section.points %}
+                            <li>{{ point }}</li>
+                        {% endfor %}
+                    </ul>
+                {% elif section.type == "text" %}
+                    <div class="lesson-text-block">
+                        {% for paragraph in section.paragraphs %}
+                            <p class="section-copy">{{ paragraph }}</p>
+                        {% endfor %}
+                    </div>
+                {% elif section.type == "video" %}
+                    <div class="stack">
+                        {% for video in section.videos %}
+                            <article class="content-panel lesson-video-card">
+                                <div class="section-head" style="margin-bottom:0.8rem;">
+                                    <div>
+                                        <strong>{{ video.title }}</strong>
+                                        <p class="section-copy">观看任务：{{ video.task }}</p>
                                     </div>
-                                    <div class="hero-actions" style="margin-top:0.9rem;">
-                                        <button class="btn btn-outline lesson-check-btn" type="button">检查答案</button>
-                                    </div>
-                                    <p class="lesson-choice-feedback small muted" hidden></p>
-                                    <div class="content-panel" style="margin-top:0.9rem; background:rgba(238, 244, 255, 0.7);">
-                                        <strong>解析</strong>
-                                        <p class="section-copy">{{ activity.explanation }}</p>
-                                    </div>
+                                    <a class="btn btn-outline" href="{{ video.url }}" target="_blank" rel="noopener">单独打开视频</a>
                                 </div>
-                            {% else %}
-                                <div class="content-panel" style="margin-top:0.9rem; background:rgba(255, 248, 240, 0.72);">
-                                    <strong>作答提示</strong>
-                                    <ul class="lesson-tip-list">
-                                        {% for tip in activity.tips %}
-                                            <li>{{ tip }}</li>
-                                        {% endfor %}
-                                    </ul>
+                                <div class="media-frame">
+                                    <iframe src="{{ video.embedded_url }}" title="{{ video.title }}" allowfullscreen></iframe>
                                 </div>
-                            {% endif %}
-                        </article>
-                    {% endfor %}
-                </div>
-            </section>
-        {% endif %}
-
-        {% if application_cards %}
-            <section class="card reveal">
-                <div class="section-head">
-                    <div>
-                        <span class="eyebrow">Application Cases</span>
-                        <h2>应用案例拆解</h2>
-                    </div>
-                </div>
-                <div class="split-grid">
-                    {% for card in application_cards %}
-                        <article class="content-panel">
-                            <strong>{{ card.title }}</strong>
-                            <p class="section-copy">{{ card.scenario }}</p>
-                            <p class="section-copy"><span class="muted">三要素映射：</span>{{ card.mapping }}</p>
-                        </article>
-                    {% endfor %}
-                </div>
-            </section>
-        {% endif %}
-
-        {% if embedded_video_url %}
-            <section class="card reveal">
-                <div class="section-head">
-                    <div>
-                        <span class="eyebrow">Video Resource</span>
-                        <h2>视频资源</h2>
-                    </div>
-                    <a class="btn btn-outline" href="{{ lesson.video_url }}" target="_blank" rel="noopener">单独打开视频</a>
-                </div>
-                <div class="media-frame">
-                    {% if ".mp4" in embedded_video_url %}
-                        <video src="{{ embedded_video_url }}" controls></video>
-                    {% else %}
-                        <iframe src="{{ embedded_video_url }}" title="{{ lesson.title }} 视频" allowfullscreen></iframe>
-                    {% endif %}
-                </div>
-            </section>
-        {% elif lesson.video_url %}
-            <section class="card reveal">
-                <div class="section-head">
-                    <div>
-                        <span class="eyebrow">Video Resource</span>
-                        <h2>视频资源</h2>
-                    </div>
-                </div>
-                <a class="btn btn-outline" href="{{ lesson.video_url }}" target="_blank" rel="noopener">打开视频资源</a>
-            </section>
-        {% endif %}
-
-        {% if feedback_url or showcase_list_url %}
-            <section class="card reveal">
-                <div class="section-head">
-                    <div>
-                        <span class="eyebrow">Unit Wrap-up</span>
-                        <h2>单元总结与成果展示</h2>
-                    </div>
-                </div>
-                <div class="split-grid">
-                    {% if feedback_url %}
-                        <article class="content-panel">
-                            <strong>学习自评问卷</strong>
-                            <p class="section-copy">围绕概念理解、技术机制、伦理认知和表达意愿完成单元自评，支持后续在数据看板中汇总展示。</p>
-                            <div class="hero-actions">
-                                <a class="btn {% if feedback_exists %}btn-outline{% endif %}" href="{{ feedback_url }}?next={% url 'courses:lesson_detail' lesson_id=lesson.id %}">{% if feedback_exists %}查看或修改问卷{% else %}填写自评问卷{% endif %}</a>
-                                {% if unit_quiz_url %}
-                                    <a class="btn btn-outline" href="{{ unit_quiz_url }}">进入10题综合测验</a>
-                                {% endif %}
-                            </div>
-                        </article>
-                    {% endif %}
-                    {% if showcase_list_url %}
-                        <article class="content-panel">
-                            <strong>成果展示区</strong>
-                            <p class="section-copy">将单元海报、PPT 结构、学习收获或案例分析发布到成果展示区，教师可直接在帖子详情中点评。</p>
-                            <div class="hero-actions">
-                                <a class="btn btn-outline" href="{{ showcase_list_url }}">浏览成果展示</a>
-                                <a class="btn" href="{{ showcase_create_url }}">发布成果展示</a>
-                            </div>
-                        </article>
-                    {% endif %}
-                </div>
-                {% if showcase_posts %}
-                    <div class="stack" style="margin-top:1rem;">
-                        {% for post in showcase_posts %}
-                            <article class="content-panel">
-                                <strong><a href="{% url 'forum:post_detail' post_id=post.id %}">{{ post.title }}</a></strong>
-                                <p class="section-copy">{{ post.content|truncatechars:120 }}</p>
-                                <p class="section-copy">发布者：{{ post.author.username|default:"匿名" }} · {{ post.created_at|date:"Y-m-d H:i" }}</p>
                             </article>
                         {% endfor %}
                     </div>
+                {% elif section.type == "feature_grid" %}
+                    <div class="tile-grid lesson-feature-grid">
+                        {% for item in section.items %}
+                            <article class="feature-tile lesson-feature-card">
+                                <div class="lesson-feature-icon">{{ item.icon }}</div>
+                                <strong>{{ item.title }}</strong>
+                                {% if item.lead %}<p class="section-copy">{{ item.lead }}</p>{% endif %}
+                                <p class="section-copy">{{ item.body }}</p>
+                                <p class="section-copy">{{ item.detail }}</p>
+                            </article>
+                        {% endfor %}
+                    </div>
+                {% elif section.type == "timeline" %}
+                    <div class="collection-grid lesson-timeline-grid">
+                        {% for group in section.groups %}
+                            <article class="content-panel lesson-timeline-card">
+                                <strong>{{ group.label }}</strong>
+                                <ul class="lesson-bullet-list compact">
+                                    {% for event in group.events %}
+                                        <li>{{ event }}</li>
+                                    {% endfor %}
+                                </ul>
+                            </article>
+                        {% endfor %}
+                    </div>
+                {% elif section.type == "table" %}
+                    <div class="table-wrap">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    {% for header in section.headers %}
+                                        <th>{{ header }}</th>
+                                    {% endfor %}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for row in section.rows %}
+                                    <tr>
+                                        {% for cell in row %}
+                                            <td>{{ cell }}</td>
+                                        {% endfor %}
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% elif section.type == "case_grid" %}
+                    <div class="collection-grid lesson-case-grid">
+                        {% for item in section.items %}
+                            <article class="content-panel lesson-case-card">
+                                <strong>{{ item.title }}</strong>
+                                <ul class="lesson-bullet-list compact">
+                                    {% for point in item.points %}
+                                        <li>{{ point }}</li>
+                                    {% endfor %}
+                                </ul>
+                            </article>
+                        {% endfor %}
+                    </div>
+                {% elif section.type == "action_cards" %}
+                    <div class="collection-grid lesson-action-grid">
+                        {% for item in section.items %}
+                            <article class="content-panel lesson-action-card">
+                                <strong>{{ item.title }}</strong>
+                                <ul class="lesson-bullet-list compact">
+                                    {% for point in item.points %}
+                                        <li>{{ point }}</li>
+                                    {% endfor %}
+                                </ul>
+                                {% if item.buttons %}
+                                    <div class="hero-actions" style="margin-top:1rem;">
+                                        {% for button in item.buttons %}
+                                            <a class="btn {% if forloop.first %}{% else %}btn-outline{% endif %}" href="{{ button.url }}">{{ button.label }}</a>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </article>
+                        {% endfor %}
+                    </div>
+                {% elif section.type == "exercise" %}
+                    <div class="stack">
+                        {% for question in section.questions %}
+                            <article class="content-panel lesson-question-card">
+                                <strong>第 {{ forloop.counter }} 题</strong>
+                                <p class="section-copy">{{ question.stem }}</p>
+                                <ul class="lesson-option-list">
+                                    {% for option in question.options %}
+                                        <li><span>{{ option.key }}.</span> {{ option.text }}</li>
+                                    {% endfor %}
+                                </ul>
+                            </article>
+                        {% endfor %}
+                    </div>
+                    <details class="lesson-answer-toggle">
+                        <summary>点击展开 / 收起参考答案</summary>
+                        <div class="content-panel lesson-answer-panel">
+                            <p class="section-copy">{{ section.answer_items|join:" " }}</p>
+                        </div>
+                    </details>
+                    {% if section.quiz_url %}
+                        <div class="hero-actions" style="margin-top:1rem;">
+                            <a class="btn" href="{{ section.quiz_url }}">{{ section.quiz_label }}</a>
+                        </div>
+                    {% endif %}
                 {% endif %}
             </section>
-        {% endif %}
+        {% endfor %}
 
+        {% if showcase_posts %}
+            <section class="card reveal">
+                <div class="section-head">
+                    <div>
+                        <span class="eyebrow">Showcase Feed</span>
+                        <h2>最新成果展示</h2>
+                    </div>
+                </div>
+                <div class="stack">
+                    {% for post in showcase_posts %}
+                        <article class="content-panel">
+                            <strong><a href="{% url 'forum:post_detail' post_id=post.id %}">{{ post.title }}</a></strong>
+                            <p class="section-copy">{{ post.content|truncatechars:120 }}</p>
+                            <p class="section-copy">发布者：{{ post.author.username|default:"匿名" }} · {{ post.created_at|date:"Y-m-d H:i" }}</p>
+                        </article>
+                    {% endfor %}
+                </div>
+            </section>
+        {% endif %}
         <div class="split-grid">
             <section class="card reveal">
                 <div class="section-head">
@@ -345,31 +331,4 @@
         </div>
     </div>
 </div>
-{% endblock %}
-
-{% block extra_scripts %}
-<script>
-    (function () {
-        const groups = document.querySelectorAll('.lesson-choice-group');
-        groups.forEach((group) => {
-            const button = group.querySelector('.lesson-check-btn');
-            const feedback = group.querySelector('.lesson-choice-feedback');
-            if (!button || !feedback) {
-                return;
-            }
-            button.addEventListener('click', () => {
-                const selected = group.querySelector('input[type="radio"]:checked');
-                if (!selected) {
-                    feedback.hidden = false;
-                    feedback.textContent = '请先选择一个选项，再检查答案。';
-                    return;
-                }
-                const expected = group.dataset.answer;
-                const isCorrect = selected.value === expected;
-                feedback.hidden = false;
-                feedback.textContent = isCorrect ? '回答正确，可继续看下方解析巩固原因。' : '回答未命中参考答案，可结合解析继续回看本课内容。';
-            });
-        });
-    })();
-</script>
 {% endblock %}

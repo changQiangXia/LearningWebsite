@@ -14,6 +14,8 @@
         <span class="aurora aurora-a"></span>
         <span class="aurora aurora-b"></span>
         <span class="aurora aurora-c"></span>
+        <span class="campus-mark campus-mark-a"></span>
+        <span class="campus-mark campus-mark-b"></span>
     </div>
 
     <header class="site-header">
@@ -21,18 +23,22 @@
             <div class="top-row">
                 <a class="brand" href="/">
                     <span class="brand-mark">
-                        <img src="{% static 'images/icon.gif' %}" alt="LearningWebsite 图标">
+                        <img src="{% static 'images/sicnu_logo_docx.jpeg' %}" alt="四川师范大学校徽">
                     </span>
                     <span class="brand-copy">
-                        <strong>LearningWebsite</strong>
-                        <small>走进人工智能 · 课程学习与互动实践平台</small>
+                        <strong>四川师范大学</strong>
+                        <small>走进人工智能课程学习与实践训练平台</small>
                     </span>
                 </a>
 
                 <div class="header-tools">
                     <form class="header-search" method="get" action="{% url 'search:index' %}">
-                        <input type="text" name="q" placeholder="全局搜索课程、资源、帖子">
-                        <button type="submit" class="header-search-submit">搜索</button>
+                        <input type="text" name="q" placeholder="搜索课程、资源、帖子">
+                        <button type="submit" class="header-search-submit" aria-label="搜索">
+                            <svg viewBox="0 0 24 24" aria-hidden="true">
+                                <path d="M10.5 4a6.5 6.5 0 1 0 4.11 11.54l4.43 4.43 1.41-1.41-4.43-4.43A6.5 6.5 0 0 0 10.5 4Zm0 2a4.5 4.5 0 1 1 0 9a4.5 4.5 0 0 1 0-9Z" fill="currentColor"></path>
+                            </svg>
+                        </button>
                     </form>
 
                     {% if request.user.is_authenticated %}
@@ -65,13 +71,11 @@
             <nav class="main-nav">
                 <a href="/">首页</a>
                 <a href="/courses/">课程内容</a>
-                <a href="/practice/">交互体验</a>
+                <a href="/practice/">实践训练</a>
                 <a href="/resources/">资源库</a>
                 <a href="/forum/">社区</a>
-                <a href="/search/">搜索</a>
-                <a href="/guides/">教学指引</a>
-                <a href="/quiz/">在线答题</a>
-                <a href="/analytics/">数据看板</a>
+                <a href="/quiz/">在线练习</a>
+                <a href="{% url 'accounts:index' %}">个人中心</a>
                 {% if request.user.is_staff %}
                     <a href="/admin/">后台管理</a>
                 {% endif %}
@@ -92,13 +96,16 @@
 
     <footer class="site-footer">
         <div class="footer-card reveal">
-            <div>
-                <strong>LearningWebsite</strong>
-                <p>课程站点围绕“课程内容 + AI 互动 + 资源共享 + 社区交流 + 教学指引”构建完整学习闭环，适用于本科毕业设计展示与课程教学演示。</p>
+            <div class="footer-badge" aria-hidden="true">
+                <img src="{% static 'images/sicnu_logo_docx.jpeg' %}" alt="">
+            </div>
+            <div class="footer-copy">
+                <strong>做中学、玩中学，轻松走进 AI 世界</strong>
+                <p>© 2026 四川师范大学 | 设计者：邓明月 | 指导教师：刘俊</p>
             </div>
             <div class="footer-links">
-                <a href="{% url 'guides:guide_list' %}">教学指引入口</a>
-                <a href="{% url 'core:health' %}">系统健康检查</a>
+                <a href="{% url 'guides:guide_list' %}">教学指引</a>
+                <a href="{% url 'analytics:index' %}">数据看板</a>
             </div>
         </div>
     </footer>

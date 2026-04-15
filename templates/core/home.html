@@ -5,27 +5,31 @@
 {% block content %}
 <section class="card hero-panel reveal">
     <div class="hero-copy">
-        <span class="eyebrow">AI Learning Experience</span>
+        <span class="eyebrow">AI Learning Portal</span>
         <h1><span class="gradient-text">走进人工智能</span></h1>
         <p class="display-copy">
-            面向中学主题化学习场景，整合四课时课程内容、语音识别、图像识别、AI 对话、在线答题、资源共享、社区交流与教学指引，
-            形成“学内容、做体验、看资源、发笔记、做答题、查进度”的完整学习闭环。
+            面向初中阶段人工智能专题学习场景，串联课程内容、实践训练、资源库、社区交流、在线练习、个人中心与教学指引，
+            形成“先学内容，再做体验，随后答题巩固，最后交流与反思”的完整学习闭环。
         </p>
         <div class="hero-actions">
             <a class="btn" href="{% url 'courses:course_list' %}">进入课程内容</a>
-            <a class="btn btn-outline" href="{% url 'practice:index' %}">体验 AI 互动</a>
-            <a class="btn btn-outline" href="{% url 'search:index' %}">全局搜索</a>
+            <a class="btn btn-outline" href="{% url 'practice:index' %}">进入实践训练</a>
+            {% if primary_guide %}
+                <a class="btn btn-outline" href="{% url 'guides:guide_detail' guide_id=primary_guide.id %}">查看教学指引</a>
+            {% else %}
+                <a class="btn btn-outline" href="{% url 'guides:guide_list' %}">查看教学指引</a>
+            {% endif %}
         </div>
         <div class="hero-meta">
-            <span class="badge">课程门户</span>
-            <span class="badge">课程学习 + AI 实践 + 社区协作</span>
-            {% if featured_course %}<span class="badge">当前推荐：{{ featured_course.title }}</span>{% endif %}
+            <span class="badge">4 课时专题学习</span>
+            <span class="badge">课程学习 + 实践训练 + 在线练习</span>
+            {% if featured_course %}<span class="badge">当前课程：{{ featured_course.title }}</span>{% endif %}
         </div>
     </div>
     <div class="hero-subgrid">
         <div class="metric-panel">
-            <div class="panel-label">Platform Snapshot</div>
-            <p class="panel-copy">以课程内容为主线，串联互动体验、资源库、社区、在线答题与数据看板，形成可展示、可演示、可答辩的完整平台形态。</p>
+            <div class="panel-label">平台概览</div>
+            <p class="panel-copy">首页优先提供课程入口、教学指引入口和模块导航，适合课堂投屏、答辩展示与新用户快速上手。</p>
             <div class="metric-grid">
                 <div class="metric-item">
                     <span>发布课程</span>
@@ -51,75 +55,85 @@
 <section class="card reveal">
     <div class="section-head">
         <div>
-            <span class="eyebrow">平台结构</span>
-            <h2>七大模块一体化联动</h2>
-            <p class="section-copy">对应“课程内容、交互体验、资源库、社区、搜索、个人中心、教学指引”七个核心入口，既能满足教学流程，也适合毕业设计展示。</p>
+            <span class="eyebrow">学习入口</span>
+            <h2>首页核心入口</h2>
+            <p class="section-copy">按照“课程内容 → 实践训练 → 资源库 → 社区 → 在线练习 → 个人中心”的使用顺序组织，并将教学指引单独放在首页展示。</p>
         </div>
         <form method="get" action="{% url 'search:index' %}" class="inline-form">
-            <input type="text" name="q" placeholder="例如：人工智能、图像识别、AI 伦理">
+            <input type="text" name="q" placeholder="例如：人工智能、语音识别、AI 伦理">
             <button class="btn" type="submit">搜索站内内容</button>
         </form>
     </div>
 
     <div class="tile-grid">
         <a class="feature-tile" href="{% url 'courses:course_list' %}">
-            <div class="tile-topline">
-                <span class="tile-index">01</span>
-                <span class="badge">课程内容</span>
-            </div>
+            <div class="tile-topline"><span class="tile-index">01</span><span class="badge">课程内容</span></div>
             <strong>四课时专题学习主线</strong>
-            <p class="section-copy">第 1-4 课时导航、图文内容、嵌入视频与术语表。</p>
+            <p class="section-copy">按“认识 AI、AI 如何工作、伦理与安全、未来与总结”组织课堂内容。</p>
         </a>
         <a class="feature-tile" href="{% url 'practice:index' %}">
-            <div class="tile-topline">
-                <span class="tile-index">02</span>
-                <span class="badge">交互体验</span>
-            </div>
-            <strong>沉浸式 AI 实验入口</strong>
-            <p class="section-copy">语音识别、图像识别、AI 对话与在线答题形成可操作的体验链路。</p>
+            <div class="tile-topline"><span class="tile-index">02</span><span class="badge">实践训练</span></div>
+            <strong>三大 AI 核心体验</strong>
+            <p class="section-copy">语音识别、AI 对话、图像识别三条实践链路集中展示。</p>
         </a>
         <a class="feature-tile" href="{% url 'resources:resource_list' %}">
-            <div class="tile-topline">
-                <span class="tile-index">03</span>
-                <span class="badge">资源库</span>
-            </div>
-            <strong>按课时组织的资源中心</strong>
-            <p class="section-copy">视频、阅读、图解、模板和工具资源按照课程和课时分类展示。</p>
+            <div class="tile-topline"><span class="tile-index">03</span><span class="badge">资源库</span></div>
+            <strong>按课时整理拓展资料</strong>
+            <p class="section-copy">每课时都配套阅读材料、课件资源与总结模板。</p>
         </a>
         <a class="feature-tile" href="{% url 'forum:post_list' %}">
-            <div class="tile-topline">
-                <span class="tile-index">04</span>
-                <span class="badge">社区交流</span>
-            </div>
-            <strong>讨论、求助、分享、笔记</strong>
-            <p class="section-copy">最新帖子、最热讨论、学习笔记与课时话题构成社区互动层。</p>
+            <div class="tile-topline"><span class="tile-index">04</span><span class="badge">社区</span></div>
+            <strong>讨论、笔记与成果展示</strong>
+            <p class="section-copy">支持观点发布、交流回复、学习总结和成果展示。</p>
         </a>
-        <a class="feature-tile" href="{% url 'search:index' %}">
-            <div class="tile-topline">
-                <span class="tile-index">05</span>
-                <span class="badge">搜索模块</span>
-            </div>
-            <strong>跨模块搜索与高亮定位</strong>
-            <p class="section-copy">支持关键词检索、类型筛选、课时筛选与高亮显示。</p>
+        <a class="feature-tile" href="{% url 'quiz:index' %}">
+            <div class="tile-topline"><span class="tile-index">05</span><span class="badge">在线练习</span></div>
+            <strong>课时检测与单元综合</strong>
+            <p class="section-copy">课时答题与单元测验配合使用，及时反馈学习情况。</p>
         </a>
         <a class="feature-tile" href="{% url 'accounts:index' %}">
-            <div class="tile-topline">
-                <span class="tile-index">06</span>
-                <span class="badge">个人中心</span>
-            </div>
-            <strong>进度、收藏、错题、统计</strong>
-            <p class="section-copy">查看学习进度、收藏、笔记、错题与个人学习数据。</p>
+            <div class="tile-topline"><span class="tile-index">06</span><span class="badge">个人中心</span></div>
+            <strong>进度、收藏与错题</strong>
+            <p class="section-copy">查看学习进度、收藏内容、答题历史和错题记录。</p>
+        </a>
+        <a class="feature-tile" href="{% if primary_guide %}{% url 'guides:guide_detail' guide_id=primary_guide.id %}{% else %}{% url 'guides:guide_list' %}{% endif %}">
+            <div class="tile-topline"><span class="tile-index">07</span><span class="badge">教学指引</span></div>
+            <strong>课堂使用说明入口</strong>
+            <p class="section-copy">面向教学实施的课时安排、学习目标、学习路径与使用建议。</p>
         </a>
     </div>
 </section>
+{% if primary_guide %}
+<section class="card reveal">
+    <div class="section-head">
+        <div>
+            <span class="eyebrow">Teaching Guide</span>
+            <h2>教学指引入口</h2>
+            <p class="section-copy">课堂使用时可先打开教学指引，快速查看适用对象、课时安排、学习目标与学习路径。</p>
+        </div>
+        <a class="btn" href="{% url 'guides:guide_detail' guide_id=primary_guide.id %}">打开教学指引</a>
+    </div>
+    <div class="split-grid">
+        <article class="content-panel">
+            <strong>{{ primary_guide.title }}</strong>
+            {% if primary_guide.unit_name %}<p class="section-copy">单元：{{ primary_guide.unit_name }}</p>{% endif %}
+            <p class="section-copy">{{ primary_guide.objectives|truncatechars:170 }}</p>
+        </article>
+        <article class="content-panel">
+            <strong>推荐学习路径</strong>
+            <p class="section-copy">课程内容 → 实践训练 → 资源库拓展 → 在线练习检测 → 社区交流分享 → 数据看板查看学习情况</p>
+        </article>
+    </div>
+</section>
+{% endif %}
 
 {% if featured_course %}
 <section class="card reveal">
     <div class="section-head">
         <div>
             <span class="eyebrow">Featured Course</span>
-            <h2>推荐专题课程</h2>
-            <p class="section-copy">首页直接展示课时导航，方便演示课程门户结构与章节化组织方式。</p>
+            <h2>推荐课程与课时</h2>
+            <p class="section-copy">首页直接展示当前课程和四个课时入口，方便课堂演示与快速进入对应内容页。</p>
         </div>
         <a class="btn" href="{% url 'courses:course_detail' slug=featured_course.slug %}">查看课程详情</a>
     </div>
@@ -130,20 +144,18 @@
     </div>
 
     <div class="collection-grid">
-        {% for chapter in featured_course.chapters.all %}
-            {% for lesson in chapter.lessons.all %}
-                <article class="content-panel">
-                    <div class="note-line">
-                        <span class="badge">第 {{ lesson.order_no }} 课时</span>
-                        <span class="badge">{{ chapter.title }}</span>
-                    </div>
-                    <strong style="margin-top:0.8rem;">{{ lesson.title }}</strong>
-                    <p class="section-copy">{{ lesson.content|truncatechars:76 }}</p>
-                    <div class="hero-actions" style="margin-top:1rem;">
-                        <a class="btn btn-outline" href="{% url 'courses:lesson_detail' lesson_id=lesson.id %}">进入本课</a>
-                    </div>
-                </article>
-            {% endfor %}
+        {% for lesson in featured_lessons %}
+            <article class="content-panel">
+                <div class="note-line">
+                    <span class="badge">第 {{ lesson.order_no }} 课时</span>
+                    <span class="badge">{{ lesson.chapter.title }}</span>
+                </div>
+                <strong style="margin-top:0.8rem;">{{ lesson.title }}</strong>
+                <p class="section-copy">{{ lesson.content|truncatechars:88 }}</p>
+                <div class="hero-actions" style="margin-top:1rem;">
+                    <a class="btn btn-outline" href="{% url 'courses:lesson_detail' lesson_id=lesson.id %}">进入本课</a>
+                </div>
+            </article>
         {% endfor %}
     </div>
 </section>
@@ -154,7 +166,7 @@
         <div>
             <span class="eyebrow">Community Feed</span>
             <h2>最新学习动态</h2>
-            <p class="section-copy">首页可直接展示最新笔记与讨论，突出系统的互动属性与持续更新能力。</p>
+            <p class="section-copy">首页保留最新笔记与讨论，用于展示系统的互动性和持续更新能力。</p>
         </div>
     </div>
 

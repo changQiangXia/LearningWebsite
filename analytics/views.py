@@ -8,6 +8,7 @@ from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils.http import url_has_allowed_host_and_scheme
 
+from courses.ai_unit_data import STUDENT_FEEDBACK_BLUEPRINT
 from courses.models import Course, CourseStatus, LearningProgress, Lesson
 from forum.models import ForumPost, ForumPostStatus
 from quiz.models import QuizSubmission, WrongQuestion
@@ -338,6 +339,10 @@ def feedback_form(request, course_slug: str):
     course_qs = _visible_courses(request.user)
     course = get_object_or_404(course_qs, slug=course_slug)
     feedback = LearningFeedback.objects.filter(user=request.user, course=course).first()
+    initial = {
+        "student_name": (feedback.student_name if feedback else "") or request.user.get_full_name() or request.user.username,
+        "class_name": (feedback.class_name if feedback else "") or getattr(getattr(request.user, "profile", None), "grade", ""),
+    }
 
     if request.method == "POST":
         form = LearningFeedbackForm(request.POST, instance=feedback)
@@ -346,7 +351,7 @@ def feedback_form(request, course_slug: str):
             feedback.user = request.user
             feedback.course = course
             feedback.save()
-            messages.success(request, "????????")
+            messages.success(request, "学习自评问卷已保存。")
             next_url = request.POST.get("next") or request.GET.get("next") or ""
             if next_url and url_has_allowed_host_and_scheme(
                 url=next_url,
@@ -356,7 +361,15 @@ def feedback_form(request, course_slug: str):
                 return redirect(next_url)
             return redirect("analytics:index")
     else:
-        form = LearningFeedbackForm(instance=feedback)
+        form = LearningFeedbackForm(instance=feedback, initial=initial)
+
+    survey_sections = [
+        {
+            "title": section["title"],
+            "fields": [form[field_name] for field_name in section["fields"]],
+        }
+        for section in STUDENT_FEEDBACK_BLUEPRINT["sections"]
+    ]
 
     return render(
         request,
@@ -366,6 +379,8 @@ def feedback_form(request, course_slug: str):
             "course": course,
             "feedback": feedback,
             "next": request.GET.get("next", ""),
+            "survey_blueprint": STUDENT_FEEDBACK_BLUEPRINT,
+            "survey_sections": survey_sections,
         },
     )
 

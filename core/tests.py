@@ -15,7 +15,7 @@ class SeedDemoDataCommandTests(TestCase):
         call_command("seed_demo_data", skip_search_index=True)
 
         self.assertTrue(Course.objects.filter(title="走进人工智能").exists())
-        self.assertEqual(Question.objects.filter(lesson__chapter__course__title="走进人工智能").count(), 10)
+        self.assertEqual(Question.objects.filter(lesson__chapter__course__title="走进人工智能").count(), 40)
         self.assertTrue(QuizSubmission.objects.filter(user__username="demo_student").exists())
         self.assertTrue(Resource.objects.filter(title="单元知识思维导图").exists())
         self.assertTrue(TeachingGuide.objects.filter(title="走进人工智能——教学指引").exists())

@@ -3,60 +3,101 @@
 {% block title %}AI 交互实践 | LearningWebsite{% endblock %}
 
 {% block content %}
-<section class="card hero-panel reveal">
-    <div class="hero-copy">
-        <span class="eyebrow">Interactive Labs</span>
-        <h1>AI 交互实践模块</h1>
-        <p class="display-copy">提供语音识别、AI 对话、图像识别和在线答题训练入口，用于展示 AI 在学习场景中的典型应用形式，增强系统的可体验性与答辩展示效果。</p>
-        <div class="hero-actions">
-            <a class="btn" href="{% url 'practice:speech_lab' %}">语音识别体验</a>
-            <a class="btn btn-outline" href="{% url 'practice:dialogue_lab' %}">AI 对话体验</a>
-            <a class="btn btn-outline" href="{% url 'practice:image_lab' %}">图像识别体验</a>
-            <a class="btn btn-outline" href="{% url 'quiz:index' %}">在线答题训练</a>
+<section class="card reveal practice-banner">
+    <div class="section-head" style="margin-bottom:0;">
+        <div>
+            <span class="eyebrow">Interactive Practice Center</span>
+            <h1>AI 交互实践训练中心</h1>
+            <p class="display-copy">在这里可以亲手体验人工智能三大核心能力：听、看、交流对话。先学课程知识，再来动手实践，更容易理解 AI 原理。</p>
         </div>
-    </div>
-    <div class="hero-subgrid">
-        <div class="metric-panel">
-            <div class="panel-label">体验路径</div>
-            <p class="panel-copy">建议先学习课程内容，再进入 AI 实验模块体验具体能力，最后通过在线答题进行知识巩固与效果验证。</p>
-            <div class="metric-grid">
-                <div class="metric-item">
-                    <span>实验模块</span>
-                    <strong>语音 / 图像 / 对话</strong>
-                </div>
-                <div class="metric-item">
-                    <span>配套练习</span>
-                    <strong>在线答题训练</strong>
-                </div>
-            </div>
-        </div>
+        <a class="btn btn-outline" href="{% url 'courses:course_list' %}">先去看课程内容</a>
     </div>
 </section>
 
-<section class="card reveal">
-    <div class="section-head">
-        <div>
-            <span class="eyebrow">Practice Entry</span>
-            <h2>推荐答题课时</h2>
-            <p class="section-copy">从已开放课时中直接进入测验或课时详情，形成“学完即练”的连续体验。</p>
-        </div>
+<section class="practice-layout reveal">
+    <div class="practice-main stack">
+        <section class="card">
+            <div class="section-head">
+                <div>
+                    <span class="eyebrow">Core Labs</span>
+                    <h2>三大核心实践</h2>
+                    <p class="section-copy">在这里可以亲手体验人工智能三大核心能力：听、看、交流对话。</p>
+                </div>
+            </div>
+            <div class="practice-card-grid">
+                {% for lab in labs %}
+                    <article class="practice-lab-card">
+                        <div class="practice-lab-icon">{{ lab.icon }}</div>
+                        <strong>{{ lab.title }}</strong>
+                        <p class="practice-lab-subtitle">{{ lab.subtitle }}</p>
+                        <p class="section-copy">{{ lab.description }}</p>
+                        <p class="small muted">对应课时：{{ lab.lesson }}</p>
+                        <div class="hero-actions" style="margin-top:1rem;">
+                            <a class="btn" href="{{ lab.url }}">{{ lab.button_label }}</a>
+                        </div>
+                    </article>
+                {% endfor %}
+            </div>
+        </section>
+
+        <section class="card">
+            <div class="section-head">
+                <div>
+                    <span class="eyebrow">Practice Board</span>
+                    <h2>课时学习&答题进度看板</h2>
+                    <p class="section-copy">实践完成后，选择对应课时完成测试，查看学习成果。</p>
+                </div>
+            </div>
+            <div class="collection-grid">
+                {% for row in lesson_cards %}
+                    <article class="content-panel progress-card">
+                        <strong>第 {{ row.lesson.order_no }} 课时｜{{ row.lesson.title }}</strong>
+                        <p class="section-copy">{{ row.summary|truncatechars:90 }}</p>
+                        <div class="progress-track" aria-hidden="true">
+                            <span class="progress-fill" style="width: {{ row.progress_percent }}%;"></span>
+                        </div>
+                        <div class="hero-meta">
+                            <span class="badge">进度 {{ row.progress_percent }}%</span>
+                            <span class="badge">状态：{{ row.status_label }}</span>
+                            <span class="badge">题目 {{ row.question_total }} 道</span>
+                        </div>
+                        <div class="hero-actions" style="margin-top:1rem;">
+                            <a class="btn" href="{{ row.action_url }}">{{ row.action_label }}</a>
+                            <a class="btn btn-outline" href="{% url 'courses:lesson_detail' lesson_id=row.lesson.id %}">查看课时</a>
+                        </div>
+                    </article>
+                {% endfor %}
+            </div>
+        </section>
+        <section class="card practice-tips-card">
+            <div class="section-head">
+                <div>
+                    <span class="eyebrow">Tips</span>
+                    <h2>实践小贴士</h2>
+                </div>
+            </div>
+            <ul class="lesson-bullet-list compact">
+                <li>语音识别请尽量在安静环境中使用，识别更准确。</li>
+                <li>图像识别建议上传清晰、光线充足的图片。</li>
+                <li>AI 对话可以围绕“数据、算法、算力”这些知识点提问。</li>
+            </ul>
+        </section>
     </div>
 
-    {% if lessons %}
-        <div class="collection-grid">
-            {% for lesson in lessons %}
-                <article class="content-panel">
-                    <strong>{{ lesson.title }}</strong>
-                    <p class="section-copy">课程：{{ lesson.chapter.course.title }} / 章节：{{ lesson.chapter.title }}</p>
-                    <div class="hero-actions">
-                        <a class="btn" href="{% url 'quiz:take_lesson_quiz' lesson_id=lesson.id %}">开始测验</a>
-                        <a class="btn btn-outline" href="{% url 'courses:lesson_detail' lesson_id=lesson.id %}">查看课时</a>
-                    </div>
-                </article>
-            {% endfor %}
-        </div>
-    {% else %}
-        <p class="empty-state">当前暂无可用练习课时。</p>
-    {% endif %}
+    <aside class="practice-side stack">
+        <section class="card practice-flow-card">
+            <div class="section-head" style="margin-bottom:0.6rem;">
+                <div>
+                    <span class="eyebrow">Recommended Flow</span>
+                    <h2>推荐学习体验流程</h2>
+                </div>
+            </div>
+            <div class="practice-flow-list">
+                <div class="practice-flow-step"><span>01</span><strong>先看课程内容</strong></div>
+                <div class="practice-flow-step"><span>02</span><strong>完成上方三大实践训练</strong></div>
+                <div class="practice-flow-step"><span>03</span><strong>进入下方课时答题巩固</strong></div>
+            </div>
+        </section>
+    </aside>
 </section>
 {% endblock %}

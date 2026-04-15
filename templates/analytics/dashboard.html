@@ -56,10 +56,10 @@
         </div>
         {% if feedback_count %}
             <div class="stats-grid">
-                <article class="metric-card"><strong>{{ feedback_summary.concept_avg }}</strong><p class="section-copy">概念理解均分</p></article>
-                <article class="metric-card"><strong>{{ feedback_summary.mechanism_avg }}</strong><p class="section-copy">机制理解均分</p></article>
+                <article class="metric-card"><strong>{{ feedback_summary.concept_avg }}</strong><p class="section-copy">知识掌握均分</p></article>
+                <article class="metric-card"><strong>{{ feedback_summary.mechanism_avg }}</strong><p class="section-copy">原理理解均分</p></article>
                 <article class="metric-card"><strong>{{ feedback_summary.ethics_avg }}</strong><p class="section-copy">伦理认知均分</p></article>
-                <article class="metric-card"><strong>{{ feedback_summary.expression_avg }}</strong><p class="section-copy">展示表达均分</p></article>
+                <article class="metric-card"><strong>{{ feedback_summary.expression_avg }}</strong><p class="section-copy">学习参与均分</p></article>
                 <article class="metric-card"><strong>{{ feedback_summary.exploration_avg }}</strong><p class="section-copy">继续探索意愿均分</p></article>
             </div>
         {% else %}
@@ -192,7 +192,7 @@
         <div class="section-head">
             <div>
                 <span class="eyebrow">Learning Feedback</span>
-                <h2>课程自评问卷</h2>
+                <h2>单元学习自评问卷</h2>
             </div>
         </div>
         {% if course_progress_rows %}
@@ -227,10 +227,10 @@
         </div>
         {% if recent_feedback %}
             <div class="stats-grid">
-                <article class="metric-card"><strong>{{ feedback_summary.concept_avg }}</strong><p class="section-copy">概念理解均分</p></article>
-                <article class="metric-card"><strong>{{ feedback_summary.mechanism_avg }}</strong><p class="section-copy">机制理解均分</p></article>
+                <article class="metric-card"><strong>{{ feedback_summary.concept_avg }}</strong><p class="section-copy">知识掌握均分</p></article>
+                <article class="metric-card"><strong>{{ feedback_summary.mechanism_avg }}</strong><p class="section-copy">原理理解均分</p></article>
                 <article class="metric-card"><strong>{{ feedback_summary.ethics_avg }}</strong><p class="section-copy">伦理认知均分</p></article>
-                <article class="metric-card"><strong>{{ feedback_summary.expression_avg }}</strong><p class="section-copy">展示表达均分</p></article>
+                <article class="metric-card"><strong>{{ feedback_summary.expression_avg }}</strong><p class="section-copy">学习参与均分</p></article>
                 <article class="metric-card"><strong>{{ feedback_summary.exploration_avg }}</strong><p class="section-copy">继续探索意愿均分</p></article>
             </div>
             <div class="stack" style="margin-top:1rem;">

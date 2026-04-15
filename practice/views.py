@@ -2,10 +2,12 @@ from PIL import Image, ImageStat
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.urls import reverse
 from django.shortcuts import render
 
-from courses.models import CourseStatus
-from quiz.models import Question
+from courses.ai_unit_data import LESSON_PAGE_DATA
+from courses.models import CourseStatus, LearningProgress, Lesson
+from quiz.models import Question, QuizSubmission
 
 from .forms import DialogueForm, ImageRecognitionForm, SpeechTranscriptForm
 from .models import PracticeRecord, PracticeRecordType
@@ -61,27 +63,107 @@ def _analyze_image(image_file):
 
 
 def index(request):
-    lessons = (
-        Question.objects.filter(
+    lessons = list(
+        Lesson.objects.filter(
             is_active=True,
-            lesson__is_active=True,
-            lesson__chapter__is_active=True,
-            lesson__chapter__course__status=CourseStatus.PUBLISHED,
+            chapter__is_active=True,
+            chapter__course__status=CourseStatus.PUBLISHED,
         )
-        .select_related("lesson", "lesson__chapter", "lesson__chapter__course")
-        .order_by("lesson__chapter__course_id", "lesson__chapter__order_no", "lesson__order_no")
+        .select_related("chapter", "chapter__course")
+        .order_by("chapter__course_id", "chapter__order_no", "order_no", "id")[:4]
     )
-    lesson_map = []
-    seen_ids = set()
-    for question in lessons:
-        lesson = question.lesson
-        if lesson.id in seen_ids:
-            continue
-        seen_ids.add(lesson.id)
-        lesson_map.append(lesson)
-        if len(lesson_map) >= 6:
-            break
-    return render(request, "practice/index.html", {"lessons": lesson_map})
+
+    lesson_ids = [lesson.id for lesson in lessons]
+    progress_map = {}
+    latest_submission_map = {}
+    question_count_map = {
+        lesson.id: Question.objects.filter(lesson=lesson, is_active=True).count()
+        for lesson in lessons
+    }
+
+    if request.user.is_authenticated and lesson_ids:
+        progress_map = {
+            progress.lesson_id: progress
+            for progress in LearningProgress.objects.filter(user=request.user, lesson_id__in=lesson_ids)
+        }
+        for submission in (
+            QuizSubmission.objects.filter(user=request.user, lesson_id__in=lesson_ids)
+            .select_related("lesson")
+            .order_by("lesson_id", "-submitted_at", "-id")
+        ):
+            latest_submission_map.setdefault(submission.lesson_id, submission)
+
+    lesson_cards = []
+    for lesson in lessons:
+        lesson_meta = LESSON_PAGE_DATA.get(lesson.order_no, {})
+        progress = progress_map.get(lesson.id)
+        submission = latest_submission_map.get(lesson.id)
+        if submission:
+            percent = 100
+            status_label = "已完成"
+            action_label = f"查看成绩（{submission.accuracy}%）"
+            action_url = reverse("quiz:submission_history")
+        elif progress and (progress.completed or progress.view_count > 0):
+            percent = 50
+            status_label = "进行中"
+            action_label = "开始测试"
+            action_url = reverse("quiz:take_lesson_quiz", kwargs={"lesson_id": lesson.id})
+        else:
+            percent = 0
+            status_label = "未开始"
+            action_label = "开始测试"
+            action_url = reverse("quiz:take_lesson_quiz", kwargs={"lesson_id": lesson.id})
+
+        lesson_cards.append(
+            {
+                "lesson": lesson,
+                "summary": lesson_meta.get("hero_summary", lesson.content),
+                "progress_percent": percent,
+                "status_label": status_label,
+                "question_total": question_count_map.get(lesson.id, 0),
+                "action_label": action_label,
+                "action_url": action_url,
+            }
+        )
+
+    labs = [
+        {
+            "icon": "🎤",
+            "title": "语音识别体验",
+            "subtitle": "感受 AI「听觉感知能力」",
+            "description": "对着麦克风说话，AI 将语音自动转成文字，看看它能不能听懂你。",
+            "lesson": "第一课时 · 认识人工智能",
+            "button_label": "开始体验",
+            "url": reverse("practice:speech_lab"),
+        },
+        {
+            "icon": "💬",
+            "title": "AI 智能对话体验",
+            "subtitle": "感受 AI「语言理解&学习能力」",
+            "description": "和 AI 自由聊天，问问它：你靠什么才能学会回答问题？",
+            "lesson": "第二课时 · 人工智能如何工作",
+            "button_label": "进入对话",
+            "url": reverse("practice:dialogue_lab"),
+        },
+        {
+            "icon": "📷",
+            "title": "图像识别体验",
+            "subtitle": "感受 AI「视觉感知能力」",
+            "description": "上传一张图片，让 AI 看看图里有什么，体验它的视觉识别能力。",
+            "lesson": "第一课时 · 认识人工智能",
+            "button_label": "上传识别",
+            "url": reverse("practice:image_lab"),
+        },
+    ]
+
+    return render(
+        request,
+        "practice/index.html",
+        {
+            "labs": labs,
+            "lesson_cards": lesson_cards,
+        },
+    )
 
 
 def dialogue_lab(request):

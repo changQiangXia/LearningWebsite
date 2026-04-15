@@ -1,4 +1,4 @@
-﻿{% extends "base.html" %}
+{% extends "base.html" %}
 
 {% block title %}学习自评问卷 | LearningWebsite{% endblock %}
 
@@ -8,32 +8,28 @@
         <section class="card reveal">
             <div class="section-head" style="margin-bottom:0.8rem;">
                 <div>
-                    <span class="eyebrow">Feedback Guide</span>
-                    <h2>填写说明</h2>
+                    <span class="eyebrow">Survey Guide</span>
+                    <h2>{{ survey_blueprint.title }}</h2>
                 </div>
             </div>
-            <p class="section-copy">本问卷用于记录课程学习后的自我感受，分值采用 1 到 5 分。建议在完成单元学习或成果展示准备后填写。</p>
+            <p class="section-copy">{{ survey_blueprint.subtitle }}</p>
         </section>
 
         <section class="card reveal">
             <div class="section-head" style="margin-bottom:0.8rem;">
                 <div>
-                    <span class="eyebrow">Scoring Rule</span>
-                    <h2>评分参考</h2>
+                    <span class="eyebrow">Completion Info</span>
+                    <h2>填写说明</h2>
                 </div>
             </div>
             <div class="stack" style="gap:0.7rem;">
                 <article class="content-panel">
-                    <strong>1-2 分</strong>
-                    <p class="section-copy">理解或掌握仍然较弱，需要继续回看课程内容与案例。</p>
+                    <strong>填写建议</strong>
+                    <p class="section-copy">完成四个课时学习、实践体验和在线答题后，再统一填写本问卷，内容会更准确。</p>
                 </article>
                 <article class="content-panel">
-                    <strong>3 分</strong>
-                    <p class="section-copy">基本理解核心内容，但仍需通过练习或讨论进一步巩固。</p>
-                </article>
-                <article class="content-panel">
-                    <strong>4-5 分</strong>
-                    <p class="section-copy">已经能够较清晰地说明概念、机制与个人判断，可继续做展示或拓展探究。</p>
+                    <strong>完成时间</strong>
+                    <p class="section-copy">{% if feedback %}最近更新：{{ feedback.updated_at|date:"Y-m-d H:i" }}{% else %}首次提交后将自动记录完成时间。{% endif %}</p>
                 </article>
             </div>
         </section>
@@ -44,29 +40,37 @@
             <div>
                 <span class="eyebrow">Learning Feedback</span>
                 <h1 style="font-size:clamp(2rem, 3vw, 3rem);">{{ course.title }}</h1>
-                <p class="section-copy">围绕概念理解、技术机制、伦理认知、展示表达与继续探索意愿完成自评，可选填写文字反思。</p>
+                <p class="section-copy">围绕知识掌握、实践能力、学习参与度和综合反思完成本单元在线自评。</p>
             </div>
         </div>
-
-        {% if feedback %}
-            <div class="content-panel" style="margin-bottom:1rem;">
-                <strong>最近一次提交</strong>
-                <p class="section-copy">更新时间：{{ feedback.updated_at|date:"Y-m-d H:i" }}</p>
-            </div>
-        {% endif %}
 
         <form method="post">
             {% csrf_token %}
             <input type="hidden" name="next" value="{{ next }}">
-            {% for field in form %}
-                <div class="form-row">
-                    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
-                    {{ field }}
-                    {% if field.help_text %}<p class="section-copy">{{ field.help_text }}</p>{% endif %}
-                    {{ field.errors }}
-                </div>
-            {% endfor %}
-            <div class="hero-actions">
+
+            <div class="stack">
+                {% for section in survey_sections %}
+                    <section class="content-panel">
+                        <div class="section-head" style="margin-bottom:0.8rem;">
+                            <div>
+                                <strong>{{ section.title }}</strong>
+                            </div>
+                        </div>
+                        <div class="stack">
+                            {% for field in section.fields %}
+                                <div class="form-row">
+                                    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                                    {{ field }}
+                                    {% if field.help_text %}<p class="section-copy">{{ field.help_text }}</p>{% endif %}
+                                    {{ field.errors }}
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </section>
+                {% endfor %}
+            </div>
+
+            <div class="hero-actions" style="margin-top:1rem;">
                 <button class="btn" type="submit">保存问卷</button>
                 {% if next %}
                     <a class="btn btn-outline" href="{{ next }}">返回上一页</a>
