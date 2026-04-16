@@ -14,6 +14,7 @@
 - 首页：`http://127.0.0.1:8000/`
 - 账户：`http://127.0.0.1:8000/accounts/`
 - 课程：`http://127.0.0.1:8000/courses/`
+- 实践训练：`http://127.0.0.1:8000/practice/`
 - 测验：`http://127.0.0.1:8000/quiz/`
 - 论坛：`http://127.0.0.1:8000/forum/`
 - 搜索：`http://127.0.0.1:8000/search/`
@@ -115,7 +116,81 @@ pip check
 
 ---
 
-## 5. 初始化数据库（第一次运行必做）
+## 5. 配置本地环境变量（推荐）
+
+本项目支持用项目根目录下的 `.env` 文件读取本地配置。
+
+这一步不是必须的，但如果想启用“AI 对话体验”和“图像识别体验”的真实大模型能力，必须配置 Qwen API Key。
+
+### 5.1 新建 `.env` 文件
+
+项目根目录中已经提供了模板文件：`.env.example`
+
+直接复制一份：
+
+```powershell
+copy .env.example .env
+```
+
+如果提示是否覆盖，输入 `N` 或按实际情况处理即可。
+
+### 5.2 用记事本打开 `.env`
+
+```powershell
+notepad .env
+```
+
+### 5.3 至少需要关注这些字段
+
+```env
+DJANGO_SECRET_KEY=replace-with-a-secure-random-string
+DJANGO_DEBUG=1
+DJANGO_ALLOWED_HOSTS=127.0.0.1,localhost
+DB_ENGINE=sqlite
+
+QWEN_API_KEY=这里替换成自己的Qwen API Key
+QWEN_BASE_URL=https://dashscope.aliyuncs.com/compatible-mode/v1
+QWEN_CHAT_MODEL=qwen3.6-plus
+QWEN_VL_MODEL=qwen3-vl-plus
+QWEN_TIMEOUT=45
+```
+
+说明：
+
+- `QWEN_API_KEY`：最关键，填自己的 key
+- `QWEN_BASE_URL`：通常保持默认即可
+- `QWEN_CHAT_MODEL`：用于 AI 对话体验
+- `QWEN_VL_MODEL`：用于图像识别体验
+- `QWEN_TIMEOUT`：接口超时时间，单位秒
+
+### 5.4 重要提醒
+
+- 不要把自己的 API Key 写进 `README.md`、代码文件或 Git 提交记录
+- `.env` 已被 `.gitignore` 忽略，不会上传到 GitHub
+- 即使不配置 Qwen，本项目也仍然可以运行，只是：
+  - AI 对话页会走本地兜底回复
+  - 图像识别页会只显示基础分析结果
+
+### 5.5 如何判断 Qwen 配置成功
+
+启动项目后访问：
+
+- `http://127.0.0.1:8000/practice/dialogue/`
+- `http://127.0.0.1:8000/practice/image/`
+
+如果配置成功：
+
+- AI 对话页会返回真实模型回复
+- 图像识别页会出现“AI 识别结论”
+
+如果配置失败：
+
+- 页面仍能打开
+- 系统会自动回退到本地演示模式，不会直接报错
+
+---
+
+## 6. 初始化数据库（第一次运行必做）
 
 本项目默认数据库是 SQLite，不需要单独安装数据库软件。
 
@@ -127,7 +202,7 @@ python manage.py migrate
 
 ---
 
-## 6. 一键生成演示数据（强烈推荐）
+## 7. 一键生成演示数据（强烈推荐）
 
 为了方便直接体验所有功能，建议执行：
 
@@ -143,7 +218,7 @@ python manage.py seed_demo_data
 - 论坛帖子
 - 搜索索引
 
-### 6.1 默认演示账号
+### 7.1 默认演示账号
 
 执行 `seed_demo_data` 后，可用账号：
 
@@ -155,13 +230,13 @@ python manage.py seed_demo_data
 
 - `DemoPass123!`
 
-### 6.2 自定义密码（可选）
+### 7.2 自定义密码（可选）
 
 ```powershell
 python manage.py seed_demo_data --password "YourStrongPass123!"
 ```
 
-### 6.3 跳过搜索索引重建（可选）
+### 7.3 跳过搜索索引重建（可选）
 
 ```powershell
 python manage.py seed_demo_data --skip-search-index
@@ -169,7 +244,7 @@ python manage.py seed_demo_data --skip-search-index
 
 ---
 
-## 7. 启动项目
+## 8. 启动项目
 
 ```powershell
 python manage.py runserver
@@ -185,7 +260,7 @@ Starting development server at http://127.0.0.1:8000/
 
 - `http://127.0.0.1:8000/`
 
-### 7.1 如果 8000 端口被占用
+### 8.1 如果 8000 端口被占用
 
 ```powershell
 python manage.py runserver 8001
@@ -197,22 +272,22 @@ python manage.py runserver 8001
 
 ---
 
-## 8. 0 基础功能验收流程（照做即可）
+## 9. 0 基础功能验收流程（照做即可）
 
 按下面顺序点击，能通过则说明项目复现成功。
 
-### 8.1 首页与导航
+### 9.1 首页与导航
 
 1. 打开首页。
 2. 顶部导航能看到：首页、论坛、搜索、课程、测验、数据看板、后台管理。
 
-### 8.2 登录
+### 9.2 登录
 
 1. 打开 `http://127.0.0.1:8000/accounts/login/`
 2. 用 `demo_student / DemoPass123!` 登录。
 3. 进入账户中心，页面显示中文字段（用户名、邮箱、角色等）。
 
-### 8.3 学生学习流程
+### 9.3 学生学习流程
 
 1. 打开课程页：`/courses/`
 2. 进入任意课程和课时。
@@ -220,26 +295,35 @@ python manage.py runserver 8001
 4. 在课时页点击“开始测验”，提交后应看到“测验结果”和“提交编号”。
 5. 打开 `quiz/history/` 与 `quiz/wrong-questions/`，应看到历史与错题记录。
 
-### 8.4 论坛
+### 9.4 实践训练
+
+1. 打开 `http://127.0.0.1:8000/practice/`
+2. 点击“AI 智能对话体验”
+3. 输入 `什么是人工智能？`
+4. 如果已配置 Qwen API Key，应看到真实模型回复
+5. 点击“图像识别体验”，上传一张图片
+6. 页面应显示“基础分析”，若已配置 Qwen，还会显示“AI 识别结论”
+
+### 9.5 论坛
 
 1. 打开 `http://127.0.0.1:8000/forum/`
 2. 发布帖子。
 3. 进入帖子详情并发表评论。
 
-### 8.5 搜索
+### 9.6 搜索
 
 1. 打开 `http://127.0.0.1:8000/search/`
 2. 输入关键词（如 `Django`）。
 3. 页面应返回课程/课时/论坛/题目的分区结果。
 
-### 8.6 分析看板
+### 9.7 分析看板
 
 1. 用 `demo_student` 访问 `http://127.0.0.1:8000/analytics/`，看到“个人概览”。
 2. 退出后用 `demo_admin` 登录，访问同一地址，看到“平台概览”。
 
 ---
 
-## 9. 管理端（可选）
+## 10. 管理端（可选）
 
 如果需要 Django 原生后台：
 
@@ -253,15 +337,15 @@ python manage.py createsuperuser
 
 ---
 
-## 10. 质量检查命令
+## 11. 质量检查命令
 
-### 10.1 Django 配置检查
+### 11.1 Django 配置检查
 
 ```powershell
 python manage.py check
 ```
 
-### 10.2 运行测试
+### 11.2 运行测试
 
 ```powershell
 python manage.py test
@@ -269,7 +353,7 @@ python manage.py test
 
 如果看到 `OK`，说明测试通过。
 
-### 10.3 重建搜索索引
+### 11.3 重建搜索索引
 
 ```powershell
 python manage.py rebuild_search_index
@@ -277,7 +361,7 @@ python manage.py rebuild_search_index
 
 ---
 
-## 11. MySQL（可选，高阶）
+## 12. MySQL（可选，高阶）
 
 默认不需要 MySQL；SQLite 已能完整运行项目。
 
@@ -308,9 +392,9 @@ python manage.py runserver
 
 ---
 
-## 12. 常见问题与解决
+## 13. 常见问题与解决
 
-### 12.1 `conda activate learningwebsite` 失败
+### 13.1 `conda activate learningwebsite` 失败
 
 可能是 conda 初始化未完成，执行：
 
@@ -320,7 +404,7 @@ conda init powershell
 
 关闭并重新打开 PowerShell 后再试。
 
-### 12.2 `pip install -r requirements.txt` 失败
+### 13.2 `pip install -r requirements.txt` 失败
 
 先确认是否已激活环境：
 
@@ -335,7 +419,7 @@ python -m pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
-### 12.3 `python manage.py migrate` 报错
+### 13.3 `python manage.py migrate` 报错
 
 先执行：
 
@@ -345,7 +429,7 @@ python manage.py check
 
 若是数据库文件权限问题，关闭占用 `db.sqlite3` 的程序后重试。
 
-### 12.4 浏览器打不开 `127.0.0.1:8000`
+### 13.4 浏览器打不开 `127.0.0.1:8000`
 
 检查是否已启动服务端：
 
@@ -359,7 +443,7 @@ python manage.py runserver
 python manage.py runserver 8001
 ```
 
-### 12.5 页面没有演示数据
+### 13.5 页面没有演示数据
 
 重新执行：
 
@@ -370,7 +454,36 @@ python manage.py rebuild_search_index
 
 ---
 
-## 13. 项目结构（简版）
+### 13.6 AI 对话或图像识别没有真实模型效果
+
+先检查：
+
+```powershell
+type .env
+```
+
+确认是否存在下面这些字段：
+
+- `QWEN_API_KEY`
+- `QWEN_BASE_URL`
+- `QWEN_CHAT_MODEL`
+- `QWEN_VL_MODEL`
+
+如果刚修改过 `.env`，要先重启开发服务器：
+
+```powershell
+python manage.py runserver
+```
+
+如果仍不生效，优先检查：
+
+- API Key 是否填写错误
+- 当前网络是否可以访问 Qwen 接口
+- 账号额度是否正常
+
+---
+
+## 14. 项目结构（简版）
 
 - `config/`：Django 全局配置（settings、urls）
 - `accounts/`：注册登录、个人资料
@@ -380,12 +493,13 @@ python manage.py rebuild_search_index
 - `search/`：站内搜索与索引文档
 - `analytics/`：学生/平台统计看板 + CSV 导出
 - `core/`：首页、健康检查、演示数据命令
+- `practice/`：语音识别、AI 对话、图像识别实践训练模块
 - `templates/`：前端页面模板（当前为中文界面）
 - `docs/`：答辩材料、演示脚本、讲稿
 
 ---
 
-## 14. 答辩相关文档入口
+## 15. 答辩相关文档入口
 
 - 演示流程：`docs/DEMO_WALKTHROUGH.md`
 - 答辩总材料：`docs/DEFENSE_MATERIALS_CN.md`
@@ -395,7 +509,7 @@ python manage.py rebuild_search_index
 
 ---
 
-## 15. 一条命令版（给熟悉用户）
+## 16. 一条命令版（给熟悉用户）
 
 ```powershell
 conda create -n learningwebsite python=3.11 -y; conda activate learningwebsite; pip install -r requirements.txt; python manage.py migrate; python manage.py seed_demo_data; python manage.py runserver

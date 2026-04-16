@@ -152,8 +152,8 @@ LOGOUT_REDIRECT_URL = "/"
 
 QWEN_API_KEY = os.getenv("QWEN_API_KEY", "")
 QWEN_BASE_URL = os.getenv("QWEN_BASE_URL", "https://dashscope.aliyuncs.com/compatible-mode/v1")
-QWEN_CHAT_MODEL = os.getenv("QWEN_CHAT_MODEL", "qwen-plus")
-QWEN_VL_MODEL = os.getenv("QWEN_VL_MODEL", "qwen-vl-plus")
+QWEN_CHAT_MODEL = os.getenv("QWEN_CHAT_MODEL", "qwen3.6-plus")
+QWEN_VL_MODEL = os.getenv("QWEN_VL_MODEL", "qwen3-vl-plus")
 QWEN_TIMEOUT = int(os.getenv("QWEN_TIMEOUT", "45"))
 
 # Default primary key field type
