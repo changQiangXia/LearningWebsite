@@ -1,6 +1,7 @@
 from io import BytesIO
 import shutil
 import tempfile
+from unittest.mock import patch
 
 from PIL import Image
 
@@ -78,23 +79,23 @@ class PracticeViewTests(TestCase):
         self.assertContains(response, "Public Lesson")
         self.assertNotContains(response, "Draft Lesson")
 
-    def test_dialogue_lab_creates_record_for_logged_in_user(self):
+    @patch("practice.views.generate_ai_dialogue_reply", return_value="人工智能需要数据、算法和算力协同工作。")
+    @patch("practice.views.qwen_is_enabled", return_value=True)
+    def test_dialogue_lab_creates_record_for_logged_in_user(self, mocked_enabled, mocked_reply):
         self.client.login(username="practice_user", password="Password123!")
         response = self.client.post(
             reverse("practice:dialogue_lab"),
-            {"message": "如何设计一门课程？"},
+            {"message": "人工智能为什么需要数据？"},
             follow=True,
         )
 
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "教学目标")
-        self.assertTrue(
-            PracticeRecord.objects.filter(
-                user=self.user,
-                practice_type=PracticeRecordType.DIALOGUE,
-                input_text="如何设计一门课程？",
-            ).exists()
-        )
+        self.assertContains(response, "人工智能需要数据、算法和算力协同工作。")
+        record = PracticeRecord.objects.get(user=self.user, practice_type=PracticeRecordType.DIALOGUE)
+        self.assertEqual(record.input_text, "人工智能为什么需要数据？")
+        self.assertEqual(record.metadata["provider"], "Qwen")
+        mocked_enabled.assert_called()
+        mocked_reply.assert_called_once()
 
     def test_speech_lab_saves_transcript_record(self):
         self.client.login(username="practice_user", password="Password123!")
@@ -113,7 +114,9 @@ class PracticeViewTests(TestCase):
             ).exists()
         )
 
-    def test_image_lab_analyzes_uploaded_image_and_saves_record(self):
+    @patch("practice.views.analyze_image_with_qwen", return_value="图片主体是一张浅色界面截图。")
+    @patch("practice.views.qwen_is_enabled", return_value=True)
+    def test_image_lab_analyzes_uploaded_image_and_saves_record(self, mocked_enabled, mocked_qwen):
         self.client.login(username="practice_user", password="Password123!")
         response = self.client.post(
             reverse("practice:image_lab"),
@@ -123,6 +126,10 @@ class PracticeViewTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "识别结果")
+        self.assertContains(response, "图片主体是一张浅色界面截图。")
         record = PracticeRecord.objects.get(user=self.user, practice_type=PracticeRecordType.IMAGE)
         self.assertEqual(record.metadata["format"], "PNG")
-        self.assertTrue(record.output_text.startswith("格式：PNG"))
+        self.assertEqual(record.metadata["provider"], "Qwen + 本地分析")
+        self.assertIn("AI识别结果：图片主体是一张浅色界面截图。", record.output_text)
+        mocked_enabled.assert_called()
+        mocked_qwen.assert_called_once()

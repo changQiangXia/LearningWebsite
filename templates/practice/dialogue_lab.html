@@ -7,7 +7,13 @@
     <div class="hero-copy">
         <span class="eyebrow">AI Dialogue</span>
         <h1>AI 对话体验</h1>
-        <p class="display-copy">当前版本使用规则增强式问答，适合演示课程设计、资源整理和答辩组织相关场景。</p>
+        <p class="display-copy">
+            {% if qwen_enabled %}
+                当前页面已接入 Qwen 大模型，可围绕“什么是人工智能、AI 的应用、AI 伦理、AI 未来趋势”等问题进行真实对话。
+            {% else %}
+                当前页面处于本地演示模式，未配置 Qwen API Key 时会自动使用站内兜底回复。
+            {% endif %}
+        </p>
     </div>
     <div class="hero-subgrid">
         <div class="content-panel">
@@ -23,6 +29,15 @@
                 <button class="btn" type="submit">发送问题</button>
             </form>
         </div>
+        <div class="content-panel">
+            <strong>建议提问</strong>
+            <ul class="lesson-bullet-list compact" style="margin-top:0.9rem;">
+                <li>什么是人工智能？</li>
+                <li>AI 在医疗、交通和教育中有哪些应用？</li>
+                <li>为什么说 AI 伦理很重要？</li>
+                <li>未来人工智能会怎样发展？</li>
+            </ul>
+        </div>
     </div>
 </section>
 
@@ -32,12 +47,14 @@
             <span class="eyebrow">Recent Dialogue</span>
             <h2>最近对话</h2>
         </div>
+        <span class="badge">当前模式：{{ provider_label }}</span>
     </div>
     {% if history %}
         <div class="stack">
             {% for item in history %}
                 <article class="content-panel">
                     <p class="rich-text"><strong>提问：</strong>{{ item.question }}</p>
+                    <p class="section-copy" style="margin-top:0.6rem;">回复来源：{{ item.provider|default:"本地兜底" }}</p>
                     <p class="rich-text" style="margin-top:0.7rem;"><strong>回复：</strong>{{ item.answer }}</p>
                 </article>
             {% endfor %}

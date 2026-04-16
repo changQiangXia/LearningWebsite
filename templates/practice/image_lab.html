@@ -7,7 +7,13 @@
     <div class="hero-copy">
         <span class="eyebrow">Image Recognition</span>
         <h1>图像识别体验</h1>
-        <p class="display-copy">上传图片后，系统会根据格式、尺寸、亮度和版式给出基础识别结论，用于展示图像理解的入门式应用流程。</p>
+        <p class="display-copy">
+            {% if qwen_enabled %}
+                上传图片后，系统会先做基础图像分析，再调用 Qwen 进行图像内容理解，输出更接近真实 AI 应用的识别结果。
+            {% else %}
+                当前未配置 Qwen API Key，页面会先展示本地基础分析结果，适合演示图像识别流程。
+            {% endif %}
+        </p>
     </div>
     <div class="hero-subgrid">
         <div class="content-panel">
@@ -33,12 +39,39 @@
                 <span class="eyebrow">Recognition Result</span>
                 <h2>识别结果</h2>
             </div>
+            <span class="badge">分析模式：{{ analysis.provider }}</span>
+        </div>
+        <div class="split-grid">
+            <article class="content-panel">
+                <strong>基础分析</strong>
+                <ul style="margin:0.9rem 0 0; padding-left:1.2rem; line-height:1.9;">
+                    {% for label in analysis.labels %}
+                        <li>{{ label }}</li>
+                    {% endfor %}
+                </ul>
+            </article>
+            <article class="content-panel">
+                <strong>AI 识别结论</strong>
+                {% if analysis.ai_result %}
+                    <p class="section-copy" style="margin-top:0.9rem; white-space:pre-line;">{{ analysis.ai_result }}</p>
+                {% else %}
+                    <p class="empty-state" style="margin-top:0.9rem;">当前仅展示本地分析结果。配置 Qwen API Key 后可获得更完整的图像理解输出。</p>
+                {% endif %}
+            </article>
+        </div>
+    </section>
+    <section class="card reveal">
+        <div class="section-head">
+            <div>
+                <span class="eyebrow">Interpretation</span>
+                <h2>如何理解这个结果</h2>
+            </div>
         </div>
         <div class="content-panel">
             <ul style="margin:0; padding-left:1.2rem; line-height:1.9;">
-                {% for label in analysis.labels %}
-                    <li>{{ label }}</li>
-                {% endfor %}
+                <li>“基础分析”说明图片本身的格式、尺寸、方向和明暗特征。</li>
+                <li>“AI 识别结论”更关注图片主体是什么、处于什么场景、可能有什么用途。</li>
+                <li>如果结果写明“不完全确定”，说明模型对图片内容存在一定不确定性，这也是现实 AI 应用中的正常现象。</li>
             </ul>
         </div>
     </section>

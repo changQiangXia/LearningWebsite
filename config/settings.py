@@ -3,8 +3,22 @@
 import os
 from pathlib import Path
 
+
+def _load_local_env(env_path: Path) -> None:
+    if not env_path.exists():
+        return
+    for raw_line in env_path.read_text(encoding="utf-8").splitlines():
+        line = raw_line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, value = line.split("=", 1)
+        key = key.strip()
+        value = value.strip().strip('"').strip("'")
+        os.environ.setdefault(key, value)
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+_load_local_env(BASE_DIR / ".env")
 
 
 SECRET_KEY = os.getenv(
@@ -135,6 +149,12 @@ MEDIA_ROOT = BASE_DIR / "media"
 
 LOGIN_REDIRECT_URL = "/"
 LOGOUT_REDIRECT_URL = "/"
+
+QWEN_API_KEY = os.getenv("QWEN_API_KEY", "")
+QWEN_BASE_URL = os.getenv("QWEN_BASE_URL", "https://dashscope.aliyuncs.com/compatible-mode/v1")
+QWEN_CHAT_MODEL = os.getenv("QWEN_CHAT_MODEL", "qwen-plus")
+QWEN_VL_MODEL = os.getenv("QWEN_VL_MODEL", "qwen-vl-plus")
+QWEN_TIMEOUT = int(os.getenv("QWEN_TIMEOUT", "45"))
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
