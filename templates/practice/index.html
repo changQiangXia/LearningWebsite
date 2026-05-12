@@ -40,35 +40,6 @@
             </div>
         </section>
 
-        <section class="card">
-            <div class="section-head">
-                <div>
-                    <span class="eyebrow">Practice Board</span>
-                    <h2>课时学习&答题进度看板</h2>
-                    <p class="section-copy">实践完成后，选择对应课时完成测试，查看学习成果。</p>
-                </div>
-            </div>
-            <div class="collection-grid">
-                {% for row in lesson_cards %}
-                    <article class="content-panel progress-card">
-                        <strong>第 {{ row.lesson.order_no }} 课时｜{{ row.lesson.title }}</strong>
-                        <p class="section-copy">{{ row.summary|truncatechars:90 }}</p>
-                        <div class="progress-track" aria-hidden="true">
-                            <span class="progress-fill" style="width: {{ row.progress_percent }}%;"></span>
-                        </div>
-                        <div class="hero-meta">
-                            <span class="badge">进度 {{ row.progress_percent }}%</span>
-                            <span class="badge">状态：{{ row.status_label }}</span>
-                            <span class="badge">题目 {{ row.question_total }} 道</span>
-                        </div>
-                        <div class="hero-actions" style="margin-top:1rem;">
-                            <a class="btn" href="{{ row.action_url }}">{{ row.action_label }}</a>
-                            <a class="btn btn-outline" href="{% url 'courses:lesson_detail' lesson_id=row.lesson.id %}">查看课时</a>
-                        </div>
-                    </article>
-                {% endfor %}
-            </div>
-        </section>
         <section class="card practice-tips-card">
             <div class="section-head">
                 <div>

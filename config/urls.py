@@ -1,5 +1,7 @@
 """Root URL configuration for the LearningWebsite project."""
 
+from pathlib import Path
+
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
@@ -21,3 +23,4 @@ urlpatterns = [
 
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    urlpatterns += static("/videos/", document_root=Path(settings.BASE_DIR) / "videos")

@@ -151,10 +151,21 @@
                                         <strong>{{ video.title }}</strong>
                                         <p class="section-copy">观看任务：{{ video.task }}</p>
                                     </div>
-                                    <a class="btn btn-outline" href="{{ video.url }}" target="_blank" rel="noopener">单独打开视频</a>
+                                    {% if video.local_video_url %}
+                                        <a class="btn btn-outline" href="{{ video.local_video_url }}" target="_blank" rel="noopener">单独打开视频</a>
+                                    {% else %}
+                                        <a class="btn btn-outline" href="{{ video.url }}" target="_blank" rel="noopener">单独打开视频</a>
+                                    {% endif %}
                                 </div>
                                 <div class="media-frame">
-                                    <iframe src="{{ video.embedded_url }}" title="{{ video.title }}" allowfullscreen></iframe>
+                                    {% if video.local_video_url %}
+                                        <video controls preload="metadata" title="{{ video.title }}">
+                                            <source src="{{ video.local_video_url }}" type="video/mp4">
+                                            当前浏览器不支持视频播放，请尝试单独打开视频。
+                                        </video>
+                                    {% else %}
+                                        <iframe src="{{ video.embedded_url }}" title="{{ video.title }}" allowfullscreen></iframe>
+                                    {% endif %}
                                 </div>
                             </article>
                         {% endfor %}

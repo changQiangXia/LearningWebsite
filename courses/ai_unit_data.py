@@ -41,6 +41,7 @@ LESSON_PAGE_DATA = {
                         "title": "《什么是人工智能》",
                         "task": "视频中介绍了人工智能的哪些功能？人工智能有哪些基本特点？请认真观看并思考。",
                         "url": "https://www.bilibili.com/video/BV1CY411H7oZ?t=159.2",
+                        "local_video_path": "videos/1.mp4",
                     }
                 ],
             },
@@ -136,7 +137,7 @@ LESSON_PAGE_DATA = {
                 "eyebrow": "微课学习",
                 "title": "微课学习",
                 "videos": [
-                    {"title": "《AI 是如何工作的》", "task": "微课中使用了什么类比来解释人工智能的学习过程？请记录下来。", "url": "https://www.bilibili.com/video/BV1mgPvzTEvb?t=316.4"}
+                    {"title": "《AI 是如何工作的》", "task": "微课中使用了什么类比来解释人工智能的学习过程？请记录下来。", "url": "https://www.bilibili.com/video/BV1mgPvzTEvb?t=316.4", "local_video_path": "videos/2.mp4"}
                 ],
             },
             {
@@ -155,7 +156,7 @@ LESSON_PAGE_DATA = {
                 "eyebrow": "应用拓展",
                 "title": "人工智能应用领域",
                 "videos": [
-                    {"title": "《人工智能在不同领域的应用》", "task": "记录人工智能在医疗、金融、交通、教育四个领域的应用案例。这些应用分别用到了人工智能的什么能力？", "url": "https://www.bilibili.com/video/BV1Er421773P?t=25.2"}
+                    {"title": "《人工智能在不同领域的应用》", "task": "记录人工智能在医疗、金融、交通、教育四个领域的应用案例。这些应用分别用到了人工智能的什么能力？", "url": "https://www.bilibili.com/video/BV1Er421773P?t=25.2", "local_video_path": "videos/3.mp4"}
                 ],
             },
             {"type": "case_grid", "eyebrow": "应用拓展", "title": "人工智能应用领域", "items": [{"title": "医疗", "points": ["辅助诊断", "病灶影像识别", "医疗影像分析"]}, {"title": "金融", "points": ["风险评估", "智能客服", "量化预测"]}, {"title": "交通", "points": ["自动驾驶", "智能导航", "路线规划"]}, {"title": "教育", "points": ["个性化学习推荐", "智能辅导", "作业批改"]}], "note": "思考：这些应用分别用到了人工智能的什么能力？"},
@@ -306,8 +307,8 @@ COURSE_GLOSSARY = [
 ]
 
 RESOURCE_LIBRARY = [
-    {"title": "生活中的人工智能案例阅读", "resource_type": "reading", "lesson_no": 1, "sort_order": 1, "external_url": "https://www.ibm.com/topics/artificial-intelligence", "tags": "案例, 阅读, 第1课", "description": "围绕语音助手、人脸识别、拍照搜题、智能推荐等场景，帮助学生理解生活中的人工智能。"},
-    {"title": "人工智能发展简史资料", "resource_type": "reading", "lesson_no": 1, "sort_order": 2, "external_url": "https://en.wikipedia.org/wiki/History_of_artificial_intelligence", "tags": "历史, 阅读, 第1课", "description": "梳理人工智能发展过程中的关键节点，辅助学生理解 AI 发展历史。"},
+    {"title": "生活中的人工智能案例阅读", "resource_type": "reading", "lesson_no": 1, "sort_order": 1, "external_url": "https://developer.baidu.com/article/detail.html?id=5252025", "tags": "案例, 阅读, 第1课", "description": "围绕语音助手、人脸识别、拍照搜题、智能推荐等场景，帮助学生理解生活中的人工智能。"},
+    {"title": "人工智能发展简史资料", "resource_type": "reading", "lesson_no": 1, "sort_order": 2, "external_url": "https://cloud.tencent.com/developer/article/2632623", "tags": "历史, 阅读, 第1课", "description": "梳理人工智能发展过程中的关键节点，辅助学生理解 AI 发展历史。"},
     {"title": "语音识别、图像识别原理简介", "resource_type": "courseware", "lesson_no": 1, "sort_order": 3, "external_url": "https://developer.mozilla.org/en-US/docs/Web/API/Web_Speech_API", "tags": "语音识别, 图像识别, 第1课", "description": "用简明图文介绍语音识别与图像识别的基本原理，为实践体验做准备。"},
     {"title": "AI 在各行业应用图文资料", "resource_type": "reading", "lesson_no": 2, "sort_order": 1, "external_url": "https://www.ibm.com/think/topics/artificial-intelligence-use-cases", "tags": "应用, 行业, 第2课", "description": "整理医疗、金融、交通、教育等领域的 AI 应用案例。"},
     {"title": "典型人工智能产品介绍", "resource_type": "reading", "lesson_no": 2, "sort_order": 2, "external_url": "https://www.cloudflare.com/learning/ai/what-is-machine-learning/", "tags": "产品, 第2课", "description": "帮助学生了解常见 AI 产品背后的工作方式和典型能力。"},

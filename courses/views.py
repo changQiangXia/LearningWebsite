@@ -1,5 +1,7 @@
 ﻿from copy import deepcopy
+from pathlib import Path
 
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
@@ -110,6 +112,18 @@ def _embed_video_url(url):
     return url
 
 
+def _resolve_local_video_asset(relative_path: str):
+    if not relative_path:
+        return None
+    candidate = Path(settings.BASE_DIR) / relative_path
+    if not candidate.exists():
+        return None
+    return {
+        "url": f"/{relative_path.replace(chr(92), '/')}",
+        "name": candidate.name,
+    }
+
+
 def _resolve_button_url(button_spec, lesson_id: int, lesson_filter_value: int):
     route = button_spec["route"]
     if button_spec.get("lesson_query"):
@@ -135,6 +149,10 @@ def _build_lesson_page(
         if section.get("type") == "video":
             for video in section.get("videos", []):
                 video["embedded_url"] = _embed_video_url(video["url"])
+                local_video = _resolve_local_video_asset(video.get("local_video_path", ""))
+                if local_video:
+                    video["local_video_url"] = local_video["url"]
+                    video["local_video_name"] = local_video["name"]
         if section.get("type") == "action_cards":
             for item in section.get("items", []):
                 buttons = []

@@ -190,58 +190,6 @@
             {% endif %}
         </section>
 
-        <section class="card reveal">
-            <div class="section-head">
-                <div>
-                    <span class="eyebrow">Teaching Guides</span>
-                    <h2>配套教学指引</h2>
-                </div>
-            </div>
-            {% if related_guides %}
-                <div class="stack">
-                    {% for guide in related_guides %}
-                        <article class="content-panel">
-                            <div class="section-head" style="margin-bottom:0.6rem; align-items:center;">
-                                <a href="{% url 'guides:guide_detail' guide_id=guide.id %}"><strong>{{ guide.title }}</strong></a>
-                                <span class="badge">第 {{ guide.order_no }} 项</span>
-                            </div>
-                            {% if guide.unit_name %}
-                                <p class="section-copy">单元：{{ guide.unit_name }}</p>
-                            {% endif %}
-                        </article>
-                    {% endfor %}
-                </div>
-            {% else %}
-                <p class="empty-state">当前课程暂无教学指引。</p>
-            {% endif %}
-        </section>
-
-        <section class="card reveal">
-            <div class="section-head">
-                <div>
-                    <span class="eyebrow">Resources</span>
-                    <h2>配套资源</h2>
-                </div>
-            </div>
-            {% if related_resources %}
-                <div class="stack">
-                    {% for resource in related_resources %}
-                        <article class="content-panel">
-                            <div class="section-head" style="margin-bottom:0.6rem; align-items:center;">
-                                <a href="{% url 'resources:resource_detail' slug=resource.slug %}"><strong>{{ resource.title }}</strong></a>
-                                <div class="note-line">
-                                    <span class="badge">{{ resource.get_resource_type_display }}</span>
-                                    {% if resource.lesson %}<span class="badge">第 {{ resource.lesson.order_no }} 课时</span>{% endif %}
-                                </div>
-                            </div>
-                            <p class="section-copy">{{ resource.description|truncatechars:120|default:"暂无资源简介。" }}</p>
-                        </article>
-                    {% endfor %}
-                </div>
-            {% else %}
-                <p class="empty-state">当前课程暂无配套资源。</p>
-            {% endif %}
-        </section>
     </div>
 </div>
 {% endblock %}

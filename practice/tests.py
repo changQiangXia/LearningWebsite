@@ -76,7 +76,9 @@ class PracticeViewTests(TestCase):
     def test_index_recommends_only_published_course_lessons(self):
         response = self.client.get(reverse("practice:index"))
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "Public Lesson")
+        self.assertContains(response, "三大核心实践")
+        self.assertContains(response, "语音识别体验")
+        self.assertContains(response, "AI 智能对话体验")
         self.assertNotContains(response, "Draft Lesson")
 
     @patch("practice.views.generate_ai_dialogue_reply", return_value="人工智能需要数据、算法和算力协同工作。")

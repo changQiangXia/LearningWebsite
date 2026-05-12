@@ -5,7 +5,6 @@
 {% block content %}
 <section class="card hero-panel reveal">
     <div class="hero-copy">
-        <span class="eyebrow">AI Learning Portal</span>
         <h1><span class="gradient-text">课程学习与实践平台</span></h1>
         <p class="display-copy">
             面向初中阶段人工智能专题学习场景，串联课程内容、实践训练、资源库、社区交流、在线练习、个人中心与教学指引，
@@ -55,9 +54,8 @@
 <section class="card reveal">
     <div class="section-head">
         <div>
-            <span class="eyebrow">学习入口</span>
-            <h2>首页核心入口</h2>
-            <p class="section-copy">按照“课程内容 → 实践训练 → 资源库 → 社区 → 在线练习 → 个人中心”的使用顺序组织，并将教学指引单独放在首页展示。</p>
+            <h2>学习入口</h2>
+            <p class="section-copy">按照“课程内容 → 实践训练 → 资源库 → 社区 → 在线练习 → 个人中心”的使用顺序组织。</p>
         </div>
         <form method="get" action="{% url 'search:index' %}" class="inline-form">
             <input type="text" name="q" placeholder="例如：人工智能、语音识别、AI 伦理">
@@ -107,7 +105,6 @@
 <section class="card reveal">
     <div class="section-head">
         <div>
-            <span class="eyebrow">Teaching Guide</span>
             <h2>教学指引入口</h2>
             <p class="section-copy">课堂使用时可先打开教学指引，快速查看适用对象、课时安排、学习目标与学习路径。</p>
         </div>
@@ -131,8 +128,7 @@
 <section class="card reveal">
     <div class="section-head">
         <div>
-            <span class="eyebrow">Featured Course</span>
-            <h2>推荐课程与课时</h2>
+            <h2>课程入口</h2>
             <p class="section-copy">首页直接展示当前课程和四个课时入口，方便课堂演示与快速进入对应内容页。</p>
         </div>
         <a class="btn" href="{% url 'courses:course_detail' slug=featured_course.slug %}">查看课程详情</a>
@@ -164,7 +160,6 @@
 <section class="card reveal">
     <div class="section-head">
         <div>
-            <span class="eyebrow">Community Feed</span>
             <h2>最新学习动态</h2>
             <p class="section-copy">首页保留最新笔记与讨论，用于展示系统的互动性和持续更新能力。</p>
         </div>
