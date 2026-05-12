@@ -272,22 +272,88 @@ python manage.py runserver 8001
 
 ---
 
-## 9. 0 基础功能验收流程（照做即可）
+## 9. 本地视频资源说明（重要）
+
+本项目支持在课时页面播放本地视频文件。
+
+当前约定如下：
+
+- `videos/1.mp4`：第一课视频
+- `videos/2.mp4`：第二课第一个视频
+- `videos/3.mp4`：第二课第二个视频
+
+### 9.1 为什么 GitHub 里可能没有这些视频
+
+视频文件体积较大，项目已经在 `.gitignore` 中忽略了 `videos/` 目录：
+
+- `videos/` 不会上传到 GitHub
+- 从 GitHub 下载项目的人，需要自己把视频放回项目根目录下的 `videos/` 文件夹
+
+### 9.2 视频目录应该怎么放
+
+项目根目录下创建：
+
+```text
+LearningWebsite/
+├─ manage.py
+├─ videos/
+│  ├─ 1.mp4
+│  ├─ 2.mp4
+│  └─ 3.mp4
+```
+
+也就是说，`videos/` 必须和 `manage.py` 在同一级目录。
+
+### 9.3 如果没有本地视频会怎样
+
+项目不会直接报错。
+
+当前处理逻辑是：
+
+- 如果本地视频存在，课时页优先播放本地 mp4
+- 如果本地视频不存在，页面会回退到原来的远程视频链接
+
+### 9.4 如何验证本地视频是否生效
+
+启动项目后访问：
+
+```text
+http://127.0.0.1:8000/courses/
+```
+
+然后依次检查：
+
+1. 进入 `走进人工智能`
+2. 打开第一课，确认页面播放的是 `videos/1.mp4`
+3. 打开第二课，确认页面中有两个视频：
+   - 第一个对应 `videos/2.mp4`
+   - 第二个对应 `videos/3.mp4`
+
+如果页面还是播放旧的远程视频，优先检查：
+
+- `videos/1.mp4`、`videos/2.mp4`、`videos/3.mp4` 是否真的存在
+- 文件名是否完全一致
+- `videos/` 是否放在项目根目录
+- 修改后是否重启了 `python manage.py runserver`
+
+---
+
+## 10. 0 基础功能验收流程（照做即可）
 
 按下面顺序点击，能通过则说明项目复现成功。
 
-### 9.1 首页与导航
+### 10.1 首页与导航
 
 1. 打开首页。
 2. 顶部导航能看到：首页、论坛、搜索、课程、测验、数据看板、后台管理。
 
-### 9.2 登录
+### 10.2 登录
 
 1. 打开 `http://127.0.0.1:8000/accounts/login/`
 2. 用 `demo_student / DemoPass123!` 登录。
 3. 进入账户中心，页面显示中文字段（用户名、邮箱、角色等）。
 
-### 9.3 学生学习流程
+### 10.3 学生学习流程
 
 1. 打开课程页：`/courses/`
 2. 进入任意课程和课时。
@@ -295,7 +361,7 @@ python manage.py runserver 8001
 4. 在课时页点击“开始测验”，提交后应看到“测验结果”和“提交编号”。
 5. 打开 `quiz/history/` 与 `quiz/wrong-questions/`，应看到历史与错题记录。
 
-### 9.4 实践训练
+### 10.4 实践训练
 
 1. 打开 `http://127.0.0.1:8000/practice/`
 2. 点击“AI 智能对话体验”
@@ -304,26 +370,26 @@ python manage.py runserver 8001
 5. 点击“图像识别体验”，上传一张图片
 6. 页面应显示“基础分析”，若已配置 Qwen，还会显示“AI 识别结论”
 
-### 9.5 论坛
+### 10.5 论坛
 
 1. 打开 `http://127.0.0.1:8000/forum/`
 2. 发布帖子。
 3. 进入帖子详情并发表评论。
 
-### 9.6 搜索
+### 10.6 搜索
 
 1. 打开 `http://127.0.0.1:8000/search/`
 2. 输入关键词（如 `Django`）。
 3. 页面应返回课程/课时/论坛/题目的分区结果。
 
-### 9.7 分析看板
+### 10.7 分析看板
 
 1. 用 `demo_student` 访问 `http://127.0.0.1:8000/analytics/`，看到“个人概览”。
 2. 退出后用 `demo_admin` 登录，访问同一地址，看到“平台概览”。
 
 ---
 
-## 10. 管理端（可选）
+## 11. 管理端（可选）
 
 如果需要 Django 原生后台：
 
@@ -337,15 +403,15 @@ python manage.py createsuperuser
 
 ---
 
-## 11. 质量检查命令
+## 12. 质量检查命令
 
-### 11.1 Django 配置检查
+### 12.1 Django 配置检查
 
 ```powershell
 python manage.py check
 ```
 
-### 11.2 运行测试
+### 12.2 运行测试
 
 ```powershell
 python manage.py test
@@ -353,7 +419,7 @@ python manage.py test
 
 如果看到 `OK`，说明测试通过。
 
-### 11.3 重建搜索索引
+### 12.3 重建搜索索引
 
 ```powershell
 python manage.py rebuild_search_index
@@ -361,7 +427,7 @@ python manage.py rebuild_search_index
 
 ---
 
-## 12. MySQL（可选，高阶）
+## 13. MySQL（可选，高阶）
 
 默认不需要 MySQL；SQLite 已能完整运行项目。
 
@@ -392,9 +458,9 @@ python manage.py runserver
 
 ---
 
-## 13. 常见问题与解决
+## 14. 常见问题与解决
 
-### 13.1 `conda activate learningwebsite` 失败
+### 14.1 `conda activate learningwebsite` 失败
 
 可能是 conda 初始化未完成，执行：
 
@@ -404,7 +470,7 @@ conda init powershell
 
 关闭并重新打开 PowerShell 后再试。
 
-### 13.2 `pip install -r requirements.txt` 失败
+### 14.2 `pip install -r requirements.txt` 失败
 
 先确认是否已激活环境：
 
@@ -419,7 +485,7 @@ python -m pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
-### 13.3 `python manage.py migrate` 报错
+### 14.3 `python manage.py migrate` 报错
 
 先执行：
 
@@ -429,7 +495,7 @@ python manage.py check
 
 若是数据库文件权限问题，关闭占用 `db.sqlite3` 的程序后重试。
 
-### 13.4 浏览器打不开 `127.0.0.1:8000`
+### 14.4 浏览器打不开 `127.0.0.1:8000`
 
 检查是否已启动服务端：
 
@@ -443,7 +509,7 @@ python manage.py runserver
 python manage.py runserver 8001
 ```
 
-### 13.5 页面没有演示数据
+### 14.5 页面没有演示数据
 
 重新执行：
 
@@ -454,7 +520,7 @@ python manage.py rebuild_search_index
 
 ---
 
-### 13.6 AI 对话或图像识别没有真实模型效果
+### 14.6 AI 对话或图像识别没有真实模型效果
 
 先检查：
 
@@ -483,7 +549,35 @@ python manage.py runserver
 
 ---
 
-## 14. 项目结构（简版）
+### 14.7 本地视频没有播放
+
+先检查：
+
+```powershell
+dir videos
+```
+
+应至少看到：
+
+- `1.mp4`
+- `2.mp4`
+- `3.mp4`
+
+然后重启服务：
+
+```powershell
+python manage.py runserver
+```
+
+如果还是不对，再检查：
+
+- 视频文件是否放在项目根目录下的 `videos/`
+- 文件名是否写成了 `1.mp4`、`2.mp4`、`3.mp4`
+- 浏览器是否缓存了旧页面，可尝试 `Ctrl + F5`
+
+---
+
+## 15. 项目结构（简版）
 
 - `config/`：Django 全局配置（settings、urls）
 - `accounts/`：注册登录、个人资料
@@ -494,12 +588,13 @@ python manage.py runserver
 - `analytics/`：学生/平台统计看板 + CSV 导出
 - `core/`：首页、健康检查、演示数据命令
 - `practice/`：语音识别、AI 对话、图像识别实践训练模块
+- `videos/`：本地课时视频目录（默认不上传 GitHub）
 - `templates/`：前端页面模板（当前为中文界面）
 - `docs/`：答辩材料、演示脚本、讲稿
 
 ---
 
-## 15. 答辩相关文档入口
+## 16. 答辩相关文档入口
 
 - 演示流程：`docs/DEMO_WALKTHROUGH.md`
 - 答辩总材料：`docs/DEFENSE_MATERIALS_CN.md`
@@ -509,7 +604,7 @@ python manage.py runserver
 
 ---
 
-## 16. 一条命令版（给熟悉用户）
+## 17. 一条命令版（给熟悉用户）
 
 ```powershell
 conda create -n learningwebsite python=3.11 -y; conda activate learningwebsite; pip install -r requirements.txt; python manage.py migrate; python manage.py seed_demo_data; python manage.py runserver
